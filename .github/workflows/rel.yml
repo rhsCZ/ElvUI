@@ -1,0 +1,45 @@
+name: Release as artifact
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Commit, tag nebo branch, pro který se má release vytvořit"
+        required: false
+        default: "main"
+
+jobs:
+  release:
+    name: Build and upload artifact
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.inputs.ref || github.ref }}
+
+      - name: Ensure tags are available
+        run: git fetch --tags --force
+
+      - name: Create Package
+        uses: BigWigsMods/packager@v2
+        with:
+          args: -n "{package-name}-{project-version}"
+
+      - name: Get package name
+        id: pkg
+        run: |
+          PACKAGE=$(find .release -type f -name "*.zip" -printf "%f\n")
+          echo "package=$PACKAGE" >> $GITHUB_OUTPUT
+
+      - name: Upload artifact to GitHub Actions
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.pkg.outputs.package }}
+          path: .release/${{ steps.pkg.outputs.package }}
+          retention-days: 7
