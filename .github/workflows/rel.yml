@@ -1,13 +1,10 @@
 name: Release as artifact
 
 on:
-  push:
-    tags:
-      - "v*"
   workflow_dispatch:
     inputs:
       ref:
-        description: "Commit, tag nebo branch, pro který se má release vytvořit"
+        description: "Commit (krátký nebo celý hash), tag nebo branch"
         required: false
         default: "main"
 
@@ -17,14 +14,21 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      - name: Checkout repository
+      - name: Checkout default branch
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: ${{ github.event.inputs.ref || github.ref }}
 
       - name: Ensure tags are available
         run: git fetch --tags --force
+
+      - name: Checkout specific ref or commit
+        if: ${{ github.event.inputs.ref != '' }}
+        run: |
+          REF="${{ github.event.inputs.ref }}"
+          echo "Checking out $REF..."
+          git fetch origin $REF --depth=1 || true
+          git checkout $REF
 
       - name: Create Package
         uses: BigWigsMods/packager@v2
