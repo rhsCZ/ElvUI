@@ -33,6 +33,13 @@ local function UpdateCollapse(texture, atlas)
 	end
 end
 
+local function UpdateToggleCollapseButton(self)
+	local isCollapsed = self:GetHeader():IsCollapsed()
+	local tex = isCollapsed and E.Media.Textures.PlusButton or E.Media.Textures.MinusButton
+	self:SetNormalTexture(tex)
+	self:SetPushedTexture(tex)
+end
+
 local function UpdateTokenSkinsChild(child)
 	if not child.IsSkinned then
 		if child.Right then
@@ -50,6 +57,12 @@ local function UpdateTokenSkinsChild(child)
 		local icon = child.Content and child.Content.CurrencyIcon
 		if icon then
 			S:HandleIcon(icon)
+		end
+
+		local ToggleCollapseButton = child.ToggleCollapseButton
+		if ToggleCollapseButton and ToggleCollapseButton.RefreshIcon then
+			hooksecurefunc(ToggleCollapseButton, 'RefreshIcon', UpdateToggleCollapseButton)
+			UpdateToggleCollapseButton(ToggleCollapseButton)
 		end
 
 		child.IsSkinned = true
@@ -115,7 +128,7 @@ end
 local function UpdateAzeriteEmpoweredItem(item)
 	item.AzeriteTexture:SetAtlas('AzeriteIconFrame')
 	item.AzeriteTexture:SetInside()
-	item.AzeriteTexture:SetTexCoord(unpack(E.TexCoords))
+	item.AzeriteTexture:SetTexCoords()
 	item.AzeriteTexture:SetDrawLayer('BORDER', 1)
 end
 
@@ -155,7 +168,7 @@ local function EquipmentDisplayButton(button)
 		button:StyleButton()
 
 		button.icon:SetInside()
-		button.icon:SetTexCoord(unpack(E.TexCoords))
+		button.icon:SetTexCoords()
 
 		S:HandleIconBorder(button.IconBorder)
 
@@ -259,6 +272,12 @@ local function UpdateFactionSkinsChild(child)
 				ReputationBar:CreateBackdrop()
 				E:RegisterStatusBar(ReputationBar)
 			end
+		end
+
+		local ToggleCollapseButton = child.ToggleCollapseButton
+		if ToggleCollapseButton and ToggleCollapseButton.RefreshIcon then
+			hooksecurefunc(ToggleCollapseButton, 'RefreshIcon', UpdateToggleCollapseButton)
+			UpdateToggleCollapseButton(ToggleCollapseButton)
 		end
 
 		child.IsSkinned = true
@@ -430,7 +449,8 @@ function S:Blizzard_UIPanels_Game()
 	S:HandleCheckBox(DetailFrame.AtWarCheckbox)
 	S:HandleCheckBox(DetailFrame.MakeInactiveCheckbox)
 	S:HandleCheckBox(DetailFrame.WatchFactionCheckbox)
-	S:HandleButton(DetailFrame.ViewRenownButton)
+	S:HandleButton(DetailFrame.ViewRenownButton, nil, nil, nil, true)
+	S:HandleTrimScrollBar(DetailFrame.ScrollingDescriptionScrollBar)
 
 	-- Currency Frame
 	_G.TokenFramePopup:StripTextures()
@@ -460,10 +480,16 @@ function S:Blizzard_UIPanels_Game()
 	currencyTransfer:SetTemplate('Transparent')
 	S:HandleCloseButton(currencyTransfer.CloseButton)
 	S:HandleDropDownBox(currencyTransfer.Content.SourceSelector.Dropdown)
-	S:HandleEditBox(currencyTransfer.Content.AmountSelector.InputBox)
 	S:HandleButton(currencyTransfer.Content.AmountSelector.MaxQuantityButton)
 	S:HandleButton(currencyTransfer.Content.ConfirmButton)
 	S:HandleButton(currencyTransfer.Content.CancelButton)
+	S:HandleIcon(currencyTransfer.Content.SourceBalancePreview.BalanceInfo.CurrencyIcon)
+	S:HandleIcon(currencyTransfer.Content.PlayerBalancePreview.BalanceInfo.CurrencyIcon)
+	local InputBox = currencyTransfer.Content.AmountSelector.InputBox
+	S:HandleEditBox(InputBox)
+	InputBox.backdrop:ClearAllPoints()
+	InputBox.backdrop:Point('TOPLEFT', 0, -3)
+	InputBox.backdrop:Point('BOTTOMRIGHT', -1, 8)
 
 	hooksecurefunc(_G.ReputationFrame.ScrollBox, 'Update', UpdateFactionSkins)
 	hooksecurefunc(_G.TokenFrame.ScrollBox, 'Update', UpdateTokenSkins)

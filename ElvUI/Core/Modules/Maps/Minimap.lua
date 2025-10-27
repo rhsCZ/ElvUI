@@ -171,7 +171,7 @@ function M:HandleTrackingButton()
 
 		if _G.MiniMapTrackingIcon then
 			_G.MiniMapTrackingIcon:SetDrawLayer('ARTWORK')
-			_G.MiniMapTrackingIcon:SetTexCoord(unpack(E.TexCoords))
+			_G.MiniMapTrackingIcon:SetTexCoords()
 			_G.MiniMapTrackingIcon:SetInside()
 		end
 	end
@@ -474,7 +474,7 @@ function M:UpdateIcons()
 
 			if _G.BattlegroundShine then _G.BattlegroundShine:Hide() end
 			if _G.MiniMapBattlefieldBorder then _G.MiniMapBattlefieldBorder:Hide() end
-			if _G.MiniMapBattlefieldIcon then _G.MiniMapBattlefieldIcon:SetTexCoord(unpack(E.TexCoords)) end
+			if _G.MiniMapBattlefieldIcon then _G.MiniMapBattlefieldIcon:SetTexCoords() end
 		end
 
 		if difficulty then
@@ -746,10 +746,6 @@ function M:Initialize()
 
 	if E.Retail then
 		MinimapCluster:KillEditMode()
-
-		if MinimapCluster.systemInfo then -- fix an error when the cluster is moved to the lower part of screen
-			MinimapCluster.systemInfo.isInDefaultPosition = nil
-		end
 
 		local clusterHolder = CreateFrame('Frame', 'ElvUI_MinimapClusterHolder', MinimapCluster)
 		clusterHolder.savedWidth, clusterHolder.savedHeight = MinimapCluster:GetSize()

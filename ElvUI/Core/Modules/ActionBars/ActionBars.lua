@@ -1,7 +1,7 @@
 local E, L, V, P, G = unpack(ElvUI)
 local AB = E:GetModule('ActionBars')
 
-local _G, wipe = _G, wipe
+local _G = _G
 local ipairs, pairs, strmatch, next, unpack, tonumber = ipairs, pairs, strmatch, next, unpack, tonumber
 local format, gsub, strsplit, strfind, strsub, strupper = format, gsub, strsplit, strfind, strsub, strupper
 
@@ -213,7 +213,7 @@ function AB:TrimIcon(button, masque)
 		local left, right, top, bottom = E:CropRatio(width, height)
 		icon:SetTexCoord(left, right, top, bottom)
 	elseif not masque then
-		icon:SetTexCoord(unpack(E.TexCoords))
+		icon:SetTexCoords()
 	end
 end
 
@@ -399,7 +399,7 @@ function AB:CreateBar(id)
 		if targetReticle then
 			targetReticle:SetAllPoints()
 
-			targetReticle.Base:SetTexCoord(unpack(E.TexCoords))
+			targetReticle.Base:SetTexCoords()
 			targetReticle.Base:SetTexture(E.Media.Textures.TargetReticle)
 			targetReticle.Base:SetInside()
 
@@ -1091,20 +1091,20 @@ function AB:ButtonEventsRegisterFrame(added)
 end
 
 function AB:IconIntroTracker_Skin()
-	local l, r, t, b = unpack(E.TexCoords)
+	local left, right, top, bottom = E:GetTexCoords()
 	for _, iconIntro in ipairs(self.iconList) do
 		if not iconIntro.IsSkinned then
-			iconIntro.trail1.icon:SetTexCoord(l, r, t, b)
-			iconIntro.trail1.bg:SetTexCoord(l, r, t, b)
+			iconIntro.trail1.icon:SetTexCoord(left, right, top, bottom)
+			iconIntro.trail1.bg:SetTexCoord(left, right, top, bottom)
 
-			iconIntro.trail2.icon:SetTexCoord(l, r, t, b)
-			iconIntro.trail2.bg:SetTexCoord(l, r, t, b)
+			iconIntro.trail2.icon:SetTexCoord(left, right, top, bottom)
+			iconIntro.trail2.bg:SetTexCoord(left, right, top, bottom)
 
-			iconIntro.trail3.icon:SetTexCoord(l, r, t, b)
-			iconIntro.trail3.bg:SetTexCoord(l, r, t, b)
+			iconIntro.trail3.icon:SetTexCoord(left, right, top, bottom)
+			iconIntro.trail3.bg:SetTexCoord(left, right, top, bottom)
 
-			iconIntro.icon.icon:SetTexCoord(l, r, t, b)
-			iconIntro.icon.bg:SetTexCoord(l, r, t, b)
+			iconIntro.icon.icon:SetTexCoord(left, right, top, bottom)
+			iconIntro.icon.bg:SetTexCoord(left, right, top, bottom)
 
 			iconIntro.IsSkinned = true
 		end
@@ -1819,36 +1819,6 @@ do
 			end
 		end
 	end
-
-	-- a few functions to modify what spells are rotation assisted
-	function AB:RotationUpdate()
-		AB:RotationSpellsAdjust()
-	end
-
-	function AB:RotationSpellsClear()
-		AB:RotationSpellsAdjust(true) -- set them back to true
-		wipe(E.db.general.rotationAssist.spells[E.myclass]) -- clear our table now
-	end
-
-	function AB:RotationSpellsAdjust(value)
-		local rotations = _G.AssistedCombatManager.rotationSpells -- Blizzards table
-		if not next(rotations) then return end
-
-		local spells = E.db.general.rotationAssist.spells[E.myclass] -- our table for toggling
-		for spellID, active in next, spells do
-			if rotations[spellID] ~= nil then
-				if value ~= nil then
-					rotations[spellID] = value
-				else
-					rotations[spellID] = active
-				end
-			else -- remove old ones
-				spells[spellID] = nil
-			end
-		end
-
-		_G.AssistedCombatManager:ForceUpdateAtEndOfFrame()
-	end
 end
 
 function AB:Initialize()
@@ -1961,7 +1931,6 @@ function AB:Initialize()
 
 		AB:AssistedGlowUpdate()
 		hooksecurefunc(_G.AssistedCombatManager, 'UpdateAllAssistedHighlightFramesForSpell', AB.AssistedUpdate)
-		_G.EventRegistry:RegisterCallback('AssistedCombatManager.RotationSpellsUpdated', AB.RotationUpdate)
 		_G.AssistedCombatManager.OnUpdate = AB.AssistedOnUpdate -- use our update function instead
 	end
 
