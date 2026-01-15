@@ -1220,7 +1220,7 @@ L["Only Match SpellID"] = true
 L["Only show icons instead of specialization names"] = true
 L["Only Used Slots"] = true
 L["OPACITY"] = "Opacity"
-L["OPTION_TOOLTIP_ACTION_BUTTON_USE_KEY_DOWN"] = "Action button keybinds will respond on key down, rather than on key up.\n\n|cffff3333Note:|r Using a mod key macro that matches the Pick Up Key Action will force this to be Key Up."
+L["OPTION_TOOLTIP_ACTION_BUTTON_USE_KEY_DOWN"] = "Action button keybinds will respond on key down, rather than on key up.\n\n|cffff3333Note:|r Using a mod key macro that matches the Pick Up Action Key will force this to be Key Up."
 L["OPTION_TOOLTIP_TIMESTAMPS"] = "Select the format of timestamps for chat messages."
 L["Order Hall Command Bar"] = true
 L["Orderhall"] = true
@@ -1573,7 +1573,6 @@ L["Slots"] = true
 L["Smaller World Map Scale"] = true
 L["Smaller World Map"] = true
 L["Smart Aura Position"] = true
-L["Smart Raid Filter"] = true
 L["Smart"] = true
 L["Smooth Bars"] = true
 L["Smooth"] = true
@@ -1910,7 +1909,6 @@ L["|cffFF3333This does not work in Instances or Garrisons!|r"] = true
 L["|cffFF3333This is for information. This will not change the tags in the UI.|r"] = true
 L["|cffFF3333Warning:|r Changing options in this section will apply to all Aura Indicator auras. To change only one Aura, please click \"Configure Auras\" and change that specific Auras settings. If \"Profile Specific\" is selected it will apply to that filter set."] = true
 L["|cffFF3333Warning:|r Click the arrow on the dropdown box to see a list of spells."] = true
-L["|cffFF3333Warning:|r Enable and Number of Groups are managed by Smart Raid Filter. Disable Smart Raid Filter in (UnitFrames - General) to change these settings."] = true
 
 -- done by using labelN
 L["FACTION_STANDING_LABEL1"] = "Hated"
