@@ -413,9 +413,9 @@ function M:Initialize()
 	M:ToggleItemLevelInfo(true)
 	M:ZoneTextToggle()
 
-	if not E.Midnight then
+	if not E.Retail then
 		M:ToggleInterrupt()
-		M:LoadLoot() -- tooltip crash out
+		M:LoadLoot() -- Midnight: tooltip crash out
 	end
 
 	local vanillaStyle = E.ClassicAnniv or E.TBC

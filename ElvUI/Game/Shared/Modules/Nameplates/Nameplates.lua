@@ -9,7 +9,6 @@ local next, strsplit, tonumber = next, strsplit, tonumber
 local pairs, ipairs, wipe, tinsert = pairs, ipairs, wipe, tinsert
 
 local CreateFrame = CreateFrame
-local InCombatLockdown = InCombatLockdown
 local IsInInstance = IsInInstance
 local IsResting = IsResting
 local UIParent = UIParent
@@ -35,11 +34,8 @@ local UnitWidgetSet = UnitWidgetSet
 local UnitNameplateShowsWidgetsOnly = UnitNameplateShowsWidgetsOnly
 
 local C_NamePlate_GetNamePlateForUnit = C_NamePlate.GetNamePlateForUnit
-local C_NamePlate_SetNamePlateEnemyClickThrough = C_NamePlate.SetNamePlateEnemyClickThrough
 local C_NamePlate_SetNamePlateEnemySize = C_NamePlate.SetNamePlateEnemySize
-local C_NamePlate_SetNamePlateFriendlyClickThrough = C_NamePlate.SetNamePlateFriendlyClickThrough
 local C_NamePlate_SetNamePlateFriendlySize = C_NamePlate.SetNamePlateFriendlySize
-local C_NamePlate_SetNamePlateSelfClickThrough = C_NamePlate.SetNamePlateSelfClickThrough
 local C_NamePlate_SetNamePlateSelfSize = C_NamePlate.SetNamePlateSelfSize
 local C_NamePlate_GetNamePlates = C_NamePlate.GetNamePlates
 
@@ -342,7 +338,6 @@ function NP:StylePlate(nameplate)
 	nameplate.PVPRole = NP:Construct_PVPRole(nameplate)
 	nameplate.Cutaway = NP:Construct_Cutaway(nameplate)
 	nameplate.PrivateAuras = NP:Construct_PrivateAuras(nameplate)
-	nameplate.BossMods = NP:Construct_BossMods(nameplate)
 
 	NP:Construct_Auras(nameplate)
 	NP:Construct_ClassPowerTwo(nameplate)
@@ -357,7 +352,6 @@ function NP:UpdatePlate(nameplate, updateBase)
 	NP:Update_PVPRole(nameplate)
 	-- NP:Update_Portrait(nameplate)
 	NP:Update_QuestIcons(nameplate)
-	NP:Update_BossMods(nameplate)
 
 	local db = NP:PlateDB(nameplate)
 	if db.nameOnly or not db.enable then
@@ -506,27 +500,10 @@ function NP:SetupTarget(nameplate, removed)
 end
 
 function NP:SetNamePlateClickThrough()
-	if E.Midnight then
+	if E.Retail then
 		NP.PlateDriver:SetEnemyInteractible(not NP.db.clickThrough.enemy)
 		NP.PlateDriver:SetFriendlyInteractible(not NP.db.clickThrough.friendly)
-	elseif not InCombatLockdown() then
-		E:SetNamePlateSelfClickThrough()
-		E:SetNamePlateFriendlyClickThrough()
-		E:SetNamePlateEnemyClickThrough()
 	end
-end
-
-function NP:SetNamePlateSelfClickThrough()
-	C_NamePlate_SetNamePlateSelfClickThrough(NP.db.clickThrough.personal)
-	NP.StaticSecure:EnableMouse(not NP.db.clickThrough.personal)
-end
-
-function NP:SetNamePlateFriendlyClickThrough()
-	C_NamePlate_SetNamePlateFriendlyClickThrough(NP.db.clickThrough.friendly)
-end
-
-function NP:SetNamePlateEnemyClickThrough()
-	C_NamePlate_SetNamePlateEnemyClickThrough(NP.db.clickThrough.enemy)
 end
 
 function NP:Update_StatusBars()
@@ -707,7 +684,7 @@ function NP:UpdatePlateSize(nameplate)
 		nameplate.width, nameplate.height = NP.db.plateSize.enemyWidth, NP.db.plateSize.enemyHeight
 	end
 
-	--if E.Midnight then
+	--if E.Retail then
 	--	nameplate:Size(nameplate.width * E.uiscale, nameplate.height * E.uiscale)
 	--else
 		nameplate:Size(nameplate.width, nameplate.height)
@@ -804,7 +781,6 @@ function NP:NAME_PLATE_UNIT_ADDED(_, unit)
 		end
 
 		NP:UpdatePlateBase(self)
-		NP:BossMods_UpdateIcon(self)
 	end
 
 	if (NP.db.fadeIn and not NP.SkipFading) and self.frameType ~= 'PLAYER' then
@@ -829,10 +805,6 @@ function NP:NAME_PLATE_UNIT_REMOVED(event, unit)
 	end
 
 	NP:UpdateNumPlates()
-
-	if not self.widgetsOnly then
-		NP:BossMods_UpdateIcon(self, true)
-	end
 
 	if self.softTargetFrame then
 		self.softTargetFrame:SetParent(self.blizzPlate)
@@ -922,7 +894,7 @@ function NP:HideInterfaceOptions()
 end
 
 function NP:SetNamePlateSizes()
-	if E.Midnight then
+	if E.Retail then
 		NP.PlateDriver:SetSize(300, 30)
 	else
 		C_NamePlate_SetNamePlateSelfSize(NP.db.plateSize.personalWidth * E.uiscale, NP.db.plateSize.personalHeight * E.uiscale)
@@ -1088,11 +1060,10 @@ function NP:Initialize()
 	NP:RegisterEvent('PLAYER_UPDATE_RESTING', 'EnviromentConditionals')
 	NP:RegisterEvent('ZONE_CHANGED_NEW_AREA', 'EnviromentConditionals')
 
-	if not E.Midnight then
+	if not E.Retail then
 		NP:RegisterEvent('COMBAT_LOG_EVENT_UNFILTERED')
 	end
 
-	NP:BossMods_RegisterCallbacks()
 	NP:HideInterfaceOptions()
 	NP:SetCVars()
 end
