@@ -268,7 +268,7 @@ function NP:Update_ClassPowerTwo(nameplate)
 end
 
 function NP:StyleTargetPlate(nameplate)
-	nameplate:SetScale(E.uiscale)
+	nameplate:SetScale(E.Retail and 1 or E.uiscale)
 	nameplate:ClearAllPoints()
 	nameplate:Point('CENTER')
 	nameplate:Size(NP.db.plateSize.personalWidth, NP.db.plateSize.personalHeight)
@@ -287,7 +287,7 @@ function NP:UpdateTargetPlate(nameplate)
 end
 
 function NP:ScalePlate(nameplate, scale, targetPlate)
-	local mult = (nameplate == NP.PlayerFrame or nameplate == NP.TestFrame) and 1 or E.uiscale
+	local mult = (E.Retail or (nameplate == NP.PlayerFrame or nameplate == NP.TestFrame)) and 1 or E.uiscale
 	if targetPlate and NP.targetPlate then
 		NP.targetPlate:SetScale(mult)
 		NP.targetPlate = nil
@@ -310,7 +310,7 @@ function NP:PostUpdateAllElements(event)
 end
 
 function NP:StylePlate(nameplate)
-	nameplate:SetScale(E.uiscale)
+	nameplate:SetScale(E.Retail and 1 or E.uiscale)
 	nameplate:ClearAllPoints()
 	nameplate:Point('CENTER')
 
@@ -574,12 +574,13 @@ function NP:ConfigurePlates(init)
 	NP.SkipFading = true
 
 	if NP.TestFrame:IsEnabled() then
-		NP:NamePlateCallBack(NP.TestFrame, 'NAME_PLATE_UNIT_ADDED')
+		NP.NAME_PLATE_UNIT_ADDED(NP.TestFrame, 'NAME_PLATE_UNIT_ADDED', NP.TestFrame.unit)
 	end
 
 	local staticEvent = (NP.db.units.PLAYER.enable and NP.db.units.PLAYER.useStaticPosition) and 'NAME_PLATE_UNIT_ADDED' or 'NAME_PLATE_UNIT_REMOVED'
+	local staticFunc = NP[staticEvent]
 	if init then -- since this is a fake plate, we actually need to trigger this always
-		NP:NamePlateCallBack(NP.PlayerFrame, staticEvent, 'player')
+		staticFunc(NP.PlayerFrame, staticEvent, 'player')
 
 		NP.PlayerFrame:UpdateAllElements('ForceUpdate')
 	else -- however, these only need to happen when changing options
@@ -587,10 +588,10 @@ function NP:ConfigurePlates(init)
 			NP:UpdatePlateSize(nameplate)
 
 			if nameplate == NP.PlayerFrame then
-				NP:NamePlateCallBack(NP.PlayerFrame, staticEvent, 'player')
+				staticFunc(NP.PlayerFrame, staticEvent, 'player')
 			else
 				nameplate.previousType = nil -- keep over the callback, we still need a full update
-				NP:NamePlateCallBack(nameplate, 'NAME_PLATE_UNIT_ADDED')
+				NP.NAME_PLATE_UNIT_ADDED(nameplate, 'NAME_PLATE_UNIT_ADDED', nameplate.unit)
 			end
 
 			nameplate:UpdateAllElements('ForceUpdate')
@@ -706,9 +707,10 @@ end
 function NP:PLAYER_TARGET_CHANGED(_, unit)
 	if self then
 		self.isDead = UnitIsDead(unit)
-	else -- pass it, even as nil here
-		NP:SetupTarget(self)
 	end
+
+	-- pass it, even as nil here
+	NP:SetupTarget(self)
 end
 
 function NP:NAME_PLATE_UNIT_ADDED(_, unit)
@@ -791,7 +793,7 @@ end
 function NP:NAME_PLATE_UNIT_REMOVED(event, unit)
 	if self ~= NP.TestFrame then
 		if self.frameType == 'PLAYER' then
-			NP.PlayerselfAnchor:Hide()
+			NP.PlayerNamePlateAnchor:Hide()
 		end
 
 		if self.isTarget then
@@ -992,7 +994,6 @@ function NP:Initialize()
 	end
 
 	local playerFrame = ElvUF:Spawn('player', 'ElvNP_Player', '')
-	playerFrame:SetScale(1)
 	playerFrame:ClearAllPoints()
 	playerFrame:Point('TOP', UIParent, 'CENTER', 0, -150)
 	playerFrame:Size(NP.db.plateSize.personalWidth, NP.db.plateSize.personalHeight)
@@ -1017,7 +1018,6 @@ function NP:Initialize()
 	NP.StaticSecure = staticSecure
 
 	local testFrame = ElvUF:Spawn('player', 'ElvNP_TestFrame')
-	testFrame:SetScale(1)
 	testFrame:ClearAllPoints()
 	testFrame:Point('BOTTOM', UIParent, 'BOTTOM', 0, 250)
 	testFrame:Size(NP.db.plateSize.personalWidth, NP.db.plateSize.personalHeight)
