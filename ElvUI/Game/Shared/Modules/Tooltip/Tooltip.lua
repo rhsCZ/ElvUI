@@ -638,7 +638,7 @@ function TT:GameTooltipStatusBar_OnValueChanged(bar, current)
 
 	-- check if dead
 	if current == 0 or (unit and UnitIsDeadOrGhost(unit)) then
-		bar.text:SetText(_G.DEAD)
+		bar.Text:SetText(_G.DEAD)
 	else
 		local maximum, _
 		if unit then -- try to get the real health values if possible
@@ -1126,10 +1126,6 @@ function TT:Initialize()
 		TT:SecureHook('BattlePetToolTip_Show', 'AddBattlePetID')
 	end
 
-	if E.Retail or E.TBC then
-		_G.GameTooltipDefaultContainer:KillEditMode()
-	end
-
 	if E.Retail then
 		TT:RegisterEvent('WORLD_CURSOR_TOOLTIP_UPDATE', 'WorldCursorTooltipUpdate')
 
@@ -1143,6 +1139,8 @@ function TT:Initialize()
 		TT:SecureHook(GameTooltip, 'SetBackpackToken')
 		TT:SecureHook('QuestMapLogTitleButton_OnEnter', 'AddQuestID')
 		TT:SecureHook('TaskPOI_OnEnter', 'AddQuestID')
+
+		_G.GameTooltipDefaultContainer:KillEditMode()
 	else
 		TT:SecureHookScript(GameTooltipStatusBar, 'OnValueChanged', 'GameTooltipStatusBar_OnValueChanged')
 	end
