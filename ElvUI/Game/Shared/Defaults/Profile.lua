@@ -2823,14 +2823,18 @@ for i, role in next, {'TANK', 'HEALER', 'DAMAGER'} do
 	P.unitframe.units.raidpet['ROLE'..i] = role
 end
 
---Cooldown
+--Cooldown:
 P.cooldown = {
-	enable = false,
-	override = true,
+	-- enable = true; only on the global table
 	color = { r = 1, g = 1, b = 1 },
-	font = 'PT Sans Narrow',
+
+	position = 'CENTER',
+	offsetX = 0,
+	offsetY = 0,
+
+	font = 'Expressway',
 	fontOutline = 'OUTLINE',
-	fontSize = 18
+	fontSize = 16
 }
 
 --Actionbar
@@ -3126,16 +3130,18 @@ do -- cooldown stuff
 	P.cdmanager = {} -- Blizzard's Cooldown Manager
 	P.cdmanager.cooldown = CopyTable(P.cooldown)
 
-	-- color override
-	P.cdmanager.cooldown.override = false
-	P.auras.cooldown.override = false
-	P.bags.cooldown.override = false
-	P.actionbar.cooldown.override = true
-	P.nameplates.cooldown.override = true
-	P.unitframe.cooldown.override = true
+	P.aurabars = {}
+	P.aurabars.cooldown = CopyTable(P.cooldown)
+
+	P.aurabars.cooldown.position = 'RIGHT'
+	P.aurabars.cooldown.offsetX = -10
+
+	P.auras.cooldown.position = 'BOTTOM'
+	P.auras.cooldown.offsetY = -3
 
 	-- we gonna need this on by default :3
 	P.cooldown.enable = true
+	P.cooldown.fontSize = 18
 end
 
 -- This allows movers positions to be reset to whatever profile is being used
