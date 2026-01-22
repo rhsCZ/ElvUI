@@ -14,7 +14,9 @@ local GetCVarBool = C_CVar.GetCVarBool
 
 local carryFilterFrom, carryFilterTo
 
+local TEXT_FORMAT_WIDTH = 330
 local ORDER = 100
+
 local filters = {}
 
 local minHeight, minWidth = 2, 40
@@ -162,13 +164,14 @@ local function GetUnitSettings(unit, name)
 	group.args.healthGroup.args.textGroup = ACH:Group(L["Text"], nil, 200, nil, function(info) return E.db.nameplates.units[unit].health.text[info[#info]] end, function(info, value) E.db.nameplates.units[unit].health.text[info[#info]] = value NP:ConfigureAll() end)
 	group.args.healthGroup.args.textGroup.inline = true
 	group.args.healthGroup.args.textGroup.args.enable = ACH:Toggle(L["Enable"], nil, 1)
-	group.args.healthGroup.args.textGroup.args.format = ACH:Input(L["Text Format"], nil, 2, nil, 'full')
-	group.args.healthGroup.args.textGroup.args.position = ACH:Select(L["Position"], nil, 3, { CENTER = L["CENTER"], TOPLEFT = L["TOPLEFT"], BOTTOMLEFT = L["BOTTOMLEFT"], TOPRIGHT = L["TOPRIGHT"], BOTTOMRIGHT = L["BOTTOMRIGHT"] })
-	group.args.healthGroup.args.textGroup.args.parent = ACH:Select(L["Parent"], nil, 4, { Nameplate = L["Nameplate"], Health = L["Health"] })
-	group.args.healthGroup.args.textGroup.args.xOffset = ACH:Range(L["X-Offset"], nil, 5, { min = -100, max = 100, step = 1 })
-	group.args.healthGroup.args.textGroup.args.yOffset = ACH:Range(L["Y-Offset"], nil, 6, { min = -100, max = 100, step = 1 })
+	group.args.healthGroup.args.textGroup.args.position = ACH:Select(L["Position"], nil, 2, { CENTER = L["CENTER"], TOPLEFT = L["TOPLEFT"], BOTTOMLEFT = L["BOTTOMLEFT"], TOPRIGHT = L["TOPRIGHT"], BOTTOMRIGHT = L["BOTTOMRIGHT"] })
+	group.args.healthGroup.args.textGroup.args.parent = ACH:Select(L["Parent"], nil, 3, { Nameplate = L["Nameplate"], Health = L["Health"] })
+	group.args.healthGroup.args.textGroup.args.xOffset = ACH:Range(L["X-Offset"], nil, 4, { min = -100, max = 100, step = 1 })
+	group.args.healthGroup.args.textGroup.args.yOffset = ACH:Range(L["Y-Offset"], nil, 5, { min = -100, max = 100, step = 1 })
+	group.args.healthGroup.args.textGroup.args.format = ACH:Input(L["Text Format"], nil, 6, nil, TEXT_FORMAT_WIDTH)
+	group.args.healthGroup.args.textGroup.args.text_reset = ACH:Execute(L["Reset Text"], L["Reset the Text Format to default."], 7, function() E.db.nameplates.units[unit].health.text.format = P.nameplates.units[unit].health.text.format NP:ConfigureAll() end)
 
-	group.args.healthGroup.args.textGroup.args.fontGroup = ACH:Group('', nil, 7)
+	group.args.healthGroup.args.textGroup.args.fontGroup = ACH:Group('', nil, 10)
 	group.args.healthGroup.args.textGroup.args.fontGroup.inline = true
 	group.args.healthGroup.args.textGroup.args.fontGroup.args.font = ACH:SharedMediaFont(L["Font"], nil, 1)
 	group.args.healthGroup.args.textGroup.args.fontGroup.args.fontSize = ACH:Range(L["Font Size"], nil, 2, { min = 4, max = 60, step = 1 })
@@ -191,13 +194,14 @@ local function GetUnitSettings(unit, name)
 	group.args.powerGroup.args.textGroup = ACH:Group(L["Text"], nil, 200, nil, function(info) return E.db.nameplates.units[unit].power.text[info[#info]] end, function(info, value) E.db.nameplates.units[unit].power.text[info[#info]] = value NP:ConfigureAll() end)
 	group.args.powerGroup.args.textGroup.inline = true
 	group.args.powerGroup.args.textGroup.args.enable = ACH:Toggle(L["Enable"], nil, 1)
-	group.args.powerGroup.args.textGroup.args.format = ACH:Input(L["Text Format"], nil, 2, nil, 'full')
-	group.args.powerGroup.args.textGroup.args.position = ACH:Select(L["Position"], nil, 3, { CENTER = L["CENTER"], TOPLEFT = L["TOPLEFT"], BOTTOMLEFT = L["BOTTOMLEFT"], TOPRIGHT = L["TOPRIGHT"], BOTTOMRIGHT = L["BOTTOMRIGHT"] })
-	group.args.powerGroup.args.textGroup.args.parent = ACH:Select(L["Parent"], nil, 4, { Nameplate = L["Nameplate"], Health = L["Health"] })
-	group.args.powerGroup.args.textGroup.args.xOffset = ACH:Range(L["X-Offset"], nil, 5, { min = -100, max = 100, step = 1 })
-	group.args.powerGroup.args.textGroup.args.yOffset = ACH:Range(L["Y-Offset"], nil, 6, { min = -100, max = 100, step = 1 })
+	group.args.powerGroup.args.textGroup.args.position = ACH:Select(L["Position"], nil, 2, { CENTER = L["CENTER"], TOPLEFT = L["TOPLEFT"], BOTTOMLEFT = L["BOTTOMLEFT"], TOPRIGHT = L["TOPRIGHT"], BOTTOMRIGHT = L["BOTTOMRIGHT"] })
+	group.args.powerGroup.args.textGroup.args.parent = ACH:Select(L["Parent"], nil, 3, { Nameplate = L["Nameplate"], Health = L["Health"] })
+	group.args.powerGroup.args.textGroup.args.xOffset = ACH:Range(L["X-Offset"], nil, 4, { min = -100, max = 100, step = 1 })
+	group.args.powerGroup.args.textGroup.args.yOffset = ACH:Range(L["Y-Offset"], nil, 5, { min = -100, max = 100, step = 1 })
+	group.args.powerGroup.args.textGroup.args.format = ACH:Input(L["Text Format"], nil, 6, nil, TEXT_FORMAT_WIDTH)
+	group.args.powerGroup.args.textGroup.args.text_reset = ACH:Execute(L["Reset Text"], L["Reset the Text Format to default."], 7, function() E.db.nameplates.units[unit].power.text.format = P.nameplates.units[unit].power.text.format NP:ConfigureAll() end)
 
-	group.args.powerGroup.args.textGroup.args.fontGroup = ACH:Group('', nil, 7)
+	group.args.powerGroup.args.textGroup.args.fontGroup = ACH:Group('', nil, 10)
 	group.args.powerGroup.args.textGroup.args.fontGroup.inline = true
 	group.args.powerGroup.args.textGroup.args.fontGroup.args.font = ACH:SharedMediaFont(L["Font"], nil, 1)
 	group.args.powerGroup.args.textGroup.args.fontGroup.args.fontSize = ACH:Range(L["Font Size"], nil, 2, { min = 4, max = 60, step = 1 })
@@ -286,13 +290,14 @@ local function GetUnitSettings(unit, name)
 
 	group.args.levelGroup = ACH:Group(L["Level"], nil, 45, nil, function(info) return E.db.nameplates.units[unit].level[info[#info]] end, function(info, value) E.db.nameplates.units[unit].level[info[#info]] = value NP:ConfigureAll() end)
 	group.args.levelGroup.args.enable = ACH:Toggle(L["Enable"], nil, 1)
-	group.args.levelGroup.args.format = ACH:Input(L["Text Format"], nil, 2, nil, 'full')
-	group.args.levelGroup.args.position = ACH:Select(L["Position"], nil, 3, { CENTER = L["CENTER"], TOPLEFT = L["TOPLEFT"], BOTTOMLEFT = L["BOTTOMLEFT"], TOPRIGHT = L["TOPRIGHT"], BOTTOMRIGHT = L["BOTTOMRIGHT"] })
-	group.args.levelGroup.args.parent = ACH:Select(L["Parent"], nil, 4, { Nameplate = L["Nameplate"], Health = L["Health"] })
-	group.args.levelGroup.args.xOffset = ACH:Range(L["X-Offset"], nil, 5, { min = -100, max = 100, step = 1 })
-	group.args.levelGroup.args.yOffset = ACH:Range(L["Y-Offset"], nil, 6, { min = -100, max = 100, step = 1 })
+	group.args.levelGroup.args.position = ACH:Select(L["Position"], nil, 2, { CENTER = L["CENTER"], TOPLEFT = L["TOPLEFT"], BOTTOMLEFT = L["BOTTOMLEFT"], TOPRIGHT = L["TOPRIGHT"], BOTTOMRIGHT = L["BOTTOMRIGHT"] })
+	group.args.levelGroup.args.parent = ACH:Select(L["Parent"], nil, 3, { Nameplate = L["Nameplate"], Health = L["Health"] })
+	group.args.levelGroup.args.xOffset = ACH:Range(L["X-Offset"], nil, 4, { min = -100, max = 100, step = 1 })
+	group.args.levelGroup.args.yOffset = ACH:Range(L["Y-Offset"], nil, 5, { min = -100, max = 100, step = 1 })
+	group.args.levelGroup.args.format = ACH:Input(L["Text Format"], nil, 6, nil, TEXT_FORMAT_WIDTH)
+	group.args.levelGroup.args.text_reset = ACH:Execute(L["Reset Text"], L["Reset the Text Format to default."], 7, function() E.db.nameplates.units[unit].level.format = P.nameplates.units[unit].level.format NP:ConfigureAll() end)
 
-	group.args.levelGroup.args.fontGroup = ACH:Group('', nil, 7)
+	group.args.levelGroup.args.fontGroup = ACH:Group('', nil, 10)
 	group.args.levelGroup.args.fontGroup.inline = true
 	group.args.levelGroup.args.fontGroup.args.font = ACH:SharedMediaFont(L["Font"], nil, 1)
 	group.args.levelGroup.args.fontGroup.args.fontSize = ACH:Range(L["Font Size"], nil, 2, { min = 4, max = 60, step = 1 })
@@ -300,13 +305,14 @@ local function GetUnitSettings(unit, name)
 
 	group.args.nameGroup = ACH:Group(L["Name"], nil, 50, nil, function(info) return E.db.nameplates.units[unit].name[info[#info]] end, function(info, value) E.db.nameplates.units[unit].name[info[#info]] = value NP:ConfigureAll() end)
 	group.args.nameGroup.args.enable = ACH:Toggle(L["Enable"], nil, 1)
-	group.args.nameGroup.args.format = ACH:Input(L["Text Format"], nil, 2, nil, 'full')
-	group.args.nameGroup.args.position = ACH:Select(L["Position"], nil, 3, { CENTER = L["CENTER"], TOPLEFT = L["TOPLEFT"], BOTTOMLEFT = L["BOTTOMLEFT"], TOPRIGHT = L["TOPRIGHT"], BOTTOMRIGHT = L["BOTTOMRIGHT"] })
-	group.args.nameGroup.args.parent = ACH:Select(L["Parent"], nil, 4, { Nameplate = L["Nameplate"], Health = L["Health"] })
-	group.args.nameGroup.args.xOffset = ACH:Range(L["X-Offset"], nil, 5, { min = -100, max = 100, step = 1 })
-	group.args.nameGroup.args.yOffset = ACH:Range(L["Y-Offset"], nil, 6, { min = -100, max = 100, step = 1 })
+	group.args.nameGroup.args.position = ACH:Select(L["Position"], nil, 2, { CENTER = L["CENTER"], TOPLEFT = L["TOPLEFT"], BOTTOMLEFT = L["BOTTOMLEFT"], TOPRIGHT = L["TOPRIGHT"], BOTTOMRIGHT = L["BOTTOMRIGHT"] })
+	group.args.nameGroup.args.parent = ACH:Select(L["Parent"], nil, 3, { Nameplate = L["Nameplate"], Health = L["Health"] })
+	group.args.nameGroup.args.xOffset = ACH:Range(L["X-Offset"], nil, 4, { min = -100, max = 100, step = 1 })
+	group.args.nameGroup.args.yOffset = ACH:Range(L["Y-Offset"], nil, 5, { min = -100, max = 100, step = 1 })
+	group.args.nameGroup.args.format = ACH:Input(L["Text Format"], nil, 6, nil, TEXT_FORMAT_WIDTH)
+	group.args.nameGroup.args.text_reset = ACH:Execute(L["Reset Text"], L["Reset the Text Format to default."], 7, function() E.db.nameplates.units[unit].name.format = P.nameplates.units[unit].name.format NP:ConfigureAll() end)
 
-	group.args.nameGroup.args.fontGroup = ACH:Group('', nil, 7)
+	group.args.nameGroup.args.fontGroup = ACH:Group('', nil, 10)
 	group.args.nameGroup.args.fontGroup.inline = true
 	group.args.nameGroup.args.fontGroup.args.font = ACH:SharedMediaFont(L["Font"], nil, 1)
 	group.args.nameGroup.args.fontGroup.args.fontSize = ACH:Range(L["Font Size"], nil, 2, { min = 4, max = 60, step = 1 })
@@ -314,13 +320,15 @@ local function GetUnitSettings(unit, name)
 
 	group.args.titleGroup = ACH:Group(L["UNIT_NAME_PLAYER_TITLE"], nil, 55, nil, function(info) return E.db.nameplates.units[unit].title[info[#info]] end, function(info, value) E.db.nameplates.units[unit].title[info[#info]] = value NP:ConfigureAll() end)
 	group.args.titleGroup.args.enable = ACH:Toggle(L["Enable"], nil, 1)
-	group.args.titleGroup.args.format = ACH:Input(L["Text Format"], nil, 2, nil, 'full')
-	group.args.titleGroup.args.position = ACH:Select(L["Position"], nil, 3, { CENTER = L["CENTER"], TOPLEFT = L["TOPLEFT"], BOTTOMLEFT = L["BOTTOMLEFT"], TOPRIGHT = L["TOPRIGHT"], BOTTOMRIGHT = L["BOTTOMRIGHT"] })
-	group.args.titleGroup.args.parent = ACH:Select(L["Parent"], nil, 4, { Nameplate = L["Nameplate"], Health = L["Health"] })
-	group.args.titleGroup.args.xOffset = ACH:Range(L["X-Offset"], nil, 5, { min = -100, max = 100, step = 1 })
-	group.args.titleGroup.args.yOffset = ACH:Range(L["Y-Offset"], nil, 6, { min = -100, max = 100, step = 1 })
+	group.args.titleGroup.args.position = ACH:Select(L["Position"], nil, 2, { CENTER = L["CENTER"], TOPLEFT = L["TOPLEFT"], BOTTOMLEFT = L["BOTTOMLEFT"], TOPRIGHT = L["TOPRIGHT"], BOTTOMRIGHT = L["BOTTOMRIGHT"] })
+	group.args.titleGroup.args.parent = ACH:Select(L["Parent"], nil, 3, { Nameplate = L["Nameplate"], Health = L["Health"] })
+	group.args.titleGroup.args.xOffset = ACH:Range(L["X-Offset"], nil, 4, { min = -100, max = 100, step = 1 })
+	group.args.titleGroup.args.yOffset = ACH:Range(L["Y-Offset"], nil, 5, { min = -100, max = 100, step = 1 })
+	group.args.titleGroup.args.format = ACH:Input(L["Text Format"], nil, 6, nil, TEXT_FORMAT_WIDTH)
+	group.args.titleGroup.args.text_reset = ACH:Execute(L["Reset Text"], L["Reset the Text Format to default."], 7, function() E.db.nameplates.units[unit].title.format = P.nameplates.units[unit].title.format NP:ConfigureAll() end)
 
-	group.args.titleGroup.args.fontGroup = ACH:Group('', nil, 7)
+	group.args.titleGroup.args.fontGroup = ACH:Group('', nil, 1
+		)
 	group.args.titleGroup.args.fontGroup.inline = true
 	group.args.titleGroup.args.fontGroup.args.font = ACH:SharedMediaFont(L["Font"], nil, 1)
 	group.args.titleGroup.args.fontGroup.args.fontSize = ACH:Range(L["Font Size"], nil, 2, { min = 4, max = 60, step = 1 })
