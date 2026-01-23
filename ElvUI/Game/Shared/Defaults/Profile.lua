@@ -2823,28 +2823,66 @@ for i, role in next, {'TANK', 'HEALER', 'DAMAGER'} do
 	P.unitframe.units.raidpet['ROLE'..i] = role
 end
 
---Cooldown:
-P.cooldown = {
-	-- enable = true; only on the global table
-	color = { r = 1, g = 1, b = 1 },
+do
+	P.cooldown = {
+		enable = true
+	}
 
-	position = 'CENTER',
-	offsetX = 0,
-	offsetY = 0,
+	local defaults = {
+		enable = true,
 
-	font = 'Expressway',
-	fontOutline = 'OUTLINE',
-	fontSize = 16
-}
+		reverse = false,
+		hideBling = false,
+		hideNumbers = false,
+
+		rotation = 0,
+		threshold = 0, -- seconds
+		minDuration = 1500, -- ms
+
+		colors = {
+			text = { r = 0.8, g = 0.8, b = 0.8, a = 1 },
+			edge = { r = 1, g = 1, b = 0, a = 0 },
+			edgeCharge = { r = 0.6, g = 1, b = 0, a = 1 },
+			swipe = { r = 0, g = 0, b = 0, a = 0.8 },
+			swipeCharge = { r = 0, g = 0.6, b = 1, a = 0.2 },
+			swipeLOC = { r = 0.3, g = 0, b = 0, a = 0.8 },
+		},
+
+		position = 'CENTER',
+		offsetX = 0,
+		offsetY = 0,
+
+		font = 'Expressway',
+		fontOutline = 'OUTLINE',
+		fontSize = 16,
+	}
+
+	for _, key in next, { 'global', 'actionbar', 'auras', 'bags', 'nameplates', 'unitframe', 'aurabars', 'cdmanager', 'totemtracker', 'bossbutton', 'zonebutton' } do
+		local object = CopyTable(defaults)
+
+		if key == 'global' then
+			object.fontSize = 18
+		elseif key == 'aurabars' then
+			object.position = 'RIGHT'
+			object.offsetX = -10
+		elseif key == 'auras' then
+			object.reverse = true
+			object.colors.swipe.a = 0.4
+			object.position = 'BOTTOM'
+			object.offsetY = -3
+		elseif key == 'actionbar' then
+			object.threshold = 300
+		end
+
+		P.cooldown[key] = object
+	end
+end
 
 --Actionbar
 local ACTION_SLOTS = _G.NUM_PET_ACTION_SLOTS or 10
 local STANCE_SLOTS = _G.NUM_STANCE_SLOTS or 10
 
 P.actionbar = {
-	chargeCooldown = false,
-	colorSwipeLOC = { r = 0.25, g = 0, b = 0, a = 0.8 },
-	colorSwipeNormal = { r = 0, g = 0, b = 0, a = 0.8 },
 	hotkeyTextPosition = 'TOPRIGHT',
 	macroTextPosition = 'TOPRIGHT',
 	countTextPosition = 'BOTTOMRIGHT',
@@ -2862,7 +2900,6 @@ P.actionbar = {
 	fontSize = 10,
 	globalFadeAlpha = 0,
 	handleOverlay = true,
-	hideCooldownBling = false,
 	lockActionBars = true,
 	movementModifier = 'SHIFT',
 	noPowerColor = { r = 0.5, g = 0.5, b = 1 },
@@ -2873,7 +2910,6 @@ P.actionbar = {
 	rightClickSelfCast = false,
 	transparent = false,
 	usableColor = { r = 1, g = 1, b = 1 },
-	useDrawSwipeOnCharges = false,
 	useRangeColorText = false,
 	barPet = {
 		enabled = true,
@@ -3122,30 +3158,6 @@ P.actionbar.bar4.backdrop = true
 P.actionbar.bar5.enabled = true
 P.actionbar.bar5.buttons = 6
 P.actionbar.bar5.buttonsPerRow = 6
-
-do -- cooldown stuff
-	P.actionbar.cooldown = CopyTable(P.cooldown)
-	P.auras.cooldown = CopyTable(P.cooldown)
-	P.bags.cooldown = CopyTable(P.cooldown)
-	P.nameplates.cooldown = CopyTable(P.cooldown)
-	P.unitframe.cooldown = CopyTable(P.cooldown)
-
-	P.cdmanager = {} -- Blizzard's Cooldown Manager
-	P.cdmanager.cooldown = CopyTable(P.cooldown)
-
-	P.aurabars = {}
-	P.aurabars.cooldown = CopyTable(P.cooldown)
-
-	P.aurabars.cooldown.position = 'RIGHT'
-	P.aurabars.cooldown.offsetX = -10
-
-	P.auras.cooldown.position = 'BOTTOM'
-	P.auras.cooldown.offsetY = -3
-
-	-- we gonna need this on by default :3
-	P.cooldown.enable = true
-	P.cooldown.fontSize = 18
-end
 
 -- This allows movers positions to be reset to whatever profile is being used
 E.LayoutMoverPositions = {
