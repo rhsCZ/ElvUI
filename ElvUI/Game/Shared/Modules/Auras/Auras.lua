@@ -129,30 +129,6 @@ function A:UpdateStatusBar(button)
 	end
 end
 
-function A:UpdateButton(button)
-	local db = A.db[button.auraType]
-	if button.statusBar and button.statusBar:IsShown() then
-		local r, g, b
-		if db.barColorGradient then
-			local maxValue = button.duration or 0
-			r, g, b = E:ColorGradient(maxValue == 0 and 0 or (button.timeLeft / button.duration), .8, 0, 0, .8, .8, 0, 0, .8, 0)
-		else
-			r, g, b = db.barColor.r, db.barColor.g, db.barColor.b
-		end
-
-		button.statusBar:SetStatusBarColor(r, g, b)
-	end
-
-	local threshold = db.fadeThreshold
-	if threshold == -1 then
-		return
-	elseif button.timeLeft > threshold then
-		E:StopFlash(button, 1)
-	else
-		E:Flash(button, 1)
-	end
-end
-
 function A:CreateIcon(button)
 	local header = button:GetParent()
 
@@ -180,9 +156,6 @@ function A:CreateIcon(button)
 
 	button.count = button.RaisedElement:CreateFontString(nil, 'OVERLAY')
 	button.count:FontTemplate()
-
-	button.text = button.RaisedElement:CreateFontString(nil, 'OVERLAY')
-	button.text:FontTemplate()
 
 	button.highlight = button:CreateTexture(nil, 'HIGHLIGHT')
 	button.highlight:SetColorTexture(1, 1, 1, .45)
@@ -243,12 +216,6 @@ function A:UpdateIcon(button, update)
 		button.count:FontTemplate(LSM:Fetch('font', db.countFont), db.countFontSize, db.countFontOutline)
 	end
 
-	if button.text then
-		button.text:ClearAllPoints()
-		button.text:Point('TOP', button, 'BOTTOM', db.timeXOffset, db.timeYOffset)
-		button.text:FontTemplate(LSM:Fetch('font', db.timeFont), db.timeFontSize, db.timeFontOutline)
-	end
-
 	if button.statusBar then
 		if E.Retail then
 			button.statusBar.smoothing = (db.smoothbars and StatusBarInterpolation.ExponentialEaseOut) or StatusBarInterpolation.Immediate or nil
@@ -272,10 +239,7 @@ function A:UpdateIcon(button, update)
 end
 
 function A:SetAuraTime(button, expiration, duration, modRate)
-	button.expiration = expiration
-	button.endTime = expiration
 	button.duration = duration
-	button.modRate = modRate
 
 	if button.statusBar:IsShown() then
 		button.statusBar:SetMinMaxValues(0, duration)
@@ -283,21 +247,12 @@ function A:SetAuraTime(button, expiration, duration, modRate)
 
 	A:UpdateTime(button, duration, expiration, modRate)
 
-	button.elapsed = 0 -- reset the timer for UpdateTime
-end
-
-function A:ClearVariables(button)
-	button.expiration = nil
-	button.endTime = nil
-	button.duration = nil
-	button.modRate = nil
-	button.timeLeft = nil
+	button.elapsed = 0
 end
 
 function A:ClearAuraTime(button, expired)
-	A:ClearVariables(button)
-
-	button.text:SetText('')
+	button.duration = nil
+	button.timeLeft = nil
 
 	E:StopFlash(button, 1)
 
@@ -326,8 +281,6 @@ function A:UpdateAura(button, index)
 	local count = data.applications
 	local modRate = data.timeMod
 
-	local db = A.db[button.auraType]
-	button.text:SetShown(db.showDuration)
 	button.texture:SetTexture(icon)
 	button.auraInstanceID = data.auraInstanceID
 	button.unit = unitToken
@@ -346,9 +299,8 @@ function A:UpdateAura(button, index)
 
 	if E.Retail then
 		A:UpdateTime(button, duration, expiration, modRate)
-		A:ClearVariables(button) -- we dont use these on Midnight so clear them
 
-		button.elapsed = 0 -- reset the timer for UpdateTime
+		button.elapsed = 0
 	elseif duration and expiration then
 		A:SetAuraTime(button, expiration, duration, modRate)
 	else
@@ -358,7 +310,6 @@ end
 
 function A:UpdateTempEnchant(button, index, expiration)
 	local db = A.db[button.auraType]
-	button.text:SetShown(db.showDuration)
 	button.statusBar:SetShown((db.barShow and expiration) or (db.barShow and db.barNoDuration and not expiration))
 
 	if expiration then
@@ -414,7 +365,6 @@ end
 function A:UpdateTime(button, duration, expiration, modRate)
 	local db = A.db[button.auraType]
 	if E.Retail then
-
 		local auraDuration = button.unit and GetAuraDuration(button.unit, button.auraInstanceID)
 		button.auraDuration = auraDuration or nil
 		button.statusBar:SetShown(db.barShow)
@@ -433,19 +383,44 @@ function A:UpdateTime(button, duration, expiration, modRate)
 		button.statusBar:SetShown((db.barShow and duration > 0) or (db.barShow and db.barNoDuration and duration == 0))
 
 		if button.timeLeft < 0.1 then
+			button.cooldown:Clear()
+
 			A:ClearAuraTime(button, true)
 		else
-			A:UpdateButton(button)
+			if duration > 0 then
+				button.cooldown:SetCooldown((expiration - duration), duration, modRate)
+			else
+				button.cooldown:Clear()
+			end
+
+			if button.statusBar and button.statusBar:IsShown() then
+				local r, g, b
+				if db.barColorGradient then
+					local maxValue = button.duration or 0
+					r, g, b = E:ColorGradient(maxValue == 0 and 0 or (button.timeLeft / maxValue), .8, 0, 0, .8, .8, 0, 0, .8, 0)
+				else
+					r, g, b = db.barColor.r, db.barColor.g, db.barColor.b
+				end
+
+				button.statusBar:SetStatusBarColor(r, g, b)
+			end
 		end
 	end
 end
 
-function A:Button_OnUpdate(elapsed)
-	local xpr = self.endTime
-	if xpr then
-		self.text:SetFormattedText(ElvUF:GetTime(self.timeLeft))
+function A:HandleFlash(button)
+	local db = A.db[button.auraType]
+	local threshold = db and db.fadeThreshold
+	if not threshold or threshold == -1 then
+		return
+	elseif button.timeLeft > threshold then
+		E:StopFlash(button, 1)
+	else
+		E:Flash(button, 1, true)
 	end
+end
 
+function A:Button_OnUpdate(elapsed)
 	if self.statusBar:IsShown() then
 		A:UpdateStatusBar(self)
 	end
@@ -455,8 +430,8 @@ function A:Button_OnUpdate(elapsed)
 			A:SetTooltip(self)
 		end
 
-		if xpr then
-			A:UpdateTime(self, self.duration, xpr, self.modRate)
+		if self.timeLeft then
+			A:HandleFlash(self)
 		end
 
 		self.elapsed = 0
