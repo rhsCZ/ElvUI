@@ -370,7 +370,7 @@ function TT:PopulateInspectGUIDCache(unitGUID, itemLevel)
 end
 
 function TT:INSPECT_READY(event, unitGUID)
-	if UnitExists('mouseover') and UnitGUID('mouseover') == unitGUID then
+	if E:UnitExists('mouseover') and UnitGUID('mouseover') == unitGUID then
 		local itemLevel, retryUnit, retryTable, iLevelDB = E:GetUnitItemLevel('mouseover')
 		if itemLevel == 'tooSoon' then
 			E:Delay(0.05, function()
@@ -843,11 +843,13 @@ end
 function TT:MODIFIER_STATE_CHANGED()
 	if not GameTooltip:IsForbidden() and GameTooltip:IsShown() then
 		local owner = GameTooltip:GetOwner()
-		if owner == UIParent and UnitExists('mouseover') then
-			if E.Retail then
-				GameTooltip:RefreshData()
-			else
-				GameTooltip:SetUnit('mouseover')
+		if owner == UIParent then
+			if E:UnitExists('mouseover') then
+				if E.Retail then
+					GameTooltip:RefreshData()
+				else
+					GameTooltip:SetUnit('mouseover')
+				end
 			end
 		else
 			local parent = owner and owner:GetParent()
