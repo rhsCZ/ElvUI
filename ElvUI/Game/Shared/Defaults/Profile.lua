@@ -1160,7 +1160,7 @@ for unit, data in next, P.nameplates.units do
 		data.showTitle = true
 
 		local useCCDebuffs = npcEnemy or (unit == 'ENEMY_PLAYER' or unit == 'FRIENDLY_PLAYER')
-		data.auras.enable = useCCDebuffs -- enemy npc and players
+		data.auras.enable = not E.Retail and useCCDebuffs -- enemy npc and players
 
 		if useCCDebuffs then
 			data.auras.priority = 'Blacklist,CCDebuffs'
@@ -2491,7 +2491,7 @@ P.unitframe.units.player.power.xOffset = -2
 
 P.unitframe.units.target.aurabar.maxDuration = 120
 P.unitframe.units.target.aurabar.priority = 'Blacklist,blockNoDuration,Personal,RaidDebuffs'
-P.unitframe.units.target.auras.enable = true
+P.unitframe.units.target.auras.enable = not E.Retail
 P.unitframe.units.target.auras.priority = 'Blacklist,CCDebuffs'
 P.unitframe.units.target.auras.filter = 'HARMFUL'
 P.unitframe.units.target.auras.xOffset = 2
@@ -2839,7 +2839,7 @@ do
 			edge = { r = 0, g = 0, b = 0, a = 1 },
 			edgeCharge = { r = 0.6, g = 1, b = 0, a = 1 },
 			edgeLOC = { r = 1, g = 0.2, b = 0.8, a = 1 },
-			swipe = { r = 0, g = 0, b = 0, a = 0.6 },
+			swipe = { r = 0, g = 0, b = 0, a = 0.7 },
 			swipeCharge = { r = 0, g = 0.6, b = 1, a = 0.25 },
 			swipeLOC = { r = 1, g = 0.2, b = 0.6, a = 0.25 },
 		},
