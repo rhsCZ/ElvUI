@@ -2700,12 +2700,12 @@ P.unitframe.units.party.health.xOffset = 2
 P.unitframe.units.party.health.text_format = E.Retail and '||cFF29CC00[perhp<%]||r' or '[healthcolor][health:current-percent:shortvalue]'
 P.unitframe.units.party.infoPanel.height = 15
 P.unitframe.units.party.name.text_format = E.Retail and '[classcolor][name] [difficultycolor][smartlevel]' or '[classcolor][name:medium] [difficultycolor][smartlevel]'
-P.unitframe.units.party.petsGroup.name.text_format = '[classcolor][name:short]'
+P.unitframe.units.party.petsGroup.name.text_format = E.Retail and '[classcolor][name]' or '[classcolor][name:short]'
 P.unitframe.units.party.power.height = 7
 P.unitframe.units.party.power.position = 'RIGHT'
 P.unitframe.units.party.power.text_format = E.Retail and '||cFF007ACC[perpp<%]||r' or '[powercolor][power:current:shortvalue]'
 P.unitframe.units.party.power.xOffset = -2
-P.unitframe.units.party.targetsGroup.name.text_format = '[classcolor][name:medium] [difficultycolor][smartlevel]'
+P.unitframe.units.party.targetsGroup.name.text_format = E.Retail and '[classcolor][name] [difficultycolor][smartlevel]' or '[classcolor][name:medium] [difficultycolor][smartlevel]'
 P.unitframe.units.party.targetsGroup.enable = false
 P.unitframe.units.party.targetsGroup.buffIndicator = nil
 P.unitframe.units.party.targetsGroup.healPrediction = nil
@@ -2840,8 +2840,8 @@ do
 			edgeCharge = { r = 0.6, g = 1, b = 0, a = 1 },
 			edgeLOC = { r = 1, g = 0.2, b = 0.8, a = 1 },
 			swipe = { r = 0, g = 0, b = 0, a = 0.7 },
-			swipeCharge = { r = 0, g = 0.6, b = 1, a = 0.25 },
-			swipeLOC = { r = 1, g = 0.2, b = 0.6, a = 0.25 },
+			swipeCharge = { r = 0, g = 0.6, b = 1, a = 0.3 },
+			swipeLOC = { r = 1, g = 0.2, b = 0.6, a = 0.3 },
 		},
 
 		position = 'CENTER',
