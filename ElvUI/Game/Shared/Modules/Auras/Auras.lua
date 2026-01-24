@@ -131,15 +131,17 @@ end
 function A:CreateIcon(button)
 	local header = button:GetParent()
 
+	button.name = button:GetName()
 	button.header = header
 	button.filter = header.filter
 	button.auraType = (header.filter == 'HELPFUL' and 'buffs') or 'debuffs'
 
-	button.name = button:GetName()
-	button.enchantIndex = tonumber(strmatch(button.name, 'TempEnchant(%d)$'))
-	if button.enchantIndex then
-		header['enchant'..button.enchantIndex] = button
-		header.enchantButtons[button.enchantIndex] = button
+	local enchantIndex = tonumber(strmatch(button.name, 'TempEnchant(%d)$'))
+	button.enchantIndex = enchantIndex
+
+	if enchantIndex then
+		header['enchant'..enchantIndex] = button
+		header.enchantButtons[enchantIndex] = button
 	else
 		button.instant = true -- let update on attribute change
 	end
@@ -242,9 +244,9 @@ function A:SetAuraTime(button, expiration, duration, modRate)
 	button.expiration = expiration
 	button.modRate = modRate
 
-	A:UpdateButton(button, duration, expiration, modRate)
-
-	button.elapsed = 0
+	if not button.enchantIndex or not E.Retail then
+		A:UpdateButton(button, duration, expiration, modRate)
+	end
 end
 
 function A:ClearAuraTime(button)
@@ -290,8 +292,6 @@ function A:UpdateAura(button, index)
 
 	if E.Retail then
 		A:UpdateButton(button, duration, expiration, modRate)
-
-		button.elapsed = 0
 	elseif duration and expiration then
 		A:SetAuraTime(button, expiration, duration, modRate)
 	else
@@ -304,18 +304,24 @@ function A:UpdateTempEnchant(button, index, expiration)
 	button.statusBar:SetShown((db.barShow and expiration) or (db.barShow and db.barNoDuration and not expiration))
 
 	if expiration then
-		button.texture:SetTexture(GetInventoryItemTexture('player', index))
-
 		local quality = A.db.colorEnchants and GetInventoryItemQuality('player', index)
 		local r, g, b = E:GetItemQualityColor(quality and quality > 1 and quality)
 
 		button:SetBackdropBorderColor(r, g, b)
 		button.statusBar.backdrop:SetBackdropBorderColor(r, g, b)
+		button.texture:SetTexture(GetInventoryItemTexture('player', index))
 
-		local remaining = (expiration * 0.001) or 0
-		A:SetAuraTime(button, remaining + GetTime(), (remaining <= 3600 and remaining > 1800) and 3600 or (remaining <= 1800 and remaining > 600) and 1800 or 600)
+		local remain = (expiration * 0.001) or 0
+		local duration = (remain <= 3600 and remain > 1800) and 3600 or (remain <= 1800 and remain > 600) and 1800 or 600
+		local expire = remain + GetTime()
+
+		A:SetAuraTime(button, expire, duration)
+
+		button.cooldown:SetCooldown(expire - duration, duration, 1)
 	else
 		A:ClearAuraTime(button)
+
+		button.cooldown:Clear()
 	end
 end
 
@@ -355,6 +361,7 @@ end
 
 function A:UpdateButton(button, duration, expiration, modRate)
 	local db = A.db[button.auraType]
+
 	if E.Retail then
 		local auraDuration = button.unit and GetAuraDuration(button.unit, button.auraInstanceID)
 		button.auraDuration = auraDuration or nil
@@ -392,22 +399,29 @@ function A:UpdateButton(button, duration, expiration, modRate)
 			end
 		end
 
-		if hasCooldown then
-			button.cooldown:SetCooldown((expiration - duration), duration, modRate)
-		else
-			button.cooldown:Clear()
+		if not button.enchantIndex then
+			if hasCooldown then -- the cooldown was already set for enchants
+				button.cooldown:SetCooldown((expiration - duration), duration, modRate)
+			else
+				button.cooldown:Clear()
+			end
 		end
 	end
+
+	button.elapsed = 0
 end
 
 function A:UpdateTime(button, expiration, modRate)
-	button.timeLeft = (expiration - GetTime()) / (modRate or 1)
+	local timeLeft = button.timeLeft
+	if not expiration or (timeLeft and timeLeft < 0.1) then
+		A:ClearAuraTime(button)
 
-	if button.timeLeft < 0.1 then
 		button.cooldown:Clear()
 
-		A:ClearAuraTime(button)
+		return
 	end
+
+	button.timeLeft = (expiration - GetTime()) / (modRate or 1)
 
 	A:UpdateFlash(button)
 end
