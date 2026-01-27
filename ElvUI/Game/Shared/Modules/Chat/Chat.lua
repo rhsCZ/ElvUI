@@ -1883,6 +1883,10 @@ function CH:GetBNFirstToonClassColor(id)
 end
 
 function CH:GetBNFriendColor(name, id, useBTag)
+	if E:IsSecretValue(name) then
+		return name
+	end
+
 	local info = C_BattleNet_GetAccountInfoByID(id)
 	local BNET_TAG = info and info.isBattleTagFriend and info.battleTag and strmatch(info.battleTag,'([^#]+)')
 	local TAG = (useBTag or CH.db.useBTagName) and BNET_TAG
@@ -1928,10 +1932,13 @@ end
 
 --Modified copy from FrameXML ChatFrame.lua to add CUSTOM_CLASS_COLORS (args were changed)
 function CH:GetColoredName(event, _, arg2, _, _, _, _, _, arg8, _, _, _, arg12)
-	if not arg2 then return end -- guild deaths is called here with no arg2
-
 	if E:IsSecretValue(arg2) then
 		return arg2
+	end
+
+	-- guild deaths is called here with no arg2
+	if not arg2 then
+		return
 	end
 
 	local chatType = strsub(event, 10)
