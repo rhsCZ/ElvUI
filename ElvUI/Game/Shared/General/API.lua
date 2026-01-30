@@ -587,7 +587,7 @@ function E:CheckRole()
 	E.myrole = E:GetPlayerRole()
 end
 
-function E:UpdateColorCurve(which, data)
+function E:UpdateAuraCurve(which, data)
 	if not data then return end
 
 	local colors = ElvUF.colors.dispel
@@ -616,7 +616,9 @@ do
 	end
 end
 
-function E:UpdateColorCurves()
+function E:UpdateAuraCurves()
+	if not E.Retail then return end
+
 	local curves = E.ColorCurves.Auras
 	for which, data in next, curves do
 		if not data then
@@ -626,7 +628,7 @@ function E:UpdateColorCurves()
 			curves[which] = data
 		end
 
-		E:UpdateColorCurve(which, data)
+		E:UpdateAuraCurve(which, data)
 	end
 end
 
@@ -655,10 +657,6 @@ function E:UpdateDispelColors()
 
 			color.r, color.g, color.b = db.r, db.g, db.b
 		end
-	end
-
-	if E.Retail then
-		E:UpdateColorCurves()
 	end
 end
 
