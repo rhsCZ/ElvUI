@@ -53,7 +53,8 @@ local WorldFrame = WorldFrame
 local GetWatchedFactionInfo = GetWatchedFactionInfo
 local GetWatchedFactionData = C_Reputation.GetWatchedFactionData
 
-local CreateCurve = C_CurveUtil.CreateCurve
+local CreateDuration = C_DurationUtil and C_DurationUtil.CreateDuration
+local CreateCurve = C_CurveUtil and C_CurveUtil.CreateCurve
 local CreateColorCurve = C_CurveUtil and C_CurveUtil.CreateColorCurve
 local ShouldUnitIdentityBeSecret = C_Secrets and C_Secrets.ShouldUnitIdentityBeSecret
 local GetColorDataForItemQuality = ColorManager and ColorManager.GetColorDataForItemQuality
@@ -76,6 +77,7 @@ local C_PvP_IsRatedBattleground = C_PvP.IsRatedBattleground
 local C_Spell_GetSpellCharges = C_Spell.GetSpellCharges
 local C_Spell_GetSpellInfo = C_Spell.GetSpellInfo
 
+local LuaCurveTypeLinear = Enum.LuaCurveType and Enum.LuaCurveType.Linear
 local LuaCurveTypeStep = Enum.LuaCurveType and Enum.LuaCurveType.Step
 local ERR_NOT_IN_COMBAT = ERR_NOT_IN_COMBAT
 local FACTION_ALLIANCE = FACTION_ALLIANCE
@@ -588,17 +590,65 @@ function E:CheckRole()
 	E.myrole = E:GetPlayerRole()
 end
 
-function E:BuildCurves()
-	local curves = E.ColorCurves
-	if not curves then return end
+function E:CreateCurve(which)
+	local curve = CreateCurve()
+	curve:SetType(which)
 
-	if not curves.Desaturate then
-		local desaturate = CreateCurve()
-		desaturate:SetType(LuaCurveTypeStep)
-		desaturate:AddPoint(0, 0)
-		desaturate:AddPoint(0.001, 1)
+	return curve
+end
 
-		curves.Desaturate = desaturate
+function E:CreateColorCurve(which)
+	local curve = CreateColorCurve()
+	curve:SetType(which)
+
+	return curve
+end
+
+do
+	local RED = { r = 1, g = 0.3, b = 0.3, a = 1 }
+	local YELLOW = { r = 1, g = 1, b = 0.3, a = 1 }
+	local GREEN = { r = 0.3, g = 1, b = 0, a = 1 }
+	function E:UpdateCurves() -- this is for the standard curves
+		if not E.Retail then return end -- it does not include all the curves
+
+		local color = E.Curves.Color
+		if color then
+			local default = color.Default
+			if not default then
+				default = E:CreateColorCurve(LuaCurveTypeLinear)
+				default:AddPoint(0.2, RED)
+				default:AddPoint(0.6, YELLOW)
+				default:AddPoint(0.8, GREEN)
+
+				color.Default = default
+			end
+		end
+
+		local duration = E.Curves.Duration
+		if not duration then
+			duration = CreateDuration()
+
+			E.Curves.Duration = duration
+		end
+
+		local float = E.Curves.Float
+		if float then
+			if not float.Alpha then
+				local alpha = E:CreateCurve(LuaCurveTypeStep)
+				alpha:AddPoint(0, 0)
+				alpha:AddPoint(0.001, 1)
+
+				float.Alpha = alpha
+			end
+
+			if not float.Desaturate then
+				local desaturate = E:CreateCurve(LuaCurveTypeStep)
+				desaturate:AddPoint(0, 0)
+				desaturate:AddPoint(1.5, 1)
+
+				float.Desaturate = desaturate
+			end
+		end
 	end
 end
 
@@ -614,12 +664,11 @@ end
 do
 	local fallback = { r = 0, g = 0, b = 0, a = 0 }
 	function E:UpdateDispelCurves()
-		local curves = E.ColorCurves.Dispel
+		local curves = E.Curves.Color.Dispel
 		if not curves then
-			curves = CreateColorCurve()
-			curves:SetType(LuaCurveTypeStep)
+			curves = E:CreateColorCurve(LuaCurveTypeStep)
 
-			E.ColorCurves.Dispel = curves
+			E.Curves.Color.Dispel = curves
 		else -- empty the list
 			curves:ClearPoints()
 		end
@@ -634,11 +683,10 @@ end
 function E:UpdateAuraCurves()
 	if not E.Retail then return end
 
-	local curves = E.ColorCurves.Auras
+	local curves = E.Curves.Color.Auras
 	for which, data in next, curves do
 		if not data then
-			data = CreateColorCurve()
-			data:SetType(LuaCurveTypeStep)
+			data = E:CreateColorCurve(LuaCurveTypeStep)
 
 			curves[which] = data
 		end
