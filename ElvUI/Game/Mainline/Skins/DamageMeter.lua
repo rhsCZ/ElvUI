@@ -59,10 +59,10 @@ function S:DamageMeter_BackdropSetAlpha(alpha)
 	end
 end
 
-function S:DamageMeter_HandleBackground(window)
-	if not window or not window.Background or window.backdrop then return end
+function S:DamageMeter_HandleBackground(window, background)
+	if not window or not background or window.backdrop then return end
 
-	window.Background:Hide()
+	background:Hide()
 
 	window:CreateBackdrop('Transparent')
 	window.backdrop:NudgePoint(13, nil, nil, 'TOPLEFT')
@@ -72,7 +72,7 @@ function S:DamageMeter_HandleBackground(window)
 	window.backdrop:SetAlpha(window.backgroundAlpha or 0.5)
 
 	-- Inherit background alpha changes from Blizzard Edit Mode
-	hooksecurefunc(window.Background, 'SetAlpha', S.DamageMeter_BackdropSetAlpha)
+	hooksecurefunc(background, 'SetAlpha', S.DamageMeter_BackdropSetAlpha)
 end
 
 function S:DamageMeter_DropdownSetWidth(width, overrideFlag)
@@ -81,13 +81,90 @@ function S:DamageMeter_DropdownSetWidth(width, overrideFlag)
 	self:SetWidth(width + DROPDOWN_WIDTH_OFFSET, true)
 end
 
-function S:DamageMeter_HandleHeader(window)
-	if not window then return end
+function S:DamageMeter_HandleTypeDropdown(window, dropdown)
+	if not dropdown or dropdown.IsSkinned then return end
 
-	local Header = not window.headerBackdrop and window.Header
-	if Header then
-		Header:Hide()
+	S:HandleButton(dropdown, nil, nil, nil, true, 'Default')
 
+	dropdown:Size(20)
+	dropdown:NudgePoint(nil, -2)
+
+	local customArrow = not dropdown.customArrow and dropdown:CreateTexture(nil, 'BACKGROUND')
+	if customArrow then
+		customArrow:Point('CENTER')
+		customArrow:Size(14)
+		customArrow:SetTexture(E.Media.Textures.ArrowUp)
+		customArrow:SetRotation(S.ArrowRotation.down)
+
+		dropdown.customArrow = customArrow
+	end
+
+	if dropdown.Arrow then
+		dropdown.Arrow:SetAlpha(0)
+	end
+
+	if dropdown.TypeName then
+		dropdown.TypeName:NudgePoint(-4, -1)
+	end
+
+	dropdown.IsSkinned = true
+end
+
+function S:DamageMeter_HandleSessionDropdown(window, dropdown)
+	if not dropdown or dropdown.IsSkinned then return end
+
+	S:HandleButton(dropdown, nil, nil, nil, true, 'Default')
+
+	dropdown:NudgePoint(nil, -3)
+	dropdown:Height(20)
+
+	local newWidth = dropdown:GetWidth() + DROPDOWN_WIDTH_OFFSET
+	dropdown:Width(newWidth, true)
+
+	-- Blizzard's dynamic width is actually bugged now, but add some horizontal padding for styling anyway
+	hooksecurefunc(dropdown, 'SetWidth', S.DamageMeter_DropdownSetWidth)
+
+	if dropdown.Arrow then
+		dropdown.Arrow:SetAlpha(0)
+	end
+
+	if dropdown.ResetButton then
+		S:HandleCloseButton(dropdown.ResetButton)
+	end
+
+	dropdown.IsSkinned = true
+end
+
+function S:DamageMeter_HandleSettingsDropdown(window, dropdown)
+	if not dropdown or dropdown.IsSkinned then return end
+
+	S:HandleButton(dropdown, nil, nil, nil, true, 'Default')
+
+	dropdown:Size(20)
+	dropdown:NudgePoint(-6, -2)
+
+	if dropdown.Icon then
+		dropdown.Icon:SetAlpha(0)
+	end
+
+	local customIcon = not dropdown.customIcon and dropdown:CreateTexture(nil, 'BACKGROUND')
+	if customIcon then
+		customIcon:Point('CENTER')
+		customIcon:Size(26)
+		customIcon:SetAtlas('GM-icon-settings')
+
+		dropdown.customIcon = customIcon
+	end
+
+	dropdown.IsSkinned = true
+end
+
+function S:DamageMeter_HandleHeader(window, header)
+	if not window or not header then return end
+
+	header:Hide()
+
+	if not window.headerBackdrop then
 		local headerBackdrop = CreateFrame('Frame', nil, window)
 		headerBackdrop:SetTemplate('Transparent')
 		headerBackdrop:Point('TOPLEFT', 16, -2)
@@ -95,81 +172,6 @@ function S:DamageMeter_HandleHeader(window)
 		headerBackdrop:OffsetFrameLevel(nil, window.backdrop)
 
 		window.headerBackdrop = headerBackdrop
-	end
-
-	local DamageMeterTypeDropdown = window.DamageMeterTypeDropdown
-	if DamageMeterTypeDropdown and not DamageMeterTypeDropdown.IsSkinned then
-		S:HandleButton(DamageMeterTypeDropdown, nil, nil, nil, true, 'Default')
-
-		DamageMeterTypeDropdown:Size(20)
-		DamageMeterTypeDropdown:NudgePoint(nil, -2)
-
-		local customArrow = not DamageMeterTypeDropdown.customArrow and DamageMeterTypeDropdown:CreateTexture(nil, 'BACKGROUND')
-		if customArrow then
-			customArrow:Point('CENTER')
-			customArrow:Size(14)
-			customArrow:SetTexture(E.Media.Textures.ArrowUp)
-			customArrow:SetRotation(S.ArrowRotation.down)
-
-			DamageMeterTypeDropdown.customArrow = customArrow
-		end
-
-		if DamageMeterTypeDropdown.Arrow then
-			DamageMeterTypeDropdown.Arrow:SetAlpha(0)
-		end
-
-		if DamageMeterTypeDropdown.TypeName then
-			DamageMeterTypeDropdown.TypeName:NudgePoint(-4, -1)
-		end
-
-		DamageMeterTypeDropdown.IsSkinned = true
-	end
-
-	local SessionDropdown = window.SessionDropdown
-	if SessionDropdown and not SessionDropdown.IsSkinned then
-		S:HandleButton(SessionDropdown, nil, nil, nil, true, 'Default')
-
-		SessionDropdown:NudgePoint(nil, -3)
-		SessionDropdown:Height(20)
-
-		local newWidth = SessionDropdown:GetWidth() + DROPDOWN_WIDTH_OFFSET
-		SessionDropdown:Width(newWidth, true)
-
-		-- Blizzard's dynamic width is actually bugged now, but add some horizontal padding for styling anyway
-		hooksecurefunc(SessionDropdown, 'SetWidth', S.DamageMeter_DropdownSetWidth)
-
-		if SessionDropdown.Arrow then
-			SessionDropdown.Arrow:SetAlpha(0)
-		end
-
-		if SessionDropdown.ResetButton then
-			S:HandleCloseButton(SessionDropdown.ResetButton)
-		end
-
-		SessionDropdown.IsSkinned = true
-	end
-
-	local SettingsDropdown = window.SettingsDropdown
-	if SettingsDropdown and not SettingsDropdown.IsSkinned then
-		S:HandleButton(SettingsDropdown, nil, nil, nil, true, 'Default')
-
-		SettingsDropdown:Size(20)
-		SettingsDropdown:NudgePoint(-6, -2)
-
-		if SettingsDropdown.Icon then
-			SettingsDropdown.Icon:SetAlpha(0)
-		end
-
-		local customIcon = not SettingsDropdown.customIcon and SettingsDropdown:CreateTexture(nil, 'BACKGROUND')
-		if customIcon then
-			customIcon:Point('CENTER')
-			customIcon:Size(26)
-			customIcon:SetAtlas('GM-icon-settings')
-
-			SettingsDropdown.customIcon = customIcon
-		end
-
-		SettingsDropdown.IsSkinned = true
 	end
 end
 
@@ -198,7 +200,7 @@ function S:DamageMeter_HandleScrollBox()
 	self:ForEachFrame(S.DamageMeter_HandleStatusBar)
 end
 
-function S:DamageMeter_HandleWindow(window)
+function S:DamageMeter_HandleScrollBoxes(window)
 	local ScrollBar = window.GetScrollBar and window:GetScrollBar()
 	if ScrollBar then
 		S:HandleTrimScrollBar(ScrollBar)
@@ -215,9 +217,7 @@ function S:DamageMeter_HandleWindow(window)
 end
 
 function S:DamageMeter_RepositionResizeButton()
-	if not self or not self.backdrop then return end
-
-	local ResizeButton = self.GetResizeButton and self:GetResizeButton()
+	local ResizeButton = self.backdrop and self.GetResizeButton and self:GetResizeButton()
 	if not ResizeButton then return end
 
 	S:DamageMeter_HandleResizeButton(ResizeButton)
@@ -235,39 +235,42 @@ function S:DamageMeter_RepositionResizeButton()
 	ResizeButton:Point(point, self.backdrop, point, xOffset, 4)
 end
 
-function S:DamageMeter_HandleSourceWindow(window)
-	if not window or window.IsSkinned then return end
+function S:DamageMeter_HandleSourceWindow(window, sourceWindow)
+	if not sourceWindow or sourceWindow.IsSkinned then return end
 
-	S:DamageMeter_HandleBackground(window)
-	S:DamageMeter_HandleWindow(window)
+	S:DamageMeter_HandleBackground(sourceWindow, sourceWindow.Background)
+	S:DamageMeter_HandleScrollBoxes(sourceWindow)
 
-	if window.AnchorToSessionWindow then
-		hooksecurefunc(window, 'AnchorToSessionWindow', S.DamageMeter_RepositionResizeButton)
+	if sourceWindow.AnchorToSessionWindow then
+		hooksecurefunc(sourceWindow, 'AnchorToSessionWindow', S.DamageMeter_RepositionResizeButton)
 	end
 
-	window.IsSkinned = true
+	sourceWindow.IsSkinned = true
 end
 
-function S:DamageMeter_HandleSessionWindow(window)
-	if not window or window.IsSkinned then return end
+function S:DamageMeter_HandleSessionWindow()
+	if self.IsSkinned then return end
 
-	S:DamageMeter_HandleBackground(window)
-	S:DamageMeter_HandleHeader(window)
-	S:DamageMeter_HandleWindow(window)
-	S:DamageMeter_HandleSourceWindow(window.SourceWindow)
+	S:DamageMeter_HandleBackground(self, self.Background)
+	S:DamageMeter_HandleHeader(self, self.Header)
+	S:DamageMeter_HandleTypeDropdown(self, self.DamageMeterTypeDropdown)
+	S:DamageMeter_HandleSessionDropdown(self, self.SessionDropdown)
+	S:DamageMeter_HandleSettingsDropdown(self, self.SettingsDropdown)
+	S:DamageMeter_HandleSourceWindow(self, self.SourceWindow)
+	S:DamageMeter_HandleScrollBoxes(self)
 
-	window.IsSkinned = true
+	self.IsSkinned = true
 end
 
-function S:DamageMeter_HandleSessionWindows()
+function S:DamageMeter_SetupSessionWindow()
 	_G.DamageMeter:ForEachSessionWindow(S.DamageMeter_HandleSessionWindow)
 end
 
 function S:Blizzard_DamageMeter()
 	if not (E.private.skins.blizzard.enable and E.private.skins.blizzard.damageMeter) then return end
 
-	hooksecurefunc(_G.DamageMeter, 'SetupSessionWindow', S.DamageMeter_HandleSessionWindows)
-	S.DamageMeter_HandleSessionWindows()
+	hooksecurefunc(_G.DamageMeter, 'SetupSessionWindow', S.DamageMeter_SetupSessionWindow)
+	S.DamageMeter_SetupSessionWindow()
 end
 
 S:AddCallbackForAddon('Blizzard_DamageMeter')
