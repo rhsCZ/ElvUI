@@ -1270,7 +1270,6 @@ function E:CropRatio(width, height, mult)
 	if not mult then mult = 0.5 end
 
 	local left, right, top, bottom = E:GetTexCoords()
-
 	local ratio = width / height
 	if ratio > 1 then
 		local trimAmount = (1 - (1 / ratio)) * mult
