@@ -267,10 +267,6 @@ local function UpdatePips(element, stages)
 	end
 end
 
-local function CastMatch(element, castID)
-	return element.castID == castID
-end
-
 --[[ Override: Castbar:ShouldShow(unit)
 Handles check for which unit the castbar should show for.
 Defaults to the object unit.
@@ -287,11 +283,10 @@ local function CastStart(self, event, unit, castGUID, spellID, castTime)
 		return
 	end
 
-	local real, castDuration = event
-	local name, text, texture, startTime, endTime, isTradeSkill, isEmpowered, castID, barID, notInterruptible, _
+	local real, casting, channeling = event, true, false
+	local name, text, texture, startTime, endTime, isTradeSkill, empowering, castID, barID, notInterruptible, castDuration, _
 	if spellID and event == 'UNIT_SPELLCAST_SENT' then
 		name, _, texture, castDuration = oUF:GetSpellInfo(spellID)
-		event = 'UNIT_SPELLCAST_START'
 
 		if name then
 			if castDuration and castDuration ~= 0 then
@@ -307,20 +302,7 @@ local function CastStart(self, event, unit, castGUID, spellID, castTime)
 			startTime = GetTime() * 1000
 			endTime = startTime + castTime
 		end
-	elseif event == 'UNIT_SPELLCAST_START' then
-		if oUF.isRetail then
-			name, text, texture, startTime, endTime, isTradeSkill, _, notInterruptible, spellID, barID = UnitCastingInfo(unit)
-			castID = barID -- because of secrets
-		else
-			name, text, texture, startTime, endTime, isTradeSkill, castID, notInterruptible, spellID = UnitCastingInfo(unit)
-		end
-	elseif event == 'UNIT_SPELLCAST_EMPOWER_START' or event == 'UNIT_SPELLCAST_CHANNEL_START' then
-		name, text, texture, startTime, endTime, isTradeSkill, notInterruptible, spellID, isEmpowered, _, castID = UnitChannelInfo(unit)
-
-		-- if castID == castTime then
-		----- BUG: Dream Breath maybe others have double start events (?)
-		-- end
-	else -- try both API when its forced
+	else
 		if oUF.isRetail then
 			name, text, texture, startTime, endTime, isTradeSkill, _, notInterruptible, spellID, barID = UnitCastingInfo(unit)
 
@@ -328,11 +310,10 @@ local function CastStart(self, event, unit, castGUID, spellID, castTime)
 		else
 			name, text, texture, startTime, endTime, isTradeSkill, castID, notInterruptible, spellID = UnitCastingInfo(unit)
 		end
-
-		event = 'UNIT_SPELLCAST_START'
 
 		if not name then
-			name, text, texture, startTime, endTime, isTradeSkill, notInterruptible, spellID, isEmpowered, _, castID = UnitChannelInfo(unit)
+			name, text, texture, startTime, endTime, isTradeSkill, notInterruptible, spellID, empowering, _, castID = UnitChannelInfo(unit)
+			casting, channeling = false, not empowering
 		end
 	end
 
@@ -345,9 +326,9 @@ local function CastStart(self, event, unit, castGUID, spellID, castTime)
 		return
 	end
 
-	element.casting = event == 'UNIT_SPELLCAST_START'
-	element.channeling = event == 'UNIT_SPELLCAST_CHANNEL_START'
-	element.empowering = isEmpowered
+	element.casting = casting
+	element.channeling = channeling
+	element.empowering = empowering
 
 	local isPlayer = UnitIsUnit(unit, 'player')
 	if not isPlayer or (real ~= 'UNIT_SPELLCAST_SENT' and real ~= 'UNIT_SPELLCAST_START' and real ~= 'UNIT_SPELLCAST_CHANNEL_START') then
@@ -362,7 +343,7 @@ local function CastStart(self, event, unit, castGUID, spellID, castTime)
 	element.spellName = name
 
 	-- ElvUI block
-	local stages = isEmpowered and UnitEmpoweredStagePercentages(unit) or nil
+	local stages = empowering and UnitEmpoweredStagePercentages(unit) or nil
 
 	element.isTradeSkill = isTradeSkill
 	element.tradeSkillCastID = (isTradeSkill and castID) or nil
@@ -491,22 +472,13 @@ local function CastStart(self, event, unit, castGUID, spellID, castTime)
 	element:Show()
 end
 
-local function CastUpdate(self, event, unit, ...)
+local function CastUpdate(self, event, unit)
 	local element = self.Castbar
 	if not (element.ShouldShow or ShouldShow) (element, unit) then
 		return
 	end
 
-	local castID, _
-	if oUF.isRetail then
-		_, _, castID = ...
-	else
-		castID = ...
-	end
-
-	if not element:IsShown() or not CastMatch(element, castID) then
-		return
-	end
+	if not element:IsShown() then return end
 
 	local name, startTime, endTime, _
 	if(event == 'UNIT_SPELLCAST_DELAYED') then
@@ -596,22 +568,18 @@ local function CastStop(self, event, unit, ...)
 		return
 	end
 
-	local castID, spellID, interruptedBy, empowerComplete, _
+	local spellID, interruptedBy, empowerComplete, _
 	if oUF.isRetail then
-		if(event == 'UNIT_SPELLCAST_STOP') then
-			_, _, castID = ...
-		elseif(event == 'UNIT_SPELLCAST_EMPOWER_STOP') then
-			_, _, empowerComplete, interruptedBy, castID = ...
+		if(event == 'UNIT_SPELLCAST_EMPOWER_STOP') then
+			_, _, empowerComplete, interruptedBy = ...
 		elseif(event == 'UNIT_SPELLCAST_CHANNEL_STOP') then
-			_, _, interruptedBy, castID = ...
+			_, _, interruptedBy = ...
 		end
 	else
-		castID, spellID = ...
+		_, spellID = ...
 	end
 
-	if not element:IsShown() or not CastMatch(element, castID) then
-		return
-	end
+	if not element:IsShown() then return end
 
 	local isPlayer = UnitIsUnit(unit, 'player')
 	if mergeTradeskill and isPlayer and (tradeskillCurrent == tradeskillTotal) then
@@ -661,20 +629,14 @@ local function CastFail(self, event, unit, ...)
 		return
 	end
 
-	local castID, interruptedBy, _
+	local interruptedBy, _
 	if oUF.isRetail then
 		if(event == 'UNIT_SPELLCAST_INTERRUPTED') then
-			_, _, interruptedBy, castID = ...
-		elseif(event == 'UNIT_SPELLCAST_FAILED') then
-			_, _, castID = ...
+			_, _, interruptedBy = ...
 		end
-	else
-		castID = ...
 	end
 
-	if not element:IsShown() or not CastMatch(element, castID) then
-		return
-	end
+	if not element:IsShown() then return end
 
 	if(element.Text) then
 		element.Text:SetText(event == 'UNIT_SPELLCAST_FAILED' and FAILED or INTERRUPTED)
