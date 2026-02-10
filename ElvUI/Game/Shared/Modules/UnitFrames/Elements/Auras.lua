@@ -504,25 +504,17 @@ end
 
 function UF:PostUpdateAura(unit, button)
 	local db, r, g, b = (self.isNameplate and NP.db.colors) or UF.db.colors
-	local enemyNPC = not button.isFriend and not button.isPlayer
 	local steal = DebuffColors.Stealable
 
 	local color = E.Retail and not self.forceShow and UF:GetAuraCurve(unit, button, db.auraByType)
 	if color then
 		r, g, b = color:GetRGB()
 	elseif button.isDebuff then
-		local debuffType = E:NotSecretValue(button.debuffType) and button.debuffType or nil
-		local spellID = E:NotSecretValue(button.spellID) and button.spellID or nil
-		local bad, enemy = DebuffColors.BadDispel, DebuffColors.EnemyNPC
-
-		if enemyNPC then
-			if enemy and db.auraByType then
-				r, g, b = enemy.r, enemy.g, enemy.b
-			end
-		elseif bad and db.auraByDispels and (BadDispels[spellID] and DispelTypes[debuffType]) then
+		local bad = DebuffColors.BadDispel
+		if bad and db.auraByDispels and (BadDispels[button.spellID] and DispelTypes[button.debuffType]) then
 			r, g, b = bad.r, bad.g, bad.b
 		elseif db.auraByType then
-			local debuffColor = DebuffColors[debuffType or 'None']
+			local debuffColor = DebuffColors[button.debuffType or 'None']
 			r, g, b = debuffColor.r * 0.6, debuffColor.g * 0.6, debuffColor.b * 0.6
 		end
 	elseif steal and db.auraByDispels and button.isStealable and not button.isFriend then
@@ -534,7 +526,7 @@ function UF:PostUpdateAura(unit, button)
 	end
 
 	button:SetBackdropBorderColor(r, g, b)
-	button.Icon:SetDesaturated(button.isDebuff and enemyNPC and button.canDesaturate)
+	button.Icon:SetDesaturated(button.canDesaturate and button.isDebuff and not button.isPlayer)
 
 	if button.Text then
 		local bdb = button.db
@@ -725,8 +717,7 @@ function UF:AuraPopulate(auras, db, unit, button, name, icon, count, debuffType,
 	button.canDispel = canDispel
 	button.unitIsCaster = unitIsCaster
 
-	-- used elsewhere
-	button.canDesaturate = db.desaturate
+	-- used by GetAuraSortTime
 	button.noTime = duration == 0 and expiration == 0
 
 	return myPet, otherPet, canDispel, unitIsCaster
@@ -759,11 +750,12 @@ end
 
 function UF:AuraFilter(unit, button, aura, name, icon, count, debuffType, duration, expiration, source, isStealable, nameplateShowPersonal, spellID, canApplyAura, isBossAura, castByPlayer, nameplateShowAll)
 	if not name then return end -- checking for an aura that is not there, pass nil to break while loop
+	local db = self.db
 
 	-- this should be secret safe, rest are populated in oUF or AuraPopulate
 	button.isFriend = UnitIsFriend('player', unit) and not UnitCanAttack('player', unit)
+	button.canDesaturate = (db and db.desaturate) or false
 
-	local db = self.db
 	if not db or not aura then
 		button.priority = 0
 
