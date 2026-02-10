@@ -1,11 +1,9 @@
 local _, ns = ...
 local oUF = ns.oUF
-local Private = oUF.Private
-
-local unitExists = Private.unitExists
 
 local next = next
 local wipe = wipe
+local pcall = pcall
 local select = select
 
 local UnitGUID = UnitGUID
@@ -139,7 +137,7 @@ local function ProcessAura(frame, event, unit, token, ...)
 	local numSlots = select('#', ...)
 	for i = 1, numSlots do
 		local slot = select(i, ...)
-		local aura = GetAuraDataBySlot(unit, slot)
+		local aura = GetAuraDataBySlot(unit, slot) -- unit verified by ProcessExisting
 		if aura then
 			TryAdded('add', frame, event, unit, nil, aura)
 		end
@@ -148,14 +146,14 @@ local function ProcessAura(frame, event, unit, token, ...)
 	return token
 end
 
-local function ProcessTokens(frame, event, unit, token, ...)
-	repeat token = ProcessAura(frame, event, unit, token, ...)
+local function ProcessTokens(frame, event, unit, success, token, ...)
+	repeat token = success and ProcessAura(frame, event, unit, token, ...)
 	until not token
 end
 
 local function ProcessExisting(frame, event, unit)
-	ProcessTokens(frame, event, unit, GetAuraSlots(unit, 'HELPFUL'))
-	ProcessTokens(frame, event, unit, GetAuraSlots(unit, 'HARMFUL'))
+	ProcessTokens(frame, event, unit, pcall(GetAuraSlots, unit, 'HELPFUL'))
+	ProcessTokens(frame, event, unit, pcall(GetAuraSlots, unit, 'HARMFUL'))
 end
 
 local function ShouldSkipAura(frame, event, unit, updateInfo, showFunc)
@@ -232,7 +230,7 @@ end
 
 -- ShouldSkipAuraUpdate by Blizzard (implemented and heavily modified by Simpy)
 function oUF:ShouldSkipAuraUpdate(frame, event, unit, updateInfo, showFunc)
-	if not unitExists(unit) or (frame.unit and frame.unit ~= unit) then
+	if not unit or (frame.unit and frame.unit ~= unit) then
 		return true
 	end
 
@@ -242,14 +240,14 @@ end
 -- Blizzard didnt implement the tooltip functions on Era or Mists
 function oUF:GetAuraIndexByInstanceID(unit, auraInstanceID, filter)
 	local index = 1
-	local aura = GetAuraDataByIndex(unit, index, filter)
-	while aura do
+	local success, aura = pcall(GetAuraDataByIndex, unit, index, filter)
+	while (success and aura) do
 		if aura.auraInstanceID == auraInstanceID then
 			return index
 		end
 
 		index = index + 1
-		aura = GetAuraDataByIndex(unit, index, filter)
+		success, aura = pcall(GetAuraDataByIndex, unit, index, filter)
 	end
 end
 
