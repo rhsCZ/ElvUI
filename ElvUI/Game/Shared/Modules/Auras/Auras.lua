@@ -606,18 +606,22 @@ function A:CreateAuraHeader(filter)
 	header:SetAttribute('unit', 'player')
 	header:SetAttribute('filter', filter)
 	header:HookScript('OnEvent', A.Header_OnEvent)
+	header:Show() -- should trigger SecureAuraHeader_OnShow
+
 	header.ForEachChild = A.ForEachChild
+
 	header.enchantButtons = {}
 	header.enchants = {}
 	header.spells = {}
+
+	header.auraType = auraType
+	header.filter = filter
+	header.name = name
 
 	header.visibility = CreateFrame('Frame', nil, UIParent, 'SecureHandlerStateTemplate')
 	header.visibility:SetScript('OnUpdate', A.Visibility_OnUpdate) -- dont put this on the main frame
 	header.visibility:SetScript('OnEvent', A.Visibility_OnEvent) -- dont put this on the main frame
 	header.visibility.frame = header
-	header.auraType = auraType
-	header.filter = filter
-	header.name = name
 
 	if E.Retail then
 		header.visibility:RegisterEvent('WEAPON_ENCHANT_CHANGED')
@@ -638,8 +642,6 @@ function A:CreateAuraHeader(filter)
 	elseif MasqueGroupDebuffs and E.private.auras.masque.debuffs then
 		header.MasqueGroup = MasqueGroupDebuffs
 	end
-
-	header:Show()
 
 	return header
 end
