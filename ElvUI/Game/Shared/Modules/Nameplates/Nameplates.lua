@@ -177,7 +177,7 @@ function NP:SetCVars()
 	-- the order of these is important !!
 	local visibility = db.visibility
 	NP:ToggleCVar('nameplateShowAll', visibility.showAll)
-	NP:ToggleCVar(E.Retail and 'nameplateShowOnlyNameForFriendlyPlayerUnits' or 'nameplateShowOnlyNames', visibility.showOnlyNames)
+	NP:ToggleCVar((E.Retail and 'nameplateShowOnlyNameForFriendlyPlayerUnits') or 'nameplateShowOnlyNames', visibility.showOnlyNames)
 
 	local enemyVisibility = visibility.enemy
 	NP:ToggleCVar('nameplateShowEnemyMinions', enemyVisibility.minions)
@@ -1075,12 +1075,6 @@ function NP:Initialize()
 
 	NP:HideInterfaceOptions()
 	NP:SetCVars()
-
-	-- Temporary implementation
-	-- Midnight: Blizzard always resets friendly npc nameplates to enabled on login, this is a fix to prevent that.
-	if E.db.nameplates.persistentFriendlyNP and E.Retail then
-		E:SetCVar('nameplateShowFriendlyNpcs', 0)
-	end
 end
 
 E:RegisterModule(NP:GetName())
