@@ -5,7 +5,6 @@ local S = E:GetModule('Skins')
 local LSM = E.Libs.LSM
 
 local _G = _G
-local issecurevariable = issecurevariable
 local gsub, strfind, gmatch, format = gsub, strfind, gmatch, format
 local ipairs, sort, wipe, time, difftime = ipairs, sort, wipe, time, difftime
 local pairs, unpack, select, pcall, next, tonumber, type = pairs, unpack, select, pcall, next, tonumber, type
@@ -81,7 +80,6 @@ local GetClientTexture = BNet_GetClientEmbeddedAtlas or BNet_GetClientEmbeddedTe
 
 local ChatEditSetLastTellTarget = (ChatFrameUtil and ChatFrameUtil.SetLastTellTarget) or ChatEdit_SetLastTellTarget
 local ChatEditSetLastActiveWindow = (ChatFrameUtil and ChatFrameUtil.SetLastActiveWindow) or ChatEdit_SetLastActiveWindow
-local ChatEditGetActiveWindow = (ChatFrameUtil and ChatFrameUtil.GetActiveWindow) or ChatEdit_GetActiveWindow
 local GetMobileEmbeddedTexture = (ChatFrameUtil and ChatFrameUtil.GetMobileEmbeddedTexture) or ChatFrame_GetMobileEmbeddedTexture
 local ResolvePrefixedChannelName = (ChatFrameUtil and ChatFrameUtil.ResolvePrefixedChannelName) or ChatFrame_ResolvePrefixedChannelName
 local ShouldColorChatByClass = (ChatFrameUtil and ChatFrameUtil.ShouldColorChatByClass) or Chat_ShouldColorChatByClass
@@ -738,56 +736,58 @@ do
 	end
 
 	local repeatedText
-	function CH:EditBoxOnTextChanged()
+	function CH:EditBoxOnTextChanged(userInput)
 		local text = self:GetText()
 		local len = strlen(text)
 
-		if CH.db.enableCombatRepeat and InCombatLockdown() and (not repeatedText or not strfind(text, repeatedText, 1, true)) then
-			local MIN_REPEAT_CHARACTERS = CH.db.numAllowedCombatRepeat
-			if len > MIN_REPEAT_CHARACTERS then
-				local repeatChar = true
-				for i = 1, MIN_REPEAT_CHARACTERS do
-					local first = -1 - i
-					if strsub(text,-i,-i) ~= strsub(text,first,first) then
-						repeatChar = false
-						break
+		if userInput then
+			if CH.db.enableCombatRepeat and InCombatLockdown() and (not repeatedText or not strfind(text, repeatedText, 1, true)) then
+				local MIN_REPEAT_CHARACTERS = CH.db.numAllowedCombatRepeat
+				if len > MIN_REPEAT_CHARACTERS then
+					local repeatChar = true
+					for i = 1, MIN_REPEAT_CHARACTERS do
+						local first = -1 - i
+						if strsub(text,-i,-i) ~= strsub(text,first,first) then
+							repeatChar = false
+							break
+						end
 					end
-				end
-				if repeatChar then
-					repeatedText = text
-					self:Hide()
-					return
+					if repeatChar then
+						repeatedText = text
+						self:Hide()
+						return
+					end
 				end
 			end
-		end
 
-		if len == 4 then
-			if text == '/tt ' then
-				local Name, Realm = UnitName('target')
-				if Name then
-					Name = gsub(Name,'%s','')
+			if len == 4 then
+				if text == '/tt ' then
+					local Name, Realm = UnitName('target')
+					if Name then
+						Name = gsub(Name,'%s','')
 
-					if Realm and Realm ~= '' then
-						Name = format('%s-%s', Name, E:ShortenRealm(Realm))
+						if Realm and Realm ~= '' then
+							Name = format('%s-%s', Name, E:ShortenRealm(Realm))
+						end
 					end
-				end
 
-				if Name then
-					if _G.ChatFrameUtil and _G.ChatFrameUtil.SendTell then
-						_G.ChatFrameUtil.SendTell(Name, self.chatFrame)
+					if Name then
+						if _G.ChatFrameUtil and _G.ChatFrameUtil.SendTell then
+							_G.ChatFrameUtil.SendTell(Name, self.chatFrame)
+						else
+							_G.ChatFrame_SendTell(Name, self.chatFrame)
+						end
 					else
-						_G.ChatFrame_SendTell(Name, self.chatFrame)
+						_G.UIErrorsFrame:AddMessage(L["Invalid Target"], 1.0, 0.2, 0.2, 1.0)
 					end
-				else
-					_G.UIErrorsFrame:AddMessage(L["Invalid Target"], 1.0, 0.2, 0.2, 1.0)
-				end
-			elseif text == '/gr ' then
-				self:SetText(CH:GetGroupDistribution() .. strsub(text, 5))
+				elseif text == '/gr ' then
+					self:SetText(CH:GetGroupDistribution() .. strsub(text, 5))
 
-				if self.ParseText then
-					self:ParseText(0)
-				else
-					_G.ChatEdit_ParseText(self, 0)
+					if self.ParseText then
+						self:ParseText(0)
+					else
+						_G.ChatEdit_ParseText(self, 0)
+					end
 				end
 			end
 		end
@@ -801,36 +801,6 @@ do
 
 		if repeatedText then
 			repeatedText = nil
-		end
-	end
-end
-
-do -- this fixes a taint when you push tab on editbox which blocks secure commands to the chat
-	local safe, list = {}, _G.hash_ChatTypeInfoList
-
-	function CH:ChatEdit_UntaintTabList()
-		for cmd, name in next, list do
-			if not issecurevariable(list, cmd) then
-				safe[cmd] = name
-				list[cmd] = nil
-			end
-		end
-	end
-
-	function CH:ChatEdit_PleaseRetaint()
-		for cmd, name in next, safe do
-			list[cmd] = name
-			safe[cmd] = nil
-		end
-	end
-
-	function CH:ChatEdit_PleaseUntaint(event)
-		if event == 'PLAYER_REGEN_DISABLED' then
-			if ChatEditGetActiveWindow() then
-				CH:ChatEdit_UntaintTabList()
-			end
-		elseif InCombatLockdown() then
-			CH:ChatEdit_UntaintTabList()
 		end
 	end
 end
@@ -862,10 +832,15 @@ function CH:ChatEdit_UpdateHeader(editbox)
 end
 
 function CH:EditBoxOnKeyDown(key)
-	--Work around broken SetAltArrowKeyMode API. Code from Prat and modified by Simpy
-	if (not self.historyLines) or #self.historyLines == 0 then
-		return
-	end
+	local lines = self.historyLines -- Code originally from Prat and modified by Simpy
+	if not lines then return end
+
+	-- Override to allow using default editbox history for secure commands
+	-- Require holding alt when restricted: will use default editbox history
+	if IsAltKeyDown() or E:IsChatRestricted() then return end
+
+	local maxLines = #lines
+	if maxLines == 0 then return end
 
 	if key == 'DOWN' then
 		self.historyIndex = self.historyIndex - 1
@@ -873,19 +848,24 @@ function CH:EditBoxOnKeyDown(key)
 		if self.historyIndex < 1 then
 			self.historyIndex = 0
 			self:SetText('')
+
 			return
 		end
 	elseif key == 'UP' then
 		self.historyIndex = self.historyIndex + 1
 
-		if self.historyIndex > #self.historyLines then
-			self.historyIndex = #self.historyLines
+		if self.historyIndex > maxLines then
+			self.historyIndex = maxLines
 		end
 	else
 		return
 	end
 
-	self:SetText(strtrim(self.historyLines[#self.historyLines - (self.historyIndex - 1)]))
+	local historyLine = maxLines - (self.historyIndex - 1)
+	local historyText = lines[historyLine]
+	if historyText then
+		self:SetText(historyText)
+	end
 end
 
 function CH:EditBoxFocusGained()
@@ -1061,33 +1041,24 @@ function CH:StyleChat(frame)
 	editbox:HookScript('OnKeyDown', CH.EditBoxOnKeyDown)
 	editbox:Hide()
 
-	--Work around broken SetAltArrowKeyMode API
 	editbox.historyLines = ElvCharacterDB.ChatEditHistory
 	editbox.historyIndex = 0
 
-	--[[ Don't need to do this since SetAltArrowKeyMode is broken, keep before AddHistory hook
-	for _, text in ipairs(editbox.historyLines) do
-			editbox:AddHistoryLine(text)
+	--[[ we use our own history, so we dont need to do this as it will also taints the lines
+	for _, text in ipairs(editbox.historyLines) do -- keep before AddHistory hook
+		editbox:AddHistoryLine(text)
 	end]]
 
 	if editbox.AddHistoryLine then
 		CH:SecureHook(editbox, 'AddHistoryLine', 'ChatEdit_AddHistory')
 	end
 
-	if editbox.OnEnterPressed then
-		CH:SecureHook(editbox, 'OnEnterPressed', 'ChatEdit_OnEnterPressed')
-	end
-
 	if editbox.UpdateHeader then
 		CH:SecureHook(editbox, 'UpdateHeader', 'ChatEdit_UpdateHeader')
 	end
 
-	if editbox.OnShow then
-		CH:SecureHook(editbox, 'OnShow', 'ChatEdit_PleaseUntaint')
-	end
-
-	if editbox.OnHide then
-		CH:SecureHook(editbox, 'OnHide', 'ChatEdit_PleaseRetaint')
+	if editbox.OnEnterPressed then
+		CH:SecureHookScript(editbox, 'OnEnterPressed', 'ChatEdit_OnEnterPressed')
 	end
 
 	--copy chat button
@@ -1152,7 +1123,7 @@ function CH:UpdateSettings()
 	for _, frameName in ipairs(_G.CHAT_FRAMES) do
 		local chat = _G[frameName]
 		local editbox = chat and chat.editBox
-		if editbox then
+		if editbox then -- controls the character movement based on holding alt
 			editbox:SetAltArrowKeyMode(CH.db.useAltKey)
 		end
 	end
@@ -2872,8 +2843,6 @@ function CH:AddLines(lines, ...)
 end
 
 function CH:ChatEdit_OnEnterPressed(editBox)
-	editBox:ClearHistory() -- we will use our own editbox history so keeping them populated on blizzards end is pointless
-
 	local chatType = editBox:GetAttribute('chatType')
 	local chatFrame = chatType and editBox:GetParent()
 	if chatFrame and (not chatFrame.isTemporary) and (_G.ChatTypeInfo[chatType].sticky == 1) then
@@ -2891,25 +2860,25 @@ function CH:SetChatFont(dropDown, chatFrame, fontSize)
 	CH:UpdateEditboxFont(chatFrame)
 end
 
-function CH:ChatEdit_AddHistory(_, line) -- editBox, line
-	line = line and strtrim(line)
+function CH:ChatEdit_AddHistory(editbox, line)
+	local lines = editbox.historyLines
+	local msg = lines and line and strtrim(line)
+	if not msg or strlen(msg) <= 0 then return end
 
-	if line and strlen(line) > 0 then
-		local cmd = strmatch(line, '^/%w+')
-		if cmd and IsSecureCmd(cmd) then return end -- block secure commands from history
+	local cmd = strmatch(msg, '^/%w+')
+	if cmd and IsSecureCmd(cmd) then return end -- block secure commands
 
-		for index, text in pairs(ElvCharacterDB.ChatEditHistory) do
-			if text == line then
-				tremove(ElvCharacterDB.ChatEditHistory, index)
-				break
-			end
+	for index, text in pairs(lines) do
+		if text == msg then
+			tremove(lines, index)
+			break
 		end
+	end
 
-		tinsert(ElvCharacterDB.ChatEditHistory, line)
+	tinsert(lines, msg)
 
-		if #ElvCharacterDB.ChatEditHistory > CH.db.editboxHistorySize then
-			tremove(ElvCharacterDB.ChatEditHistory, 1)
-		end
+	if #lines > CH.db.editboxHistorySize then
+		tremove(lines, 1)
 	end
 end
 
@@ -4066,14 +4035,6 @@ function CH:Initialize()
 		CH:SecureHook('ChatEdit_OnEnterPressed')
 	end
 
-	if _G.ChatEdit_OnShow then
-		CH:SecureHook('ChatEdit_OnShow', 'ChatEdit_PleaseUntaint')
-	end
-
-	if _G.ChatEdit_OnHide then
-		CH:SecureHook('ChatEdit_OnHide', 'ChatEdit_PleaseRetaint')
-	end
-
 	if _G.ChatEdit_UpdateHeader then
 		CH:SecureHook('ChatEdit_UpdateHeader', 'ChatEdit_UpdateHeader')
 	end
@@ -4081,7 +4042,6 @@ function CH:Initialize()
 	CH:RegisterEvent('UPDATE_CHAT_WINDOWS', 'SetupChat')
 	CH:RegisterEvent('UPDATE_FLOATING_CHAT_WINDOWS', 'SetupChat')
 	CH:RegisterEvent('GROUP_ROSTER_UPDATE', 'CheckLFGRoles')
-	CH:RegisterEvent('PLAYER_REGEN_DISABLED', 'ChatEdit_PleaseUntaint')
 	CH:RegisterEvent('PET_BATTLE_CLOSE')
 	CH:RegisterEvent('CVAR_UPDATE')
 
