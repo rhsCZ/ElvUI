@@ -1339,11 +1339,11 @@ do
 			UF:Configure_PowerPrediction(frame)
 		end
 
-		if frame.Portrait then
+		if frame.Portrait2D then -- only check for one
 			UF:Configure_Portrait(frame)
 		end
 
-		if frame.Auras then
+		if frame.Auras then -- will also update buffs and debuffs
 			UF:EnableDisable_Auras(frame)
 			UF:Configure_AllAuras(frame)
 		end
