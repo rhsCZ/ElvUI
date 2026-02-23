@@ -56,6 +56,11 @@ function S:Blizzard_HousingHouseFinder()
 		S:HandleButton(NeighborhoodListFrame.RefreshButton)
 		S:HandleTrimScrollBar(NeighborhoodListFrame.ScrollFrame.ScrollBar)
 	end
+
+	local GuildSubdivisionDropdown = FinderFrame.GuildSubdivisionDropdown
+	if GuildSubdivisionDropdown then
+		S:HandleDropDownBox(GuildSubdivisionDropdown)
+	end
 end
 
 function S:Blizzard_HousingDashboard()
