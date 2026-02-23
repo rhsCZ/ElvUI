@@ -37,10 +37,8 @@ local function UpdateTrinket(frame, unit)
 
 	if element.spellID and (startTime and duration > 0) then
 		element.cd:SetCooldown(startTime / 1000, duration / 1000, 1)
-		element.cd:Show()
 	else
 		element.cd:Clear()
-		element.cd:Hide()
 	end
 end
 
