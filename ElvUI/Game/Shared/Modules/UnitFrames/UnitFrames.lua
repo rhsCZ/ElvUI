@@ -636,18 +636,16 @@ end
 function UF:Configure_PrivateAuras(frame)
 	if not E.Retail then return end -- dont exist on classic
 
-	if frame.PrivateAuras then
-		PA:RemoveAuras(frame.PrivateAuras)
-	end
+	PA:RemoveAuras(frame.PrivateAuras)
 
 	local db = frame.db and frame.db.privateAuras
 	if db and db.enable then
-		PA:SetupPrivateAuras(db, frame.PrivateAuras, frame.unit)
-
+		frame.PrivateAuras:SetFrameLevel(frame.RaisedElementParent.PrivateAurasLevel)
 		frame.PrivateAuras:ClearAllPoints()
 		frame.PrivateAuras:Point(E.InversePoints[db.parent.point], frame, db.parent.point, db.parent.offsetX, db.parent.offsetY)
 		frame.PrivateAuras:Size(db.icon.size)
-		frame.PrivateAuras:SetFrameLevel(frame.RaisedElementParent.PrivateAurasLevel)
+
+		PA:SetupPrivateAuras(db, frame.PrivateAuras, frame.unit)
 	end
 end
 
@@ -1995,21 +1993,12 @@ end
 
 function UF:SetStatusBarColor(bar, r, g, b, custom, overrideAlpha, overrideBackdrop)
 	local clampBackdrop = overrideBackdrop and E:Clamp(overrideBackdrop)
-	local mult = clampBackdrop or E:Clamp(bar.isTransparent and (UF.multiplier * 0.5) or UF.multiplier)
 	local mainR, mainG, mainB, mainA = r, g, b, E:Clamp(bar.isTransparent and (UF.multiplier * 2) or 1)
-	local backR, backG, backB, backA
+	local backR, backG, backB, backA = r, g, b, clampBackdrop or E:Clamp(bar.isTransparent and (UF.multiplier * 0.5) or UF.multiplier)
 
 	local color = custom or bar.custom_backdrop
-	if bar.isTransparent then
-		if color then
-			backR, backG, backB, backA = color.r, color.g, color.b, clampBackdrop or (overrideAlpha and mult) or color.a
-		else
-			backR, backG, backB, backA = r, g, b, mult
-		end
-	elseif color then
-		backR, backG, backB, backA = color.r * mult, color.g * mult, color.b * mult, 1
-	else
-		backR, backG, backB, backA = r * mult, g * mult, b * mult, 1
+	if color then
+		backR, backG, backB, backA = color.r, color.g, color.b, clampBackdrop or (overrideAlpha and backA) or color.a
 	end
 
 	if bar.bg then
