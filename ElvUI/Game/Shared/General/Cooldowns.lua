@@ -43,20 +43,26 @@ function E:CooldownTextures(cooldown, texture, edge, swipe)
 	cooldown:SetSwipeTexture(E.media.blankTex, swipe.r, swipe.g, swipe.b, swipe.a)
 end
 
-function E:CooldownText(cooldown, db, hide)
-	if not cooldown then return end
+function E:CooldownText(cooldown, hide)
+	local db, data = E:CooldownData(cooldown)
+	if not db then return end
 
 	cooldown:SetHideCountdownNumbers(hide)
 	cooldown:SetCountdownAbbrevThreshold(db.threshold)
 	cooldown:SetMinimumCountdownDuration(db.minDuration) -- minimum duration above which text will be shown
 
-	if not cooldown.Text then return end
+	if cooldown.Text then
+		local target = data.which == 'targetaura'
+		if target then -- use the ab settings for text
+			db = E.db.cooldown.actionbar
+		end
 
-	local colors = db.colors.text
-	cooldown.Text:ClearAllPoints()
-	cooldown.Text:SetTextColor(colors.r, colors.g, colors.b)
-	cooldown.Text:Point('CENTER', nil, db.position, db.offsetX, db.offsetY)
-	cooldown.Text:FontTemplate(LSM:Fetch('font', db.font), db.fontSize, db.fontOutline)
+		local colors = db.colors.text
+		cooldown.Text:ClearAllPoints()
+		cooldown.Text:SetTextColor(colors.r, colors.g, colors.b)
+		cooldown.Text:Point('CENTER', nil, db.position, db.offsetX, db.offsetY)
+		cooldown.Text:FontTemplate(LSM:Fetch('font', db.font), db.fontSize, db.fontOutline)
+	end
 end
 
 function E:CooldownColors(cooldown, edge, swipe, alpha)
@@ -70,18 +76,18 @@ function E:CooldownUpdate(cooldown)
 	local db, data = E:CooldownData(cooldown)
 	if not db then return end
 
-	E:CooldownBling(cooldown)
-
-	E:CooldownText(cooldown, db, db.hideNumbers)
-	E:CooldownText(data.chargeCooldown, db, not db.chargeText)
-	E:CooldownText(data.lossOfControl, db, not db.locText)
-
 	local colors = db.colors
 	local target = data.which == 'targetaura'
 	local aurabars = data.which == 'aurabars'
 
 	local exclude = target or aurabars
 	local invisible = exclude and 0 or nil
+
+	E:CooldownBling(cooldown)
+
+	E:CooldownText(cooldown, db.hideNumbers)
+	E:CooldownText(data.chargeCooldown, not db.chargeText)
+	E:CooldownText(data.lossOfControl, not db.locText)
 
 	E:CooldownColors(cooldown, colors.edge, colors.swipe, invisible)
 	E:CooldownColors(data.chargeCooldown, colors.edgeCharge, colors.swipeCharge)
