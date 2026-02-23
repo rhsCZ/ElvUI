@@ -2169,6 +2169,12 @@ do -- Clique support for registering clicks
 	end
 end
 
+function UF:UpdateAllElements(event)
+	if self.PrivateAuras and event == 'OnShow' then
+		UF:Configure_PrivateAuras(self)
+	end
+end
+
 function UF:AfterStyleCallback()
 	-- this will wait until after ouf pushes `EnableElement` onto the newly spawned frames
 	-- calling an update onto assist or tank in the styleFunc is before the `EnableElement`
@@ -2182,6 +2188,10 @@ function UF:AfterStyleCallback()
 	elseif unit == 'assist' or unit == 'assisttarget' then
 		UF:Update_AssistFrames(self, UF.db.units.assist)
 		UF:Update_FontStrings()
+	end
+
+	if self.UpdateAllElements then
+		hooksecurefunc(self, 'UpdateAllElements', UF.UpdateAllElements)
 	end
 end
 
