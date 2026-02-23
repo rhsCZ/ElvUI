@@ -139,10 +139,10 @@ function PA:RemoveAura(aura)
 end
 
 function PA:RemoveAuras(parent)
-	if parent.auraIcons then
-		for _, aura in next, parent.auraIcons do
-			PA:RemoveAura(aura)
-		end
+	if not parent or not parent.auraIcons then return end
+
+	for _, aura in next, parent.auraIcons do
+		PA:RemoveAura(aura)
 	end
 end
 
@@ -152,6 +152,9 @@ function PA:CreateAura(parent, unit, index, db)
 		aura = CreateFrame('Frame', format('%s%d', parent:GetName(), index), parent)
 	end
 
+	aura.anchorID = PA:CreateAnchor(aura, parent, unit or 'player', index, db)
+
+	aura:Size(db.icon.size)
 	aura:ClearAllPoints()
 
 	if index == 1 then
@@ -170,10 +173,6 @@ function PA:CreateAura(parent, unit, index, db)
 
 		aura:Point(E.InversePoints[db.icon.point], parent.auraIcons[index-1], db.icon.point, offsetX, offsetY)
 	end
-
-	aura:Size(db.icon.size)
-
-	aura.anchorID = PA:CreateAnchor(aura, parent, unit or 'player', index, db)
 
 	return aura
 end

@@ -636,18 +636,16 @@ end
 function UF:Configure_PrivateAuras(frame)
 	if not E.Retail then return end -- dont exist on classic
 
-	if frame.PrivateAuras then
-		PA:RemoveAuras(frame.PrivateAuras)
-	end
+	PA:RemoveAuras(frame.PrivateAuras)
 
 	local db = frame.db and frame.db.privateAuras
 	if db and db.enable then
-		PA:SetupPrivateAuras(db, frame.PrivateAuras, frame.unit)
-
+		frame.PrivateAuras:SetFrameLevel(frame.RaisedElementParent.PrivateAurasLevel)
 		frame.PrivateAuras:ClearAllPoints()
 		frame.PrivateAuras:Point(E.InversePoints[db.parent.point], frame, db.parent.point, db.parent.offsetX, db.parent.offsetY)
 		frame.PrivateAuras:Size(db.icon.size)
-		frame.PrivateAuras:SetFrameLevel(frame.RaisedElementParent.PrivateAurasLevel)
+
+		PA:SetupPrivateAuras(db, frame.PrivateAuras, frame.unit)
 	end
 end
 
