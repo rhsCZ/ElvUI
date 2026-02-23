@@ -57,12 +57,12 @@ local defaults = {
 
 function PA:CreateAnchor(aura, parent, unit, index, db)
 	local previousAura = parent.auraIcons[index]
-	if previousAura then -- clear any old ones, respawn the new ones
+	if previousAura then -- clear any old ones
 		PA:RemoveAura(previousAura)
 	end
 
 	if not unit then unit = parent.unit end
-	if not unit then return end
+	if not unit then return end -- something went wrong
 
 	local borderScale = db.borderScale
 	if not borderScale then borderScale = 1 end
