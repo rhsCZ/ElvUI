@@ -51,17 +51,18 @@ function E:CooldownText(cooldown, hide)
 	cooldown:SetCountdownAbbrevThreshold(db.threshold)
 	cooldown:SetMinimumCountdownDuration(db.minDuration) -- minimum duration above which text will be shown
 
-	if cooldown.Text then
+	local text = cooldown.Text
+	if text then
 		local target = data.which == 'targetaura'
 		if target then -- use the ab settings for text
 			db = E.db.cooldown.actionbar
 		end
 
 		local colors = db.colors.text
-		cooldown.Text:ClearAllPoints()
-		cooldown.Text:SetTextColor(colors.r, colors.g, colors.b)
-		cooldown.Text:Point('CENTER', nil, db.position, db.offsetX, db.offsetY)
-		cooldown.Text:FontTemplate(LSM:Fetch('font', db.font), db.fontSize, db.fontOutline)
+		text:ClearAllPoints()
+		text:SetTextColor(colors.r, colors.g, colors.b)
+		text:Point('CENTER', nil, db.position, db.offsetX, db.offsetY)
+		text:FontTemplate(LSM:Fetch('font', db.font), db.fontSize, db.fontOutline)
 	end
 end
 
