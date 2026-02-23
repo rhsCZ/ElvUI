@@ -1995,7 +1995,7 @@ end
 
 function UF:SetStatusBarColor(bar, r, g, b, custom, overrideAlpha, overrideBackdrop)
 	local clampBackdrop = overrideBackdrop and E:Clamp(overrideBackdrop)
-	local mult = clampBackdrop or E:Clamp((bar.isTransparent and (UF.multiplier * 0.5)) or UF.multiplier)
+	local mult = clampBackdrop or E:Clamp(bar.isTransparent and (UF.multiplier * 0.5) or UF.multiplier)
 	local mainR, mainG, mainB, mainA = r, g, b, E:Clamp(bar.isTransparent and (UF.multiplier * 2) or 1)
 	local backR, backG, backB, backA
 
