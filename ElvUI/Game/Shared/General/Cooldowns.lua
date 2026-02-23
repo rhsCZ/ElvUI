@@ -53,12 +53,12 @@ function E:CooldownText(cooldown, hide)
 
 	local text = cooldown.Text
 	if text then
+		local colors = db.colors.text -- define the color before switching the db for font settings
 		local target = data.which == 'targetaura'
 		if target then -- use the ab settings for text
 			db = E.db.cooldown.actionbar
 		end
 
-		local colors = db.colors.text
 		text:ClearAllPoints()
 		text:SetTextColor(colors.r, colors.g, colors.b)
 		text:Point('CENTER', nil, db.position, db.offsetX, db.offsetY)
