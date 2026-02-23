@@ -1993,33 +1993,24 @@ end
 
 function UF:SetStatusBarColor(bar, r, g, b, custom, overrideAlpha, overrideBackdrop)
 	local clampBackdrop = overrideBackdrop and E:Clamp(overrideBackdrop)
-	local mult = clampBackdrop or E:Clamp(bar.isTransparent and (UF.multiplier * 0.5) or UF.multiplier)
 	local mainR, mainG, mainB, mainA = r, g, b, E:Clamp(bar.isTransparent and (UF.multiplier * 2) or 1)
-	local backR, backG, backB, backA
+	local bgR, bgG, bgB, bgA = r, g, b, clampBackdrop or E:Clamp(bar.isTransparent and (UF.multiplier * 0.5) or UF.multiplier)
 
 	local color = custom or bar.custom_backdrop
-	if bar.isTransparent then
-		if color then
-			backR, backG, backB, backA = color.r, color.g, color.b, clampBackdrop or (overrideAlpha and mult) or color.a
-		else
-			backR, backG, backB, backA = r, g, b, mult
-		end
-	elseif color then
-		backR, backG, backB, backA = color.r * mult, color.g * mult, color.b * mult, 1
-	else
-		backR, backG, backB, backA = r * mult, g * mult, b * mult, 1
+	if color then
+		bgR, bgG, bgB, bgA = color.r, color.g, color.b, clampBackdrop or (overrideAlpha and bgA) or color.a
 	end
 
 	if bar.bg then
 		if bar.invertColors then
 			bar.bg:SetVertexColor(mainR, mainG, mainB, mainA)
 		else
-			bar.bg:SetVertexColor(backR, backG, backB, backA)
+			bar.bg:SetVertexColor(bgR, bgG, bgB, bgA)
 		end
 	end
 
 	if bar.invertColors then
-		bar:GetStatusBarTexture():SetVertexColor(backR, backG, backB, backA)
+		bar:GetStatusBarTexture():SetVertexColor(bgR, bgG, bgB, bgA)
 	else
 		bar:GetStatusBarTexture():SetVertexColor(mainR, mainG, mainB, mainA)
 	end
