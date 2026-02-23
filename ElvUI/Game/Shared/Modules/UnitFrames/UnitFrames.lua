@@ -1994,14 +1994,15 @@ function UF:MergeUnitSettings(from, to)
 end
 
 function UF:SetStatusBarColor(bar, r, g, b, custom, overrideAlpha, overrideBackdrop)
-	local mult = E:Clamp(overrideBackdrop or (bar.isTransparent and (UF.multiplier * 0.5)) or UF.multiplier)
+	local clampBackdrop = overrideBackdrop and E:Clamp(overrideBackdrop)
+	local mult = clampBackdrop or E:Clamp((bar.isTransparent and (UF.multiplier * 0.5)) or UF.multiplier)
 	local mainR, mainG, mainB, mainA = r, g, b, E:Clamp(bar.isTransparent and (UF.multiplier * 2) or 1)
 	local backR, backG, backB, backA
 
 	local color = custom or bar.custom_backdrop
 	if bar.isTransparent then
 		if color then
-			backR, backG, backB, backA = color.r, color.g, color.b, overrideBackdrop or (overrideAlpha and mult) or color.a
+			backR, backG, backB, backA = color.r, color.g, color.b, clampBackdrop or (overrideAlpha and mult) or color.a
 		else
 			backR, backG, backB, backA = r, g, b, mult
 		end
