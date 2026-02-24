@@ -10,7 +10,7 @@ local AuraFiltered = ElvUF.AuraFiltered
 
 local _G = _G
 local unpack, ipairs, next = unpack, ipairs, next
-local tonumber, strlower, floor = tonumber, strlower, floor
+local tonumber, strlower, floor, pcall = tonumber, strlower, floor, pcall
 local strfind, format, strmatch, gmatch, gsub = strfind, format, strmatch, gmatch, gsub
 
 local CanInspect = CanInspect
