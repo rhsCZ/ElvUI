@@ -2337,7 +2337,7 @@ function UpdateUsable(self, isUsable, notEnoughMana)
 end
 
 function UpdateCount(self)
-	if not self:HasAction() then
+	if not self:HasAction() or self.config.hideElements.count then
 		self.Count:SetText("")
 		return
 	end
