@@ -887,7 +887,7 @@ function TT:MODIFIER_STATE_CHANGED()
 end
 
 function TT:ShowAuraInfo(tt, source, spellID, aura)
-	local mountID, mountText = E.MountIDs[spellID]
+	local mountID, mountText = E:NotSecretValue(spellID) and E.MountIDs[spellID]
 	if mountID then
 		local sourceText = E.MountText[mountID]
 		mountText = sourceText and gsub(sourceText, blanchyFix, '|n')
@@ -925,9 +925,7 @@ function TT:SetUnitAuraByAuraInstanceID(tt, unit, auraInstanceID)
 	local aura = unitAuraInfo and unitAuraInfo[auraInstanceID]
 	if not aura then return end
 
-	if E:NotSecretValue(aura.spellId) then
-		TT:ShowAuraInfo(tt, aura.sourceUnit, aura.spellId, aura)
-	end
+	TT:ShowAuraInfo(tt, aura.sourceUnit, aura.spellId, aura)
 end
 
 function TT:SetUnitAura(tt, unit, index, filter)
@@ -936,9 +934,7 @@ function TT:SetUnitAura(tt, unit, index, filter)
 	local name, _, _, _, _, _, source, _, _, spellID = E:GetAuraData(unit, index, filter)
 	if not name then return end
 
-	if E:NotSecretValue(spellID) then
-		TT:ShowAuraInfo(tt, source, spellID)
-	end
+	TT:ShowAuraInfo(tt, source, spellID)
 end
 
 function TT:GameTooltip_OnTooltipSetSpell(data)
