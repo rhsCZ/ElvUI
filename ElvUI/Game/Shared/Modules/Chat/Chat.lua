@@ -943,7 +943,7 @@ function CH:StyleChat(frame)
 	frame:SetMaxLines(CH.db.maxLines)
 	frame:SetFading(CH.db.fade)
 
-	if not IsCombatLog(frame) then -- this can cause issues on retail
+	if not IsCombatLog(frame) then -- setting this script to log is problematic on retail
 		tab:SetScript('OnClick', CH.Tab_OnClick)
 	end
 
@@ -1571,9 +1571,7 @@ function CH:PositionChat(chat)
 	end
 
 	local BASE_OFFSET = 32
-	local COMBAT_LOG = IsCombatLog(chat)
-	local LOG_OFFSET = COMBAT_LOG and (_G.LeftChatTab:GetHeight() + 4) or 0
-
+	local LOG_OFFSET = IsCombatLog(chat) and (_G.LeftChatTab:GetHeight() + 4) or 0
 	if chat == CH.LeftChatWindow then
 		chat:ClearAllPoints()
 		chat:SetPoint('BOTTOMLEFT', _G.LeftChatPanel, 'BOTTOMLEFT', 5, 5)
