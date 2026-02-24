@@ -907,9 +907,15 @@ function TT:ShowAuraInfo(tt, source, spellID, aura)
 			local color = E:ClassColor(aura.unitClassFilename) or PRIEST_COLOR
 			tt:AddDoubleLine(format(IDLine, _G.ID, spellID), color:WrapTextInColorCode(aura.unitName or UNKNOWN))
 		elseif source then
+			local classColor
 			local _, className = UnitClass(source)
-			local color = E:ClassColor(className) or PRIEST_COLOR
-			tt:AddDoubleLine(format(IDLine, _G.ID, spellID), color:WrapTextInColorCode(UnitName(source) or UNKNOWN))
+			if E:IsSecretUnit(source) then
+				classColor = C_ClassColor_GetClassColor(className) or PRIEST_COLOR
+			else
+				classColor = E:ClassColor(className) or PRIEST_COLOR
+			end
+
+			tt:AddDoubleLine(format(IDLine, _G.ID, spellID), classColor:WrapTextInColorCode(UnitName(source) or UNKNOWN))
 		else
 			tt:AddLine(format(IDLine, _G.ID, spellID))
 		end
