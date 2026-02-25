@@ -113,19 +113,16 @@ G.unitframe.aurawatch = {
 		[367364]	= Aura(367364, nil, 'BOTTOMRIGHT', {0.09, 0.69, 0.61}, nil, nil, nil, nil, -20), -- Reversion (echo)
 		[373267]	= Aura(373267, nil, 'RIGHT', {0.82, 0.29, 0.24}), -- Life Bind (Verdant Embrace)
 		[364343]	= Aura(364343, nil, 'TOP', {0.13, 0.87, 0.50}), -- Echo
-		-- Augmentation Evoker
+		-- Augmentation Evoker [ No defaults: 410263 "Inferno's Blessing" 410686 "Symbiotic Bloom" 413984 "Shifting Sands" ]
 		[360827]	= Aura(360827, nil, 'TOPRIGHT', {0.33, 0.33, 0.77}), -- Blistering Scales
 		[410089]	= Aura(410089, nil, 'TOP', {0.13, 0.87, 0.50}), -- Prescience
 		[395152]	= Aura(395152, nil, 'BOTTOMRIGHT', {0.98, 0.44, 0.00}), -- Ebon Might
-		-- ToDo 410263: Inferno's Blessing
-		-- ToDo 410686: Symbiotic Bloom
-		-- ToDo 413984: Shifting Sands
 	},
 	PRIEST = {
 		-- Disc Priest
 		[194384]	= Aura(194384, nil, 'TOPRIGHT', {1, 1, 0.66}), -- Atonement
 		[17]		= Aura(17, nil, 'TOPLEFT', {0.7, 0.7, 0.7}, true), -- Power Word: Shield
-		-- ToDo 1253593: Void Shield
+		[1253593]	= Aura(1253593, nil, 'TOP', {0.71, 0.29, 0.38}), -- Void Shield
 		-- Holy Priest
 		[41635]		= Aura(41635, nil, 'BOTTOMRIGHT', {0.2, 0.7, 0.2}), -- Prayer of Mending
 		[139]		= Aura(139, nil, 'BOTTOMLEFT', {0.4, 0.7, 0.2}), -- Renew
@@ -145,7 +142,7 @@ G.unitframe.aurawatch = {
 		[156910]	= Aura(156910, nil, 'TOPRIGHT', {0.7, 0.3, 0.7}), -- Beacon of Faith
 		[200025]	= Aura(200025, nil, 'TOPRIGHT', {0.7, 0.3, 0.7}), -- Beacon of Virtue
 		[156322]	= Aura(156322, nil, 'TOPLEFT', {0.2, 0.8, 0.2}), -- Eternal Flame
-		-- ToDo 1244893: Beacon of the Savior
+		[1244893]	= Aura(1244893, nil, 'RIGHT', {0.06, 0.77, 0.34}), -- Beacon of the Savior
 	},
 	SHAMAN = {
 		-- Restoration Shaman
