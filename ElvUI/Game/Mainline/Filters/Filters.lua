@@ -82,7 +82,7 @@ G.unitframe.aurawatch = {
 	-- Args Aura(auraID, includeIDs, enabled, point, color, anyUnit, onlyShowMissing, displayText, textThreshold, xOffset, yOffset)
 	EVOKER = {
 		-- All
-		[381748]	= Aura(381748, {381732,381741,381746,381749,381750,381751,381752,381753,381754,381756,381757,381758}, false, 'CENTER', {0.17, 0.94, 0.75}, true, true), -- Blessing of the Bronze
+		[381748]	= Aura(381748, {381732, 381741, 381746, 381749, 381750, 381751, 381752, 381753, 381754, 381756, 381757, 381758}, false, 'CENTER', {0.17, 0.94, 0.75}, true, true), -- Blessing of the Bronze
 		-- Preservation
 		[355941]	= Aura(355941, nil, true, 'TOPRIGHT', {0.33, 0.33, 0.77}), -- Dream Breath
 		[376788]	= Aura(376788, nil, true, 'TOPRIGHT', {0.25, 0.25, 0.58}, nil, nil, nil, nil, -20), -- Dream Breath (echo)
