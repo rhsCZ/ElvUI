@@ -113,10 +113,13 @@ G.unitframe.aurawatch = {
 		[367364]	= Aura(367364, nil, true, 'BOTTOMRIGHT', {0.09, 0.69, 0.61}, nil, nil, nil, nil, -20), -- Reversion (echo)
 		[373267]	= Aura(373267, nil, true, 'RIGHT', {0.82, 0.29, 0.24}), -- Life Bind (Verdant Embrace)
 		[364343]	= Aura(364343, nil, true, 'TOP', {0.13, 0.87, 0.50}), -- Echo
-		-- Augmentation Evoker [ No defaults: 410263 "Inferno's Blessing" 410686 "Symbiotic Bloom" 413984 "Shifting Sands" ]
+		-- Augmentation Evoker
 		[360827]	= Aura(360827, nil, true, 'TOPRIGHT', {0.33, 0.33, 0.77}), -- Blistering Scales
 		[410089]	= Aura(410089, nil, true, 'TOP', {0.13, 0.87, 0.50}), -- Prescience
 		[395152]	= Aura(395152, nil, true, 'BOTTOMRIGHT', {0.98, 0.44, 0.00}), -- Ebon Might
+		[410263]	= Aura(410263, nil, false, 'TOPLEFT', {0.02, 0.78, 0.43}) -- Inferno's Blessing
+		[410686]	= Aura(410686, nil, false, 'TOPLEFT', {0.18, 0.84, 0.78}) -- Symbiotic Bloom
+		[413984]	= Aura(413984, nil, false, 'BOTTOM', {0.09, 0.89, 0.86}) -- Shifting Sands
 	},
 	PRIEST = {
 		-- Disc Priest
