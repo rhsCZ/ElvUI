@@ -115,7 +115,7 @@ G.unitframe.aurawatch = {
 	DRUID = {
 		-- All
 		[1126]		= Aura(1126, nil, false, 'CENTER', {0.17, 0.94, 0.75}, true, true), -- Mark of the Wild
-		[474754]	= Aura(474754, nil, false, 'BOTTOM', {0.17, 0.94, 0.75}, true, true), -- Symbiotic Relationship
+		[474754]	= Aura(474754, nil, false, 'BOTTOM', {0.59, 0.50, 0.75}, true, true), -- Symbiotic Relationship
 		-- Restoration
 		[774]		= Aura(774, nil, true, 'TOPRIGHT', {0.8, 0.4, 0.8}), -- Rejuvenation
 		[33763]		= Aura(33763, nil, true, 'TOPLEFT', {0.4, 0.8, 0.2}), -- Lifebloom
