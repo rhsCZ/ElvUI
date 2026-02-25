@@ -101,72 +101,71 @@ G.unitframe.aurafilters.RaidBuffsElvUI = {
 	spells = {}
 }
 
---[[
-Preservation Evoker
-	355941 - Dream Breath
-	363502 - Dream Flight
-	364343 - Echo
-	366155 - Reversion
-	367364 - Echo Reversion
-	373267 - Lifebind
-	376788 - Echo Dream Breath
-
-Augmentation Evoker
-	360827 - Blistering Scales
-	395152 - Ebon Might
-	410089 - Prescience
-	410263 - Inferno's Blessing
-	410686 - Symbiotic Bloom
-	413984 - Shifting Sands
-
-Resto Druid
-	774 - Rejuv
-	8936 - Regrowth
-	33763 - Lifebloom
-	48438 - Wild Growth
-	155777 - Germination
-
-Disc Priest
-	17 - Power Word: Shield
-	194384 - Atonement
-	1253593 - Void Shield
-
-Holy Priest
-	139 - Renew
-	41635 - Prayer of Mending
-	77489 - Echo of Light
-
-Mistweaver Monk
-	115175 - Soothing Mist
-	119611 - Renewing Mist
-	124682 - Enveloping Mist
-	450769 - Aspect of Harmony
-
-Restoration Shaman
-	974, 383648 - Earth Shield
-	61295 - Riptide
-
-Holy Paladin
-	53563 - Beacon of Light
-	156322 - Eternal Flame
-	156910 - Beacon of Faith
-	1244893 - Beacon of the Savior
-	200025 - Beacon of Virtue
-]]
-
 -- Aura indicators on UnitFrames (Hots, Shields, Externals)
 G.unitframe.aurawatch = {
-	GLOBAL = {},
-	EVOKER = {},
+	-- Args Aura(auraID, includeIDs, point, color, anyUnit, onlyShowMissing, displayText, textThreshold, xOffset, yOffset)
+	EVOKER = {
+		-- Preservation Evoker
+		[355941]	= Aura(355941, nil, 'TOPRIGHT', {0.33, 0.33, 0.77}), -- Dream Breath
+		[376788]	= Aura(376788, nil, 'TOPRIGHT', {0.25, 0.25, 0.58}, nil, nil, nil, nil, -20), -- Dream Breath (echo)
+		[363502]	= Aura(363502, nil, 'BOTTOMLEFT', {0.33, 0.33, 0.70}), -- Dream Flight
+		[366155]	= Aura(366155, nil, 'BOTTOMRIGHT', {0.14, 1.00, 0.88}), -- Reversion
+		[367364]	= Aura(367364, nil, 'BOTTOMRIGHT', {0.09, 0.69, 0.61}, nil, nil, nil, nil, -20), -- Reversion (echo)
+		[373267]	= Aura(373267, nil, 'RIGHT', {0.82, 0.29, 0.24}), -- Life Bind (Verdant Embrace)
+		[364343]	= Aura(364343, nil, 'TOP', {0.13, 0.87, 0.50}), -- Echo
+		-- Augmentation Evoker
+		[360827]	= Aura(360827, nil, 'TOPRIGHT', {0.33, 0.33, 0.77}), -- Blistering Scales
+		[410089]	= Aura(410089, nil, 'TOP', {0.13, 0.87, 0.50}), -- Prescience
+		[395152]	= Aura(395152, nil, 'BOTTOMRIGHT', {0.98, 0.44, 0.00}), -- Ebon Might
+		-- ToDo 410263: Inferno's Blessing
+		-- ToDo 410686: Symbiotic Bloom
+		-- ToDo 413984: Shifting Sands
+	},
+	PRIEST = {
+		-- Disc Priest
+		[194384]	= Aura(194384, nil, 'TOPRIGHT', {1, 1, 0.66}), -- Atonement
+		[17]		= Aura(17, nil, 'TOPLEFT', {0.7, 0.7, 0.7}, true), -- Power Word: Shield
+		-- ToDo 1253593: Void Shield
+		-- Holy Priest
+		[41635]		= Aura(41635, nil, 'BOTTOMRIGHT', {0.2, 0.7, 0.2}), -- Prayer of Mending
+		[139]		= Aura(139, nil, 'BOTTOMLEFT', {0.4, 0.7, 0.2}), -- Renew
+		[77489]		= Aura(77489, nil, 'TOP', {0.75, 1.00, 0.30}), -- Echo of Light
+	},
+	DRUID = {
+		-- Resto Druid
+		[774]		= Aura(774, nil, 'TOPRIGHT', {0.8, 0.4, 0.8}), -- Rejuvenation
+		[33763]		= Aura(33763, nil, 'TOPLEFT', {0.4, 0.8, 0.2}), -- Lifebloom
+		[48438]		= Aura(48438, nil, 'BOTTOMRIGHT', {0.8, 0.4, 0}), -- Wild Growth
+		[8936]		= Aura(8936, nil, 'BOTTOMLEFT', {0.2, 0.8, 0.2}), -- Regrowth
+		[155777]	= Aura(155777, nil, 'RIGHT', {0.8, 0.4, 0.8}), -- Germination
+	},
+	PALADIN = {
+		-- Holy Paladin
+		[53563]		= Aura(53563, nil, 'TOPRIGHT', {0.7, 0.3, 0.7}), -- Beacon of Light
+		[156910]	= Aura(156910, nil, 'TOPRIGHT', {0.7, 0.3, 0.7}), -- Beacon of Faith
+		[200025]	= Aura(200025, nil, 'TOPRIGHT', {0.7, 0.3, 0.7}), -- Beacon of Virtue
+		[156322]	= Aura(156322, nil, 'TOPLEFT', {0.2, 0.8, 0.2}), -- Eternal Flame
+		-- ToDo 1244893: Beacon of the Savior
+	},
+	SHAMAN = {
+		-- Restoration Shaman
+		[61295]		= Aura(61295, nil, 'TOPRIGHT', {0.7, 0.3, 0.7}), -- Riptide
+		[974]		= Aura(974, nil, 'BOTTOMRIGHT', {0.91, 0.80, 0.44}), -- Earth Shield
+		[383648]	= Aura(383648, nil, 'BOTTOMRIGHT', {0.91, 0.80, 0.44}), -- Earth Shield (Elemental Orbit)
+	},
+	MONK = {
+		-- Mistweaver Monk
+		[115175]	= Aura(115175, nil, 'TOP', {0.6, 0.9, 0.9}), -- Soothing Mist
+		[119611]	= Aura(119611, nil, 'TOPLEFT', {0.3, 0.8, 0.6}), -- Renewing Mist
+		[124682]	= Aura(124682, nil, 'BOTTOMLEFT', {0.8, 0.8, 0.25}), -- Enveloping Mist
+		-- ToDo 450769: Aspect of Harmony
+	},
+	-- Not used for now
 	ROGUE = {},
 	WARRIOR = {},
-	PRIEST = {},
-	DRUID = {},
-	PALADIN = {},
-	SHAMAN = {},
 	HUNTER = {},
-	MONK = {},
-	PET = {}
+	PET = {},
+	GLOBAL = {},
 }
 
 -- List of spells to display ticks
