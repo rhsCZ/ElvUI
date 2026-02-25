@@ -43,9 +43,8 @@ function E:CooldownTextures(cooldown, texture, edge, swipe)
 	cooldown:SetSwipeTexture(E.media.blankTex, swipe.r, swipe.g, swipe.b, swipe.a)
 end
 
-function E:CooldownText(cooldown, hide)
-	local db, data = E:CooldownData(cooldown)
-	if not db then return end
+function E:CooldownText(cooldown, db, data, hide)
+	if not cooldown then return end
 
 	cooldown:SetHideCountdownNumbers(hide)
 	cooldown:SetCountdownAbbrevThreshold(db.threshold)
@@ -86,9 +85,9 @@ function E:CooldownUpdate(cooldown)
 
 	E:CooldownBling(cooldown, invisible)
 
-	E:CooldownText(cooldown, db.hideNumbers)
-	E:CooldownText(data.chargeCooldown, not db.chargeText)
-	E:CooldownText(data.lossOfControl, not db.locText)
+	E:CooldownText(cooldown, db, data, db.hideNumbers)
+	E:CooldownText(data.chargeCooldown, db, data, not db.chargeText)
+	E:CooldownText(data.lossOfControl, db, data, not db.locText)
 
 	E:CooldownColors(cooldown, colors.edge, colors.swipe, invisible)
 	E:CooldownColors(data.chargeCooldown, colors.edgeCharge, colors.swipeCharge)
