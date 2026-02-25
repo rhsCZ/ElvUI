@@ -84,7 +84,7 @@ function E:CooldownUpdate(cooldown)
 	local exclude = target or aurabars
 	local invisible = exclude and 0 or nil
 
-	E:CooldownBling(cooldown)
+	E:CooldownBling(cooldown, invisible)
 
 	E:CooldownText(cooldown, db.hideNumbers)
 	E:CooldownText(data.chargeCooldown, not db.chargeText)
