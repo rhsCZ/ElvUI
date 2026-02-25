@@ -106,56 +106,56 @@ G.unitframe.aurawatch = {
 	-- Args Aura(auraID, includeIDs, point, color, anyUnit, onlyShowMissing, displayText, textThreshold, xOffset, yOffset)
 	EVOKER = {
 		-- Preservation Evoker
-		[355941]	= Aura(355941, nil, 'TOPRIGHT', {0.33, 0.33, 0.77}), -- Dream Breath
-		[376788]	= Aura(376788, nil, 'TOPRIGHT', {0.25, 0.25, 0.58}, nil, nil, nil, nil, -20), -- Dream Breath (echo)
-		[363502]	= Aura(363502, nil, 'BOTTOMLEFT', {0.33, 0.33, 0.70}), -- Dream Flight
-		[366155]	= Aura(366155, nil, 'BOTTOMRIGHT', {0.14, 1.00, 0.88}), -- Reversion
-		[367364]	= Aura(367364, nil, 'BOTTOMRIGHT', {0.09, 0.69, 0.61}, nil, nil, nil, nil, -20), -- Reversion (echo)
-		[373267]	= Aura(373267, nil, 'RIGHT', {0.82, 0.29, 0.24}), -- Life Bind (Verdant Embrace)
-		[364343]	= Aura(364343, nil, 'TOP', {0.13, 0.87, 0.50}), -- Echo
+		[355941]	= Aura(355941, nil, true, 'TOPRIGHT', {0.33, 0.33, 0.77}), -- Dream Breath
+		[376788]	= Aura(376788, nil, true, 'TOPRIGHT', {0.25, 0.25, 0.58}, nil, nil, nil, nil, -20), -- Dream Breath (echo)
+		[363502]	= Aura(363502, nil, true, 'BOTTOMLEFT', {0.33, 0.33, 0.70}), -- Dream Flight
+		[366155]	= Aura(366155, nil, true, 'BOTTOMRIGHT', {0.14, 1.00, 0.88}), -- Reversion
+		[367364]	= Aura(367364, nil, true, 'BOTTOMRIGHT', {0.09, 0.69, 0.61}, nil, nil, nil, nil, -20), -- Reversion (echo)
+		[373267]	= Aura(373267, nil, true, 'RIGHT', {0.82, 0.29, 0.24}), -- Life Bind (Verdant Embrace)
+		[364343]	= Aura(364343, nil, true, 'TOP', {0.13, 0.87, 0.50}), -- Echo
 		-- Augmentation Evoker [ No defaults: 410263 "Inferno's Blessing" 410686 "Symbiotic Bloom" 413984 "Shifting Sands" ]
-		[360827]	= Aura(360827, nil, 'TOPRIGHT', {0.33, 0.33, 0.77}), -- Blistering Scales
-		[410089]	= Aura(410089, nil, 'TOP', {0.13, 0.87, 0.50}), -- Prescience
-		[395152]	= Aura(395152, nil, 'BOTTOMRIGHT', {0.98, 0.44, 0.00}), -- Ebon Might
+		[360827]	= Aura(360827, nil, true, 'TOPRIGHT', {0.33, 0.33, 0.77}), -- Blistering Scales
+		[410089]	= Aura(410089, nil, true, 'TOP', {0.13, 0.87, 0.50}), -- Prescience
+		[395152]	= Aura(395152, nil, true, 'BOTTOMRIGHT', {0.98, 0.44, 0.00}), -- Ebon Might
 	},
 	PRIEST = {
 		-- Disc Priest
-		[194384]	= Aura(194384, nil, 'TOPRIGHT', {1, 1, 0.66}), -- Atonement
-		[17]		= Aura(17, nil, 'TOPLEFT', {0.7, 0.7, 0.7}, true), -- Power Word: Shield
-		[1253593]	= Aura(1253593, nil, 'TOP', {0.71, 0.29, 0.38}), -- Void Shield
+		[194384]	= Aura(194384, nil, true, 'TOPRIGHT', {1, 1, 0.66}), -- Atonement
+		[17]		= Aura(17, nil, true, 'TOPLEFT', {0.7, 0.7, 0.7}, true), -- Power Word: Shield
+		[1253593]	= Aura(1253593, nil, true, 'TOP', {0.71, 0.29, 0.38}), -- Void Shield
 		-- Holy Priest
-		[41635]		= Aura(41635, nil, 'BOTTOMRIGHT', {0.2, 0.7, 0.2}), -- Prayer of Mending
-		[139]		= Aura(139, nil, 'BOTTOMLEFT', {0.4, 0.7, 0.2}), -- Renew
-		[77489]		= Aura(77489, nil, 'TOP', {0.75, 1.00, 0.30}), -- Echo of Light
+		[41635]		= Aura(41635, nil, true, 'BOTTOMRIGHT', {0.2, 0.7, 0.2}), -- Prayer of Mending
+		[139]		= Aura(139, nil, true, 'BOTTOMLEFT', {0.4, 0.7, 0.2}), -- Renew
+		[77489]		= Aura(77489, nil, true, 'TOP', {0.75, 1.00, 0.30}), -- Echo of Light
 	},
 	DRUID = {
 		-- Resto Druid
-		[774]		= Aura(774, nil, 'TOPRIGHT', {0.8, 0.4, 0.8}), -- Rejuvenation
-		[33763]		= Aura(33763, nil, 'TOPLEFT', {0.4, 0.8, 0.2}), -- Lifebloom
-		[48438]		= Aura(48438, nil, 'BOTTOMRIGHT', {0.8, 0.4, 0}), -- Wild Growth
-		[8936]		= Aura(8936, nil, 'BOTTOMLEFT', {0.2, 0.8, 0.2}), -- Regrowth
-		[155777]	= Aura(155777, nil, 'RIGHT', {0.8, 0.4, 0.8}), -- Germination
+		[774]		= Aura(774, nil, true, 'TOPRIGHT', {0.8, 0.4, 0.8}), -- Rejuvenation
+		[33763]		= Aura(33763, nil, true, 'TOPLEFT', {0.4, 0.8, 0.2}), -- Lifebloom
+		[48438]		= Aura(48438, nil, true, 'BOTTOMRIGHT', {0.8, 0.4, 0}), -- Wild Growth
+		[8936]		= Aura(8936, nil, true, 'BOTTOMLEFT', {0.2, 0.8, 0.2}), -- Regrowth
+		[155777]	= Aura(155777, nil, true, 'RIGHT', {0.8, 0.4, 0.8}), -- Germination
 	},
 	PALADIN = {
 		-- Holy Paladin
-		[53563]		= Aura(53563, nil, 'TOPRIGHT', {0.7, 0.3, 0.7}), -- Beacon of Light
-		[156910]	= Aura(156910, nil, 'TOPRIGHT', {0.7, 0.3, 0.7}), -- Beacon of Faith
-		[200025]	= Aura(200025, nil, 'TOPRIGHT', {0.7, 0.3, 0.7}), -- Beacon of Virtue
-		[156322]	= Aura(156322, nil, 'TOPLEFT', {0.2, 0.8, 0.2}), -- Eternal Flame
-		[1244893]	= Aura(1244893, nil, 'RIGHT', {0.06, 0.77, 0.34}), -- Beacon of the Savior
+		[53563]		= Aura(53563, nil, true, 'TOPRIGHT', {0.7, 0.3, 0.7}), -- Beacon of Light
+		[156910]	= Aura(156910, nil, true, 'TOPRIGHT', {0.7, 0.3, 0.7}), -- Beacon of Faith
+		[200025]	= Aura(200025, nil, true, 'TOPRIGHT', {0.7, 0.3, 0.7}), -- Beacon of Virtue
+		[156322]	= Aura(156322, nil, true, 'TOPLEFT', {0.2, 0.8, 0.2}), -- Eternal Flame
+		[1244893]	= Aura(1244893, nil, true, 'RIGHT', {0.06, 0.77, 0.34}), -- Beacon of the Savior
 	},
 	SHAMAN = {
 		-- Restoration Shaman
-		[61295]		= Aura(61295, nil, 'TOPRIGHT', {0.7, 0.3, 0.7}), -- Riptide
-		[974]		= Aura(974, nil, 'BOTTOMRIGHT', {0.91, 0.80, 0.44}), -- Earth Shield
-		[383648]	= Aura(383648, nil, 'BOTTOMRIGHT', {0.91, 0.80, 0.44}), -- Earth Shield (Elemental Orbit)
+		[61295]		= Aura(61295, nil, true, 'TOPRIGHT', {0.7, 0.3, 0.7}), -- Riptide
+		[974]		= Aura(974, nil, true, 'BOTTOMRIGHT', {0.91, 0.80, 0.44}), -- Earth Shield
+		[383648]	= Aura(383648, nil, true, 'BOTTOMRIGHT', {0.91, 0.80, 0.44}), -- Earth Shield (Elemental Orbit)
 	},
 	MONK = {
 		-- Mistweaver Monk
-		[115175]	= Aura(115175, nil, 'TOP', {0.6, 0.9, 0.9}), -- Soothing Mist
-		[119611]	= Aura(119611, nil, 'TOPLEFT', {0.3, 0.8, 0.6}), -- Renewing Mist
-		[450769]	= Aura(450769, nil, 'TOPLEFT', {0.3, 0.8, 0.6}), -- Aspect of Harmony (Modified version of Renewing Mist)
-		[124682]	= Aura(124682, nil, 'BOTTOMLEFT', {0.8, 0.8, 0.25}), -- Enveloping Mist
+		[115175]	= Aura(115175, nil, true, 'TOP', {0.6, 0.9, 0.9}), -- Soothing Mist
+		[119611]	= Aura(119611, nil, true, 'TOPLEFT', {0.3, 0.8, 0.6}), -- Renewing Mist
+		[450769]	= Aura(450769, nil, true, 'TOPLEFT', {0.3, 0.8, 0.6}), -- Aspect of Harmony (Modified version of Renewing Mist)
+		[124682]	= Aura(124682, nil, true, 'BOTTOMLEFT', {0.8, 0.8, 0.25}), -- Enveloping Mist
 	},
 	-- Not used for now
 	ROGUE = {},
