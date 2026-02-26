@@ -84,24 +84,19 @@ function UF:BuffIndicator_PostUpdateIcon(_, button)
 		button.cd:SetDrawEdge(false)
 	end
 
-	local hideText = not onlyText and not settings.displayText
-	button.cd:SetHideCountdownNumbers(hideText)
+	button.cd:SetHideCountdownNumbers(not onlyText and not settings.displayText)
 
 	local text = button.cd.Text or button.cd:GetRegions()
 	if text then -- CD module aquires the text to Text but without it we need to grab it
 		text:ClearAllPoints()
 		text:Point(settings.cooldownAnchor or 'CENTER', settings.cooldownX or 1, settings.cooldownY or 1)
 
-		if onlyText then
-			text:SetTextColor(settings.color.r, settings.color.g, settings.color.b)
+		local db = E.db.cooldown.auraindicator
+		local color = (onlyText and settings.color) or (db and db.colors.text)
+		if color then
+			text:SetTextColor(color.r, color.g, color.b)
 		else
-			local db = E.db.cooldown.auraindicator
-			local color = db and db.colors.text
-			if color then
-				text:SetTextColor(color.r, color.g, color.b)
-			else
-				text:SetTextColor(1, 1, 1)
-			end
+			text:SetTextColor(1, 1, 1)
 		end
 	end
 
