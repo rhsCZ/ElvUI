@@ -94,11 +94,8 @@ function UF:BuffIndicator_PostUpdateIcon(_, button)
 		text:Point(settings.cooldownAnchor or 'CENTER', settings.cooldownX or 1, settings.cooldownY or 1)
 
 		if onlyText then
-			text:SetAlpha(1)
 			text:SetTextColor(settings.color.r, settings.color.g, settings.color.b)
 		else
-			text:SetAlpha(hideText and 0 or 1)
-
 			local db = E.db.cooldown.auraindicator
 			local color = db and db.colors.text
 			if color then
