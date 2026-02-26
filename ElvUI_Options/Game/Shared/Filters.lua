@@ -18,6 +18,7 @@ local GetSpellSubtext = GetSpellSubtext
 local quickSearchText, selectedSpell, selectedFilter, filterList, spellList = '', nil, nil, {}, {}
 local auraBarDefaults = { enable = true, color = { r = 1, g = 1, b = 1, a = 1 } }
 local defaultFilterList = {
+	['Aura Highlight'] = 'Aura Highlight',
 	['Aura Indicator (Global)'] = 'Aura Indicator (Global)',
 	['Aura Indicator (Class)'] = 'Aura Indicator (Class)',
 	['Aura Indicator (Pet)'] = 'Aura Indicator (Pet)',
@@ -26,7 +27,6 @@ local defaultFilterList = {
 
 if not E.Retail then
 	defaultFilterList['AuraBar Colors'] = 'AuraBar Colors'
-	defaultFilterList['Aura Highlight'] = 'Aura Highlight'
 end
 
 local function GetSelectedFilters()
