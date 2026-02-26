@@ -86,7 +86,6 @@ function UF:BuffIndicator_PostUpdateIcon(_, button)
 
 	local hideText = not onlyText and not settings.displayText
 	button.cd:SetHideCountdownNumbers(hideText)
-	button.cd:SetCountdownAbbrevThreshold(settings.textThreshold ~= -1 and settings.textThreshold or 0)
 
 	local text = button.cd.Text or button.cd:GetRegions()
 	if text then -- CD module aquires the text to Text but without it we need to grab it
