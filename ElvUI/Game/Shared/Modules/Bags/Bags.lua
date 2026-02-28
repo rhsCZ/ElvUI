@@ -3711,6 +3711,7 @@ function B:Initialize()
 	B.MAX_CONTAINER_ITEMS = 40
 	B.CHARACTERBANK_SIZE = 98
 	B.WARBANDBANK_SIZE = 98
+	B.GUILDBANK_SIZE = 98
 
 	--Bag Mover: Set default anchor point and create mover
 	BagFrameHolder:Point('BOTTOMRIGHT', _G.RightChatPanel, 'BOTTOMRIGHT', 0, 22 + E.Border*4 - E.Spacing*2)
