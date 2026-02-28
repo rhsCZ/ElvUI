@@ -203,7 +203,6 @@ end
 -- GLOBALS: ElvUIBags, ElvUIBagMover, ElvUIBankMover
 
 local BANK_SPACE_OFFSET = E.Retail and 30 or 0
-local MAX_CONTAINER_ITEMS = 38
 local CONTAINER_SPACING = 0
 local CONTAINER_SCALE = 0.75
 local BOTTOM_OFFSET = 8
@@ -2115,7 +2114,7 @@ function B:ConstructContainerHolder(f, bagID, isBank, name, index)
 		bag.staleSlots = {}
 	end
 
-	for slotID = 1, (E.Retail and isBank and 98) or MAX_CONTAINER_ITEMS do
+	for slotID = 1, (E.Retail and isBank and B.CHARACTERBANK_SIZE) or B.MAX_CONTAINER_ITEMS do
 		bag[slotID] = B:ConstructContainerButton(f, bagID, slotID)
 	end
 
@@ -3688,9 +3687,7 @@ function B:Initialize()
 	}
 
 	B:LoadBagBar()
-
-	--Creating vendor grays frame
-	B:CreateSellFrame()
+	B:CreateSellFrame() -- Creating vendor grays frame
 	B:RegisterEvent('MERCHANT_CLOSED')
 
 	--Bag Mover (We want it created even if Bags module is disabled, so we can use it for default bags too)
@@ -3710,6 +3707,8 @@ function B:Initialize()
 
 	B.Initialized = true
 	B.BagFrames = {}
+
+	B.MAX_CONTAINER_ITEMS = 40
 	B.CHARACTERBANK_SIZE = 98
 	B.WARBANDBANK_SIZE = 98
 
