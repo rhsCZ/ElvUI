@@ -203,6 +203,7 @@ end
 -- GLOBALS: ElvUIBags, ElvUIBagMover, ElvUIBankMover
 
 local BANK_SPACE_OFFSET = E.Retail and 30 or 0
+local MAX_CONTAINER_ITEMS = 38
 local CONTAINER_SPACING = 0
 local CONTAINER_SCALE = 0.75
 local BOTTOM_OFFSET = 8
@@ -2114,7 +2115,7 @@ function B:ConstructContainerHolder(f, bagID, isBank, name, index)
 		bag.staleSlots = {}
 	end
 
-	for slotID = 1, (E.Retail and isBank and 98) or _G.MAX_CONTAINER_ITEMS do
+	for slotID = 1, (E.Retail and isBank and 98) or MAX_CONTAINER_ITEMS do
 		bag[slotID] = B:ConstructContainerButton(f, bagID, slotID)
 	end
 
