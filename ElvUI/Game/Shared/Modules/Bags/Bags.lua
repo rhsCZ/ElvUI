@@ -200,28 +200,6 @@ if not E.Classic then
 	tinsert(B.GearFilters, FILTER_FLAG_JUNKSELL)
 end
 
-do
-	local GetBackpackCurrencyInfo = GetBackpackCurrencyInfo or C_CurrencyInfo.GetBackpackCurrencyInfo
-
-	function B:GetBackpackCurrencyInfo(index)
-		if _G.GetBackpackCurrencyInfo then
-			local info = {}
-			info.name, info.quantity, info.iconFileID, info.currencyTypesID = GetBackpackCurrencyInfo(index)
-			return info
-		else
-			return GetBackpackCurrencyInfo(index)
-		end
-	end
-
-	function B:GetContainerItemInfo(containerIndex, slotIndex)
-		return GetContainerItemInfo(containerIndex, slotIndex) or {}
-	end
-
-	function B:GetContainerItemQuestInfo(containerIndex, slotIndex)
-		return GetContainerItemQuestInfo(containerIndex, slotIndex)
-	end
-end
-
 -- GLOBALS: ElvUIBags, ElvUIBagMover, ElvUIBankMover
 
 local BANK_SPACE_OFFSET = E.Retail and 30 or 0
@@ -336,6 +314,28 @@ end
 
 for bankID = bankOffset + 1, maxBankSlots do
 	tinsert(bankIDs, bankID)
+end
+
+do
+	local GetBackpackCurrencyInfo = GetBackpackCurrencyInfo or C_CurrencyInfo.GetBackpackCurrencyInfo
+
+	function B:GetBackpackCurrencyInfo(index)
+		if _G.GetBackpackCurrencyInfo then
+			local info = {}
+			info.name, info.quantity, info.iconFileID, info.currencyTypesID = GetBackpackCurrencyInfo(index)
+			return info
+		else
+			return GetBackpackCurrencyInfo(index)
+		end
+	end
+
+	function B:GetContainerItemInfo(containerIndex, slotIndex)
+		return GetContainerItemInfo(containerIndex, slotIndex) or {}
+	end
+
+	function B:GetContainerItemQuestInfo(containerIndex, slotIndex)
+		return GetContainerItemQuestInfo(containerIndex, slotIndex)
+	end
 end
 
 function B:GetContainerFrame(arg)
