@@ -200,32 +200,9 @@ if not E.Classic then
 	tinsert(B.GearFilters, FILTER_FLAG_JUNKSELL)
 end
 
-do
-	local GetBackpackCurrencyInfo = GetBackpackCurrencyInfo or C_CurrencyInfo.GetBackpackCurrencyInfo
-
-	function B:GetBackpackCurrencyInfo(index)
-		if _G.GetBackpackCurrencyInfo then
-			local info = {}
-			info.name, info.quantity, info.iconFileID, info.currencyTypesID = GetBackpackCurrencyInfo(index)
-			return info
-		else
-			return GetBackpackCurrencyInfo(index)
-		end
-	end
-
-	function B:GetContainerItemInfo(containerIndex, slotIndex)
-		return GetContainerItemInfo(containerIndex, slotIndex) or {}
-	end
-
-	function B:GetContainerItemQuestInfo(containerIndex, slotIndex)
-		return GetContainerItemQuestInfo(containerIndex, slotIndex)
-	end
-end
-
 -- GLOBALS: ElvUIBags, ElvUIBagMover, ElvUIBankMover
 
 local BANK_SPACE_OFFSET = E.Retail and 30 or 0
-local MAX_CONTAINER_ITEMS = 38
 local CONTAINER_SPACING = 0
 local CONTAINER_SCALE = 0.75
 local BOTTOM_OFFSET = 8
@@ -337,6 +314,28 @@ end
 
 for bankID = bankOffset + 1, maxBankSlots do
 	tinsert(bankIDs, bankID)
+end
+
+do
+	local GetBackpackCurrencyInfo = GetBackpackCurrencyInfo or C_CurrencyInfo.GetBackpackCurrencyInfo
+
+	function B:GetBackpackCurrencyInfo(index)
+		if _G.GetBackpackCurrencyInfo then
+			local info = {}
+			info.name, info.quantity, info.iconFileID, info.currencyTypesID = GetBackpackCurrencyInfo(index)
+			return info
+		else
+			return GetBackpackCurrencyInfo(index)
+		end
+	end
+
+	function B:GetContainerItemInfo(containerIndex, slotIndex)
+		return GetContainerItemInfo(containerIndex, slotIndex) or {}
+	end
+
+	function B:GetContainerItemQuestInfo(containerIndex, slotIndex)
+		return GetContainerItemQuestInfo(containerIndex, slotIndex)
+	end
 end
 
 function B:GetContainerFrame(arg)
@@ -2115,7 +2114,7 @@ function B:ConstructContainerHolder(f, bagID, isBank, name, index)
 		bag.staleSlots = {}
 	end
 
-	for slotID = 1, (E.Retail and isBank and 98) or MAX_CONTAINER_ITEMS do
+	for slotID = 1, (E.Retail and isBank and 98) or _G.MAX_CONTAINER_ITEMS do
 		bag[slotID] = B:ConstructContainerButton(f, bagID, slotID)
 	end
 
