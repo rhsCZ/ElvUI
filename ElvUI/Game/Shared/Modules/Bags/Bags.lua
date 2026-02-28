@@ -2114,7 +2114,7 @@ function B:ConstructContainerHolder(f, bagID, isBank, name, index)
 		bag.staleSlots = {}
 	end
 
-	for slotID = 1, (E.Retail and isBank and 98) or _G.MAX_CONTAINER_ITEMS do
+	for slotID = 1, (E.Retail and isBank and B.CHARACTERBANK_SIZE) or B.MAX_CONTAINER_ITEMS do
 		bag[slotID] = B:ConstructContainerButton(f, bagID, slotID)
 	end
 
@@ -3687,9 +3687,7 @@ function B:Initialize()
 	}
 
 	B:LoadBagBar()
-
-	--Creating vendor grays frame
-	B:CreateSellFrame()
+	B:CreateSellFrame() -- Creating vendor grays frame
 	B:RegisterEvent('MERCHANT_CLOSED')
 
 	--Bag Mover (We want it created even if Bags module is disabled, so we can use it for default bags too)
@@ -3709,8 +3707,11 @@ function B:Initialize()
 
 	B.Initialized = true
 	B.BagFrames = {}
+
+	B.MAX_CONTAINER_ITEMS = 40
 	B.CHARACTERBANK_SIZE = 98
 	B.WARBANDBANK_SIZE = 98
+	B.GUILDBANK_SIZE = 98
 
 	--Bag Mover: Set default anchor point and create mover
 	BagFrameHolder:Point('BOTTOMRIGHT', _G.RightChatPanel, 'BOTTOMRIGHT', 0, 22 + E.Border*4 - E.Spacing*2)
