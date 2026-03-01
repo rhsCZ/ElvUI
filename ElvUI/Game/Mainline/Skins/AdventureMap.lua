@@ -23,7 +23,7 @@ function S:Blizzard_AdventureMap()
 
 	-- Quest Choice
 	local AdventureMapQuestChoiceDialog = _G.AdventureMapQuestChoiceDialog
-	AdventureMapQuestChoiceDialog:StripTextures()
+	AdventureMapQuestChoiceDialog:StripTextures(true)
 	AdventureMapQuestChoiceDialog:CreateBackdrop('Transparent')
 	AdventureMapQuestChoiceDialog.backdrop:ClearAllPoints()
 	AdventureMapQuestChoiceDialog.backdrop:Point('TOPLEFT', 0, -13)
