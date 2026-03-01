@@ -3708,7 +3708,7 @@ function B:Initialize()
 	B.Initialized = true
 	B.BagFrames = {}
 
-	B.MAX_CONTAINER_ITEMS = 40
+	B.MAX_CONTAINER_ITEMS = 42
 	B.CHARACTERBANK_SIZE = 98
 	B.WARBANDBANK_SIZE = 98
 	B.GUILDBANK_SIZE = 98
