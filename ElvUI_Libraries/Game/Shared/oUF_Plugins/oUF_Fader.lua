@@ -86,7 +86,7 @@ local function Update(self, event, unit)
 
 	-- try to get the unit from the parent
 	if not unit or type(unit) ~= 'string' then
-		unit = self.unit
+		unit = self.realUnit or self.unit
 	end
 
 	-- range fader
@@ -152,8 +152,9 @@ local function OnRangeUpdate(frame, elapsed)
 
 	if (frame.timer >= .20) then
 		for _, object in next, onRangeObjects do
-			if object:IsVisible() then
-				object.Fader:ForceUpdate('OnRangeUpdate')
+			local element = object:IsVisible() and object.Fader
+			if element then
+				element:ForceUpdate('OnRangeUpdate')
 			end
 		end
 
@@ -186,6 +187,13 @@ local function TargetScript(self)
 	end
 end
 
+local function CheckRange(self, event, value)
+	local element = self.Fader
+	if not element then return end
+
+	element.isInRange = value
+end
+
 local options = {
 	Range = {
 		enable = function(self)
@@ -196,6 +204,8 @@ local options = {
 
 			onRangeFrame:Show()
 			tinsert(onRangeObjects, self)
+
+			self:RegisterEvent('UNIT_IN_RANGE_UPDATE', CheckRange)
 		end,
 		disable = function(self)
 			if onRangeFrame then
@@ -211,6 +221,9 @@ local options = {
 					onRangeFrame:Hide()
 				end
 			end
+
+			self.Fader.isInRange = nil
+			self:UnregisterEvent('UNIT_IN_RANGE_UPDATE', CheckRange)
 		end
 	},
 	Hover = {
