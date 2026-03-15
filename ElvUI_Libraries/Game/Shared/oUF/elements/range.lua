@@ -35,6 +35,8 @@ local next, tinsert, tremove = next, tinsert, tremove
 
 local CreateFrame = CreateFrame
 local UnitInRange = UnitInRange
+local UnitInParty = UnitInParty
+local UnitInRaid = UnitInRaid
 local UnitIsConnected = UnitIsConnected
 
 local function Update(self, event)
@@ -50,14 +52,15 @@ local function Update(self, event)
 		element:PreUpdate()
 	end
 
-	local inRange, checkedRange
+	local inRange, wasChecked
 	local connected = UnitIsConnected(unit)
-	if connected then
-		inRange, checkedRange = UnitInRange(unit)
+	local isEligible = connected and (UnitInParty(unit) or UnitInRaid(unit))
+	if(isEligible) then
+		inRange, wasChecked = UnitInRange(unit)
 
 		if oUF.isRetail then
 			self:SetAlphaFromBoolean(inRange, element.insideAlpha, element.outsideAlpha)
-		elseif(checkedRange and not inRange) then
+		elseif(wasChecked and not inRange) then
 			self:SetAlpha(element.outsideAlpha)
 		else
 			self:SetAlpha(element.insideAlpha)
@@ -72,9 +75,10 @@ local function Update(self, event)
 	* self       - the Range element
 	* object     - the parent object
 	* inRange    - indicates if the unit is within 40 yards of the player (boolean)
+	* isEligible - indicates if the unit is eligible for the range check (boolean)
 	--]]
 	if(element.PostUpdate) then
-		return element:PostUpdate(self, inRange, connected)
+		return element:PostUpdate(self, inRange, isEligible, connected)
 	end
 end
 
