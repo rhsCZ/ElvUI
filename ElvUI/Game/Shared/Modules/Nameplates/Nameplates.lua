@@ -43,16 +43,11 @@ local GetCVar = C_CVar.GetCVar
 local POWERTYPE_ALTERNATE = Enum.PowerType.Alternate or 10
 
 local Blacklist = {
-	PLAYER = {
-		enable = true,
-		health = {
-			enable = true,
-		},
-	},
-	ENEMY_PLAYER = {},
-	FRIENDLY_PLAYER = {},
-	ENEMY_NPC = {},
-	FRIENDLY_NPC = {},
+	PLAYER = { enable = true, health = { enable = true }, },
+	ENEMY_PLAYER = { enable = true, health = { enable = true }, },
+	FRIENDLY_PLAYER = { enable = true, health = { enable = true }, },
+	ENEMY_NPC = { enable = true, health = { enable = true }, },
+	FRIENDLY_NPC = { enable = true, health = { enable = true }, },
 }
 
 function NP:ResetAuraPriority()
