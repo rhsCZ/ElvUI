@@ -21,7 +21,6 @@ local GetBNPlayerCommunityLink = GetBNPlayerCommunityLink
 local GetChannelName = GetChannelName
 local GetChatWindowInfo = GetChatWindowInfo
 local GetCursorPosition = GetCursorPosition
-local GetInstanceInfo = GetInstanceInfo
 local GetNumGroupMembers = GetNumGroupMembers
 local GetPlayerCommunityLink = GetPlayerCommunityLink
 local GetPlayerInfoByGUID = GetPlayerInfoByGUID
@@ -32,6 +31,7 @@ local InCombatLockdown = InCombatLockdown
 local IsAltKeyDown = IsAltKeyDown
 local IsBuiltinChatWindow = IsBuiltinChatWindow
 local IsCombatLog = IsCombatLog
+local IsInInstance = IsInInstance
 local IsInRaid, IsInGroup = IsInRaid, IsInGroup
 local IsSecureCmd = IsSecureCmd
 local IsShiftKeyDown = IsShiftKeyDown
@@ -640,11 +640,12 @@ function CH:ChatFrame_OnMouseScroll(delta)
 end
 
 function CH:GetGroupDistribution()
-	local _, instanceType = GetInstanceInfo()
-	if instanceType == 'pvp' then return '/bg ' end
-	if IsInRaid() then return '/ra ' end
-	if IsInGroup() then return '/p ' end
-	return '/s '
+	local _, instanceType = IsInInstance()
+	if instanceType == 'pvp' then
+		return '/bg '
+	end
+
+	return (IsInRaid() and '/ra ') or (IsInGroup() and '/p ') or '/s '
 end
 
 function CH:InsertEmotions(msg)
@@ -2337,14 +2338,17 @@ function CH:ChatFrame_MessageEventHandler(frame, event, arg1, arg2, arg3, arg4, 
 
 		if frame.privateMessageList then
 			if chatGroup == 'SYSTEM' then -- HACK to put certain system messages into dedicated whisper windows
-				local found, msg = false, strlower(arg1)
-				for playerName in pairs(frame.privateMessageList) do
-					local playerNotFoundMsg = strlower(format(_G.ERR_CHAT_PLAYER_NOT_FOUND_S, playerName))
-					local charOnlineMsg = strlower(format(_G.ERR_FRIEND_ONLINE_SS, playerName, playerName))
-					local charOfflineMsg = strlower(format(_G.ERR_FRIEND_OFFLINE_S, playerName))
-					if msg == playerNotFoundMsg or msg == charOnlineMsg or msg == charOfflineMsg then
-						found = true
-						break
+				local msg = E:NotSecretValue(arg1) and strlower(arg1)
+				local found = false
+				if msg then
+					for playerName in pairs(frame.privateMessageList) do
+						local notFound = strlower(format(_G.ERR_CHAT_PLAYER_NOT_FOUND_S, playerName))
+						local charOnline = strlower(format(_G.ERR_FRIEND_ONLINE_SS, playerName, playerName))
+						local charOffline = strlower(format(_G.ERR_FRIEND_OFFLINE_S, playerName))
+						if msg == notFound or msg == charOnline or msg == charOffline then
+							found = true
+							break
+						end
 					end
 				end
 

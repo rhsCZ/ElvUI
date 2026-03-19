@@ -127,6 +127,7 @@ end
 local function GetOptionsTable_AuraBars(updateFunc, groupName)
 	local config = ACH:Group(L["Aura Bars"], nil, 4, nil, function(info) return E.db.unitframe.units[groupName].aurabar[info[#info]] end, function(info, value) E.db.unitframe.units[groupName].aurabar[info[#info]] = value updateFunc(UF, groupName) end)
 	config.args.enable = ACH:Toggle(L["Enable"], nil, 0)
+	config.args.useMidnight = ACH:Toggle(L["Use Midnight Filters"], nil, 1, nil, nil, nil, nil, nil, nil, E.Retail)
 
 	config.args.tooltip = ACH:Group(L["Tooltip"], nil, 5)
 	config.args.tooltip.args.tooltipAnchorType = ACH:Select(L["Anchor Type"], nil, 1, C.Values.TooltipAnchors)
@@ -152,53 +153,53 @@ local function GetOptionsTable_AuraBars(updateFunc, groupName)
 	config.args.generalGroup.args.spacing = ACH:Range(L["Spacing"], nil, 16, spacingNormal)
 	config.args.generalGroup.args.smoothbars = ACH:Toggle(L["Smooth Bars"], L["Bars will transition smoothly."], 17)
 
-	config.args.filtersGroup = ACH:Group(L["Filters"], nil, 20)
+	config.args.midnightGroup = ACH:Group(E.Retail and L["Filters"] or L["Filters: Midnight"], nil, 50, nil, nil, nil, nil, function() return not E.Retail and not E.db.unitframe.units[groupName].aurabar.useMidnight end)
+	config.args.midnightGroup.args.useBlocklist = ACH:Toggle(L["Blocklist"], E.Retail and L["Activate the blocklist filter.\n\n|cffff3333Note:|r Only non-secret auras will be checked."] or L["Activate the blocklist filter."], 1)
+	config.args.midnightGroup.args.isAuraPlayer = ACH:Toggle(L["Player"], L["All of your auras."], 2)
+	config.args.midnightGroup.args.isAuraRaidPlayerDispellable = ACH:Toggle(L["Player Dispellable"], L["Auras you can dispel."], 3, nil, nil, nil, nil, nil, nil, not E.Retail)
 
-	if E.Retail then
-		local patchReady = E.wowtoc > 120000
-		config.args.filtersGroup.args.isAuraPlayer = ACH:Toggle(L["Player"], L["All of your auras."], 1)
-		config.args.filtersGroup.args.isAuraRaidPlayerDispellable = ACH:Toggle(L["Player Dispellable"], L["Auras you can dispel."], 2, nil, nil, nil, nil, nil, nil, not patchReady)
+	config.args.midnightGroup.args.player = ACH:Group(L["Player"], nil, 10)
+	config.args.midnightGroup.args.player.args.isAuraImportantPlayer = ACH:Toggle(L["Important"], nil, 1, nil, nil, nil, nil, nil, nil, not E.Retail)
+	config.args.midnightGroup.args.player.args.isAuraRaidPlayer = ACH:Toggle(L["Raid"], nil, 2)
+	config.args.midnightGroup.args.player.args.isAuraRaidInCombatPlayer = ACH:Toggle(L["Raid Frames"], L["Auras displayed on Blizzard's raid frames."], 3, nil, nil, nil, nil, nil, nil, not E.Retail)
+	config.args.midnightGroup.args.player.args.isAuraCancelablePlayer = ACH:Toggle(L["Is Cancelable"], nil, 4)
+	config.args.midnightGroup.args.player.args.notAuraCancelablePlayer = ACH:Toggle(L["Not Cancelable"], nil, 5)
+	config.args.midnightGroup.args.player.args.isAuraCrowdControlPlayer = ACH:Toggle(L["Crowd Control"], nil, 6, nil, nil, nil, nil, nil, nil, not E.Retail)
+	config.args.midnightGroup.args.player.args.isAuraBigDefensivePlayer = ACH:Toggle(L["Big Defensive"], L["Defensives that are self cast."], 7, nil, nil, nil, nil, nil, nil, not E.Retail)
+	config.args.midnightGroup.args.player.args.isAuraExternalDefensivePlayer = ACH:Toggle(L["External Defensive"], L["Defensives that can be cast on others."], 8, nil, nil, nil, nil, nil, nil, not E.Retail)
+	config.args.midnightGroup.args.player.args.isAuraPermanentPlayer = ACH:Toggle(L["Block Permanent"], L["Hide any permanent auras."], 9)
+	config.args.midnightGroup.args.player.inline = true
 
-		config.args.filtersGroup.args.player = ACH:Group(L["Player"], nil, 10)
-		config.args.filtersGroup.args.player.args.isAuraImportantPlayer = ACH:Toggle(L["Important"], nil, 1, nil, nil, nil, nil, nil, nil, not patchReady)
-		config.args.filtersGroup.args.player.args.isAuraRaidPlayer = ACH:Toggle(L["Raid"], nil, 2)
-		config.args.filtersGroup.args.player.args.isAuraRaidInCombatPlayer = ACH:Toggle(L["Raid Frames"], L["Auras displayed on Blizzard's raid frames."], 3, nil, nil, nil, nil, nil, nil, not patchReady)
-		config.args.filtersGroup.args.player.args.isAuraCancelablePlayer = ACH:Toggle(L["Is Cancelable"], nil, 4)
-		config.args.filtersGroup.args.player.args.notAuraCancelablePlayer = ACH:Toggle(L["Not Cancelable"], nil, 5)
-		config.args.filtersGroup.args.player.args.isAuraCrowdControlPlayer = ACH:Toggle(L["Crowd Control"], nil, 6, nil, nil, nil, nil, nil, nil, not patchReady)
-		config.args.filtersGroup.args.player.args.isAuraBigDefensivePlayer = ACH:Toggle(L["Big Defensive"], L["Defensives that are self cast."], 7, nil, nil, nil, nil, nil, nil, not patchReady)
-		config.args.filtersGroup.args.player.args.isAuraExternalDefensivePlayer = ACH:Toggle(L["External Defensive"], L["Defensives that can be cast on others."], 8, nil, nil, nil, nil, nil, nil, not E.Retail)
-		config.args.filtersGroup.args.player.inline = true
+	config.args.midnightGroup.args.others = ACH:Group(L["Others"], nil, 20)
+	config.args.midnightGroup.args.others.args.isAuraImportant = ACH:Toggle(L["Important"], nil, 1, nil, nil, nil, nil, nil, nil, not E.Retail)
+	config.args.midnightGroup.args.others.args.isAuraRaid = ACH:Toggle(L["Raid"], nil, 2)
+	config.args.midnightGroup.args.others.args.isAuraRaidInCombat = ACH:Toggle(L["Raid Frames"], L["Auras displayed on Blizzard's raid frames."], 3, nil, nil, nil, nil, nil, nil, not E.Retail)
+	config.args.midnightGroup.args.others.args.isAuraCancelable = ACH:Toggle(L["Is Cancelable"], nil, 4)
+	config.args.midnightGroup.args.others.args.notAuraCancelable = ACH:Toggle(L["Not Cancelable"], nil, 5)
+	config.args.midnightGroup.args.others.args.isAuraCrowdControl = ACH:Toggle(L["Crowd Control"], nil, 6, nil, nil, nil, nil, nil, nil, not E.Retail)
+	config.args.midnightGroup.args.others.args.isAuraBigDefensive = ACH:Toggle(L["Big Defensive"], L["Defensives that are self cast."], 7, nil, nil, nil, nil, nil, nil, not E.Retail)
+	config.args.midnightGroup.args.others.args.isAuraExternalDefensive = ACH:Toggle(L["External Defensive"], L["Defensives that can be cast on others."], 8, nil, nil, nil, nil, nil, nil, not E.Retail)
+	config.args.midnightGroup.args.others.args.isAuraPermanent = ACH:Toggle(L["Block Permanent"], L["Hide any permanent auras."], 9)
+	config.args.midnightGroup.args.others.inline = true
 
-		config.args.filtersGroup.args.others = ACH:Group(L["Others"], nil, 20)
-		config.args.filtersGroup.args.others.args.isAuraImportant = ACH:Toggle(L["Important"], nil, 1, nil, nil, nil, nil, nil, nil, not patchReady)
-		config.args.filtersGroup.args.others.args.isAuraRaid = ACH:Toggle(L["Raid"], nil, 2)
-		config.args.filtersGroup.args.others.args.isAuraRaidInCombat = ACH:Toggle(L["Raid Frames"], L["Auras displayed on Blizzard's raid frames."], 3, nil, nil, nil, nil, nil, nil, not patchReady)
-		config.args.filtersGroup.args.others.args.isAuraCancelable = ACH:Toggle(L["Is Cancelable"], nil, 4)
-		config.args.filtersGroup.args.others.args.notAuraCancelable = ACH:Toggle(L["Not Cancelable"], nil, 5)
-		config.args.filtersGroup.args.others.args.isAuraCrowdControl = ACH:Toggle(L["Crowd Control"], nil, 6, nil, nil, nil, nil, nil, nil, not patchReady)
-		config.args.filtersGroup.args.others.args.isAuraBigDefensive = ACH:Toggle(L["Big Defensive"], L["Defensives that are self cast."], 7, nil, nil, nil, nil, nil, nil, not patchReady)
-		config.args.filtersGroup.args.others.args.isAuraExternalDefensive = ACH:Toggle(L["External Defensive"], L["Defensives that can be cast on others."], 8, nil, nil, nil, nil, nil, nil, not E.Retail)
-		config.args.filtersGroup.args.others.inline = true
-	else
-		config.args.filtersGroup.args.minDuration = ACH:Range(L["Minimum Duration"], L["Don't display auras that are shorter than this duration (in seconds). Set to zero to disable."], 1, { min = 0, max = 10800, step = 1 })
-		config.args.filtersGroup.args.maxDuration = ACH:Range(L["Maximum Duration"], L["Don't display auras that are longer than this duration (in seconds). Set to zero to disable."], 2, { min = 0, max = 10800, step = 1 })
-		config.args.filtersGroup.args.jumpToFilter = ACH:Execute(L["Filters Page"], L["Shortcut to global filters."], 3, function() ACD:SelectGroup('ElvUI', 'filters') end)
-		config.args.filtersGroup.args.specialFilters = ACH:Select(L["Add Special Filter"], L["These filters don't use a list of spells like the regular filters. Instead, they use the WoW API and some code logic to determine if an aura should be allowed or blocked."], 4, function() wipe(filters) local list = E.global.unitframe.specialFilters if not (list and next(list)) then return filters end for filter in pairs(list) do filters[filter] = L[filter] end return filters end, nil, nil, nil, function(_, value) C.SetFilterPriority(E.db.unitframe.units, groupName, 'aurabar', value) updateFunc(UF, groupName) end, nil, nil, true)
-		config.args.filtersGroup.args.filter = ACH:Select(L["Add Regular Filter"], L["These filters use a list of spells to determine if an aura should be allowed or blocked. The content of these filters can be modified in the Filters section of the config."], 5, function() wipe(filters) local list = E.global.unitframe.aurafilters if not (list and next(list)) then return filters end for filter in pairs(list) do filters[filter] = L[filter] end return filters end, nil, nil, nil, function(_, value) C.SetFilterPriority(E.db.unitframe.units, groupName, 'aurabar', value) updateFunc(UF, groupName) end)
-		config.args.filtersGroup.args.resetPriority = ACH:Execute(L["Reset Priority"], L["Reset filter priority to the default state."], 7, function() E.db.unitframe.units[groupName].aurabar.priority = P.unitframe.units[groupName].aurabar.priority updateFunc(UF, groupName) end)
+	config.args.legacyGroup = ACH:Group(L["Filters: Legacy"], nil, 60, nil, nil, nil, nil, function() return E.Retail or E.db.unitframe.units[groupName].aurabar.useMidnight end)
+	config.args.legacyGroup.args.minDuration = ACH:Range(L["Minimum Duration"], L["Don't display auras that are shorter than this duration (in seconds). Set to zero to disable."], 1, { min = 0, max = 10800, step = 1 })
+	config.args.legacyGroup.args.maxDuration = ACH:Range(L["Maximum Duration"], L["Don't display auras that are longer than this duration (in seconds). Set to zero to disable."], 2, { min = 0, max = 10800, step = 1 })
+	config.args.legacyGroup.args.jumpToFilter = ACH:Execute(L["Filters Page"], L["Shortcut to global filters."], 3, function() ACD:SelectGroup('ElvUI', 'filters') end)
+	config.args.legacyGroup.args.specialFilters = ACH:Select(L["Add Special Filter"], L["These filters don't use a list of spells like the regular filters. Instead, they use the WoW API and some code logic to determine if an aura should be allowed or blocked."], 4, function() wipe(filters) local list = E.global.unitframe.specialFilters if not (list and next(list)) then return filters end for filter in pairs(list) do filters[filter] = L[filter] end return filters end, nil, nil, nil, function(_, value) C.SetFilterPriority(E.db.unitframe.units, groupName, 'aurabar', value) updateFunc(UF, groupName) end, nil, nil, true)
+	config.args.legacyGroup.args.filter = ACH:Select(L["Add Regular Filter"], L["These filters use a list of spells to determine if an aura should be allowed or blocked. The content of these filters can be modified in the Filters section of the config."], 5, function() wipe(filters) local list = E.global.unitframe.aurafilters if not (list and next(list)) then return filters end for filter in pairs(list) do filters[filter] = L[filter] end return filters end, nil, nil, nil, function(_, value) C.SetFilterPriority(E.db.unitframe.units, groupName, 'aurabar', value) updateFunc(UF, groupName) end)
+	config.args.legacyGroup.args.resetPriority = ACH:Execute(L["Reset Priority"], L["Reset filter priority to the default state."], 7, function() E.db.unitframe.units[groupName].aurabar.priority = P.unitframe.units[groupName].aurabar.priority updateFunc(UF, groupName) end)
 
-		config.args.filtersGroup.args.filterPriority = ACH:MultiSelect(L["Filter Priority"], nil, 8, function() local str = E.db.unitframe.units[groupName].aurabar.priority if str == '' then return {} end return {strsplit(',', str)} end, nil, nil, function(_, value) local str = E.db.unitframe.units[groupName].aurabar.priority if str == '' then return end local tbl = {strsplit(',', str)} return tbl[value] end, function() updateFunc(UF, groupName) end)
-		config.args.filtersGroup.args.filterPriority.dragdrop = true
-		config.args.filtersGroup.args.filterPriority.dragGetTitle = C.DragGetTitle
-		config.args.filtersGroup.args.filterPriority.dragGetDesc = C.DragGetDesc
-		config.args.filtersGroup.args.filterPriority.dragOnLeave = E.noop -- keep it here
-		config.args.filtersGroup.args.filterPriority.dragOnEnter = function(info) carryFilterTo = info.obj.value end
-		config.args.filtersGroup.args.filterPriority.dragOnMouseDown = function(info) carryFilterFrom, carryFilterTo = info.obj.value, nil end
-		config.args.filtersGroup.args.filterPriority.dragOnMouseUp = function() C.SetFilterPriority(E.db.unitframe.units, groupName, 'aurabar', carryFilterTo, nil, carryFilterFrom) carryFilterFrom, carryFilterTo = nil, nil end
-		config.args.filtersGroup.args.filterPriority.dragOnClick = function(_, button) C.SetFilterPriority(E.db.unitframe.units, groupName, 'aurabar', carryFilterFrom, button == 'RightButton', nil, button == 'LeftButton' and IsShiftKeyDown(), button == 'LeftButton' and IsControlKeyDown()) end
-		config.args.filtersGroup.args.spacer1 = ACH:Description(L["FILTER_PRIORITY_DESC"], 9)
-	end
+	config.args.legacyGroup.args.filterPriority = ACH:MultiSelect(L["Filter Priority"], nil, 8, function() local str = E.db.unitframe.units[groupName].aurabar.priority if str == '' then return {} end return {strsplit(',', str)} end, nil, nil, function(_, value) local str = E.db.unitframe.units[groupName].aurabar.priority if str == '' then return end local tbl = {strsplit(',', str)} return tbl[value] end, function() updateFunc(UF, groupName) end)
+	config.args.legacyGroup.args.filterPriority.dragdrop = true
+	config.args.legacyGroup.args.filterPriority.dragGetTitle = C.DragGetTitle
+	config.args.legacyGroup.args.filterPriority.dragGetDesc = C.DragGetDesc
+	config.args.legacyGroup.args.filterPriority.dragOnLeave = E.noop -- keep it here
+	config.args.legacyGroup.args.filterPriority.dragOnEnter = function(info) carryFilterTo = info.obj.value end
+	config.args.legacyGroup.args.filterPriority.dragOnMouseDown = function(info) carryFilterFrom, carryFilterTo = info.obj.value, nil end
+	config.args.legacyGroup.args.filterPriority.dragOnMouseUp = function() C.SetFilterPriority(E.db.unitframe.units, groupName, 'aurabar', carryFilterTo, nil, carryFilterFrom) carryFilterFrom, carryFilterTo = nil, nil end
+	config.args.legacyGroup.args.filterPriority.dragOnClick = function(_, button) C.SetFilterPriority(E.db.unitframe.units, groupName, 'aurabar', carryFilterFrom, button == 'RightButton', nil, button == 'LeftButton' and IsShiftKeyDown(), button == 'LeftButton' and IsControlKeyDown()) end
+	config.args.legacyGroup.args.spacer1 = ACH:Description(L["FILTER_PRIORITY_DESC"], 9)
 
 	if groupName == 'target' then
 		config.args.generalGroup.args.attachTo.values.PLAYER_AURABARS = L["Player Frame Aura Bars"]
@@ -292,32 +293,34 @@ local function GetOptionsTable_Auras(auraType, updateFunc, groupName, numUnits)
 	config.args.strataAndLevel.inline = nil
 	config.args.strataAndLevel.order = 35
 
-	local patchReady = E.wowtoc > 120000
 	config.args.midnightGroup = ACH:Group(E.Retail and L["Filters"] or L["Filters: Midnight"], nil, 50, nil, nil, nil, nil, function() return not E.Retail and not E.db.unitframe.units[groupName][auraType].useMidnight end)
 
-	config.args.midnightGroup.args.isAuraPlayer = ACH:Toggle(L["Player"], L["All of your auras."], 1)
-	config.args.midnightGroup.args.isAuraRaidPlayerDispellable = ACH:Toggle(L["Player Dispellable"], L["Auras you can dispel."], 2, nil, nil, nil, nil, nil, nil, not patchReady)
+	config.args.midnightGroup.args.useBlocklist = ACH:Toggle(L["Blocklist"], E.Retail and L["Activate the blocklist filter.\n\n|cffff3333Note:|r Only non-secret auras will be checked."] or L["Activate the blocklist filter."], 1)
+	config.args.midnightGroup.args.isAuraPlayer = ACH:Toggle(L["Player"], L["All of your auras."], 2)
+	config.args.midnightGroup.args.isAuraRaidPlayerDispellable = ACH:Toggle(L["Player Dispellable"], L["Auras you can dispel."], 3, nil, nil, nil, nil, nil, nil, not E.Retail)
 
 	config.args.midnightGroup.args.player = ACH:Group(L["Player"], nil, 10)
-	config.args.midnightGroup.args.player.args.isAuraImportantPlayer = ACH:Toggle(L["Important"], nil, 1, nil, nil, nil, nil, nil, nil, not patchReady)
+	config.args.midnightGroup.args.player.args.isAuraImportantPlayer = ACH:Toggle(L["Important"], nil, 1, nil, nil, nil, nil, nil, nil, not E.Retail)
 	config.args.midnightGroup.args.player.args.isAuraRaidPlayer = ACH:Toggle(L["Raid"], nil, 2)
-	config.args.midnightGroup.args.player.args.isAuraRaidInCombatPlayer = ACH:Toggle(L["Raid Frames"], L["Auras displayed on Blizzard's raid frames."], 3, nil, nil, nil, nil, nil, nil, not patchReady)
+	config.args.midnightGroup.args.player.args.isAuraRaidInCombatPlayer = ACH:Toggle(L["Raid Frames"], L["Auras displayed on Blizzard's raid frames."], 3, nil, nil, nil, nil, nil, nil, not E.Retail)
 	config.args.midnightGroup.args.player.args.isAuraCancelablePlayer = ACH:Toggle(L["Is Cancelable"], nil, 4)
 	config.args.midnightGroup.args.player.args.notAuraCancelablePlayer = ACH:Toggle(L["Not Cancelable"], nil, 5)
-	config.args.midnightGroup.args.player.args.isAuraCrowdControlPlayer = ACH:Toggle(L["Crowd Control"], nil, 6, nil, nil, nil, nil, nil, nil, not patchReady)
-	config.args.midnightGroup.args.player.args.isAuraBigDefensivePlayer = ACH:Toggle(L["Big Defensive"], L["Defensives that are self cast."], 7, nil, nil, nil, nil, nil, nil, not patchReady)
+	config.args.midnightGroup.args.player.args.isAuraCrowdControlPlayer = ACH:Toggle(L["Crowd Control"], nil, 6, nil, nil, nil, nil, nil, nil, not E.Retail)
+	config.args.midnightGroup.args.player.args.isAuraBigDefensivePlayer = ACH:Toggle(L["Big Defensive"], L["Defensives that are self cast."], 7, nil, nil, nil, nil, nil, nil, not E.Retail)
 	config.args.midnightGroup.args.player.args.isAuraExternalDefensivePlayer = ACH:Toggle(L["External Defensive"], L["Defensives that can be cast on others."], 8, nil, nil, nil, nil, nil, nil, not E.Retail)
+	config.args.midnightGroup.args.player.args.isAuraPermanentPlayer = ACH:Toggle(L["Block Permanent"], L["Hide any permanent auras."], 9)
 	config.args.midnightGroup.args.player.inline = true
 
 	config.args.midnightGroup.args.others = ACH:Group(L["Others"], nil, 20)
-	config.args.midnightGroup.args.others.args.isAuraImportant = ACH:Toggle(L["Important"], nil, 1, nil, nil, nil, nil, nil, nil, not patchReady)
+	config.args.midnightGroup.args.others.args.isAuraImportant = ACH:Toggle(L["Important"], nil, 1, nil, nil, nil, nil, nil, nil, not E.Retail)
 	config.args.midnightGroup.args.others.args.isAuraRaid = ACH:Toggle(L["Raid"], nil, 2)
-	config.args.midnightGroup.args.others.args.isAuraRaidInCombat = ACH:Toggle(L["Raid Frames"], L["Auras displayed on Blizzard's raid frames."], 3, nil, nil, nil, nil, nil, nil, not patchReady)
+	config.args.midnightGroup.args.others.args.isAuraRaidInCombat = ACH:Toggle(L["Raid Frames"], L["Auras displayed on Blizzard's raid frames."], 3, nil, nil, nil, nil, nil, nil, not E.Retail)
 	config.args.midnightGroup.args.others.args.isAuraCancelable = ACH:Toggle(L["Is Cancelable"], nil, 4)
 	config.args.midnightGroup.args.others.args.notAuraCancelable = ACH:Toggle(L["Not Cancelable"], nil, 5)
-	config.args.midnightGroup.args.others.args.isAuraCrowdControl = ACH:Toggle(L["Crowd Control"], nil, 6, nil, nil, nil, nil, nil, nil, not patchReady)
-	config.args.midnightGroup.args.others.args.isAuraBigDefensive = ACH:Toggle(L["Big Defensive"], L["Defensives that are self cast."], 7, nil, nil, nil, nil, nil, nil, not patchReady)
+	config.args.midnightGroup.args.others.args.isAuraCrowdControl = ACH:Toggle(L["Crowd Control"], nil, 6, nil, nil, nil, nil, nil, nil, not E.Retail)
+	config.args.midnightGroup.args.others.args.isAuraBigDefensive = ACH:Toggle(L["Big Defensive"], L["Defensives that are self cast."], 7, nil, nil, nil, nil, nil, nil, not E.Retail)
 	config.args.midnightGroup.args.others.args.isAuraExternalDefensive = ACH:Toggle(L["External Defensive"], L["Defensives that can be cast on others."], 8, nil, nil, nil, nil, nil, nil, not E.Retail)
+	config.args.midnightGroup.args.others.args.isAuraPermanent = ACH:Toggle(L["Block Permanent"], L["Hide any permanent auras."], 9)
 	config.args.midnightGroup.args.others.inline = true
 
 	config.args.legacyGroup = ACH:Group(L["Filters: Legacy"], nil, 50, nil, nil, nil, nil, function() return E.Retail or E.db.unitframe.units[groupName][auraType].useMidnight end)
@@ -1116,7 +1119,7 @@ local function GetOptionsTable_ClassBar(updateFunc, groupName, numUnits)
 		config.args.generalGroup.args.smoothbars = ACH:Toggle(L["Smooth Bars"], L["Bars will transition smoothly."], 6)
 		config.args.generalGroup.args.sortDirection = ACH:Select(L["Sort Direction"], L["Defines the sort order of the selected sort method."], 7, { asc = L["Ascending"], desc = L["Descending"], NONE = L["None"] }, nil, nil, nil, nil, nil, function() return (E.myclass ~= 'DEATHKNIGHT') end)
 
-		config.args.additionalGroup = ACH:Group(L["Additional Power"], nil, 20, nil, function(info) return E.db.unitframe.units[groupName].classAdditional[info[#info]] end, function(info, value) E.db.unitframe.units[groupName].classAdditional[info[#info]] = value updateFunc(UF, groupName, numUnits) end, nil, function() return not (E.myclass == 'EVOKER' or E.myclass == 'DRUID' or (E.Mists and E.myclass == 'MONK')) end)
+		config.args.additionalGroup = ACH:Group(L["Additional Power"], nil, 20, nil, function(info) return E.db.unitframe.units[groupName].classAdditional[info[#info]] end, function(info, value) E.db.unitframe.units[groupName].classAdditional[info[#info]] = value updateFunc(UF, groupName, numUnits) end, nil, function() return not (E.myclass == 'PRIEST' or E.myclass == 'SHAMAN' or E.myclass == 'EVOKER' or E.myclass == 'DRUID' or (E.Mists and E.myclass == 'MONK')) end)
 		config.args.additionalGroup.args.width = ACH:Range(L["Width"], nil, 1, { min = 15, max = 1000, step = 1 })
 		config.args.additionalGroup.args.height = ACH:Range(L["Height"], nil, 2, { min = 5, max = 500, step = 1 })
 		config.args.additionalGroup.args.orientation = ACH:Select(L["Frame Orientation"], nil, 3, { HORIZONTAL = L["Horizontal"], VERTICAL = L["Vertical"] })
@@ -1135,6 +1138,10 @@ local function GetOptionsTable_ClassBar(updateFunc, groupName, numUnits)
 		elseif E.myclass == 'MONK' then
 			config.args.additionalGroup.args.altManaGroup.args.Stagger = ACH:Toggle(L["Stagger"], nil, 1, nil, nil, nil, nil, nil, nil, E.Retail)
 			config.args.additionalGroup.args.altManaGroup.args.Energy = ACH:Toggle(L["Energy"], nil, 2)
+		elseif E.myclass == 'PRIEST' then
+			config.args.additionalGroup.args.altManaGroup.args.Insanity = ACH:Toggle(L["Insanity"], nil, 1)
+		elseif E.myclass == 'SHAMAN' then
+			config.args.additionalGroup.args.altManaGroup.args.Maelstrom = ACH:Toggle(L["Maelstrom"], nil, 1)
 		elseif E.myclass == 'EVOKER' then
 			config.args.additionalGroup.args.altManaGroup.args.EbonMight = ACH:Toggle(L["EBON_MIGHT"], nil, 1)
 		end
@@ -1279,7 +1286,7 @@ UnitFrame.resetFilters = ACH:Execute(L["Reset Aura Filters"], nil, 3, function()
 UnitFrame.borderOptions = ACH:Execute(L["Border Options"], nil, 4, function() ACD:SelectGroup('ElvUI', 'general', 'media') end)
 
 UnitFrame.generalOptionsGroup = ACH:Group(L["General"], nil, 5, 'tree')
-UnitFrame.generalOptionsGroup.args.multiplier = ACH:Range(E.NewSign..L["Multiplier"], L["Backdrop Multiplier. Also used for the Transparent multiplier."], 1, { softMin = 0.2, min = 0, softMax = 0.8, max = 1, step = 0.01 }, nil, function(info) return E.db.unitframe[info[#info]] end, function(info, value) E.db.unitframe[info[#info]] = value UF:Update_AllFrames() end)
+UnitFrame.generalOptionsGroup.args.multiplier = ACH:Range(L["Multiplier"], L["Backdrop Multiplier. Also used for the Transparent multiplier."], 1, { softMin = 0.2, min = 0, softMax = 0.8, max = 1, step = 0.01 }, nil, function(info) return E.db.unitframe[info[#info]] end, function(info, value) E.db.unitframe[info[#info]] = value UF:Update_AllFrames() end)
 UnitFrame.generalOptionsGroup.args.targetOnMouseDown = ACH:Toggle(L["Target On Mouse-Down"], L["Target units on mouse down rather than mouse up.\n\n|cffff3333Note:|r If Clique is enabled, this option only effects ElvUI frames if they are not blacklisted in Clique."], 2)
 UnitFrame.generalOptionsGroup.args.targetSound = ACH:Toggle(L["Targeting Sound"], L["Enable a sound if you select a unit."], 3)
 UnitFrame.generalOptionsGroup.args.maxAllowedGroups = ACH:Toggle(L["Max Allowed Groups"], L["Groups will be maxed as Mythic to 4, Other Raids to 6, and PVP / World to 8."], 4, nil, nil, nil, nil, function(info, value) E.db.unitframe[info[#info]] = value UF:ZONE_CHANGED_NEW_AREA() end, nil, not E.Retail)
@@ -1313,7 +1320,7 @@ local Colors = UnitFrame.allColorsGroup.args
 Colors.healthGroup = ACH:Group(L["Health"], nil, nil, nil, function(info) if info.type == 'color' then local t, d = E.db.unitframe.colors[info[#info]], P.unitframe.colors[info[#info]] return t.r, t.g, t.b, t.a, d.r, d.g, d.b else return E.db.unitframe.colors[info[#info]] end end, function(info, ...) if info.type == 'color' then local r, g, b, a = ... local t = E.db.unitframe.colors[info[#info]] t.r, t.g, t.b, t.a = r, g, b, a or 1 else local value = ... E.db.unitframe.colors[info[#info]] = value end UF:Update_AllFrames() end)
 Colors.healthGroup.args.healthMultiplier = ACH:Range(L["Backdrop Multiplier"], L["Zero will inherit the unitframe general Multiplier. Disabling this override."], 1, { min = 0, softMax = 0.75, max = 1, step = 0.01 })
 Colors.healthGroup.args.transparentHealth = ACH:Toggle(L["Transparent"], L["Make textures transparent."], 2)
-Colors.healthGroup.args.invertHealth = ACH:Toggle(E.NewSign..L["Invert Colors"], L["Invert foreground and background colors."], 3)
+Colors.healthGroup.args.invertHealth = ACH:Toggle(L["Invert Colors"], L["Invert foreground and background colors."], 3)
 Colors.healthGroup.args.colorhealthbyvalue = ACH:Toggle(L["Health By Value"], L["Color health by amount remaining."], 4)
 Colors.healthGroup.args.healthselection = ACH:Toggle(L["Selection Health"], L["Color health by color selection."], 5, nil, nil, nil, nil, nil, nil, not E.Retail)
 Colors.healthGroup.args.healthclass = ACH:Toggle(L["Class Health"], L["Color health by classcolor or reaction."], 6, nil, nil, nil, nil, nil, function() return E.Retail and E.db.unitframe.colors.healthselection end)
@@ -1416,7 +1423,7 @@ do
 		L["FACTION_STANDING_LABEL8"]
 	}
 
-	Colors.reactionGroup = ACH:Group(E.NewSign..L["Reactions"], nil, nil, nil, function(info) local i = tonumber(info[#info]); local t, d = E.db.unitframe.colors.reaction[i], P.unitframe.colors.reaction[i] return t.r, t.g, t.b, t.a, d.r, d.g, d.b end, function(info, r, g, b) local i = tonumber(info[#info]); local t = E.db.unitframe.colors.reaction[i] t.r, t.g, t.b = r, g, b UF:Update_AllFrames() end)
+	Colors.reactionGroup = ACH:Group(L["Reactions"], nil, nil, nil, function(info) local i = tonumber(info[#info]); local t, d = E.db.unitframe.colors.reaction[i], P.unitframe.colors.reaction[i] return t.r, t.g, t.b, t.a, d.r, d.g, d.b end, function(info, r, g, b) local i = tonumber(info[#info]); local t = E.db.unitframe.colors.reaction[i] t.r, t.g, t.b = r, g, b UF:Update_AllFrames() end)
 
 	for i = 1, 8 do
 		Colors.reactionGroup.args[''..i] = ACH:Color(names[i], nil, i)
@@ -1440,7 +1447,7 @@ Colors.selectionGroup.args['8'] = ACH:Color(L["Friend"], nil, 8)
 Colors.selectionGroup.args['9'] = ACH:Color(L["Dead"], nil, 9)
 Colors.selectionGroup.args['13'] = ACH:Color(L["Battleground Friendly"], nil, 13)
 
-Colors.debuffHighlight = ACH:Group(L["Aura Highlight"], nil, nil, nil, function(info) if info.type == 'color' then local t, d = E.db.unitframe.colors.debuffHighlight[info[#info]], P.unitframe.colors.debuffHighlight[info[#info]] return t.r, t.g, t.b, t.a, d.r, d.g, d.b, d.a else return E.db.unitframe.colors.debuffHighlight[info[#info]] end end, function(info, ...) if info.type == 'color' then local r, g, b, a = ... local t = E.db.unitframe.colors.debuffHighlight[info[#info]] t.r, t.g, t.b, t.a = r, g, b, a else local value = ... E.db.unitframe.colors.debuffHighlight[info[#info]] = value end UF:Update_AllFrames() end)
+Colors.debuffHighlight = ACH:Group(L["Aura Highlight"], nil, nil, nil, function(info) if info.type == 'color' then local t, d = E.db.unitframe.colors.debuffHighlight[info[#info]], P.unitframe.colors.debuffHighlight[info[#info]] return t.r, t.g, t.b, t.a, d.r, d.g, d.b, d.a else return E.db.unitframe.colors.debuffHighlight[info[#info]] end end, function(info, ...) if info.type == 'color' then local r, g, b, a = ... local t = E.db.unitframe.colors.debuffHighlight[info[#info]] t.r, t.g, t.b, t.a = r, g, b, a else local value = ... E.db.unitframe.colors.debuffHighlight[info[#info]] = value end UF:Update_AllFrames() E:UpdateAuraCurves() end)
 Colors.debuffHighlight.args.debuffHighlighting = ACH:Select(L["Highlight Color Style"], L["Color the unit healthbar if there is a debuff that can be dispelled by you."], 1, { NONE = L["None"], GLOW = L["Glow"], FILL = L["Fill"] }, nil, nil, function(info) return E.db.unitframe[info[#info]] end, function(info, value) E.db.unitframe[info[#info]] = value end)
 Colors.debuffHighlight.args.blendMode = ACH:Select(L["Blend Mode"], nil, 2, blendModeValues)
 Colors.debuffHighlight.args.spacer1 = ACH:Spacer(3, 'full')

@@ -19,7 +19,7 @@ function NP:Health_UpdateColor(_, unit)
 	if not unit or self.unit ~= unit then return end
 	local element = self.Health
 
-	local useSelection = E.Retail and element.colorSelection and NP:UnitSelectionType(unit, element.considerSelectionInCombatHostile)
+	local useSelection = E.Retail and element.colorSelection and E:UnitSelectionType(unit, element.considerSelectionInCombatHostile)
 	local useClassification = element.colorClassification and E:GetClassificationColor(unit)
 	local useReaction = element.colorReaction and UnitReaction(unit, 'player')
 
@@ -94,7 +94,7 @@ function NP:Health_SetColors(nameplate, threatColors)
 		nameplate.Health:SetColorTapping(true)
 		nameplate.Health:SetColorSelection(E.Retail)
 		nameplate.Health.colorReaction = not E.Retail
-		nameplate.Health.colorClassification = db.health and db.health.useClassificationColor
+		nameplate.Health.colorClassification = db.health and db.health.useClassificationColor and (not db.health.useClassificationColorInInstance or NP.InInstance)
 		nameplate.Health.colorClass = db.health and db.health.useClassColor
 	end
 end

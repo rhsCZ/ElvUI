@@ -3,29 +3,31 @@ local UF = E:GetModule('UnitFrames')
 local ElvUF = E.oUF
 
 local max = max
-local wipe = wipe
 local next = next
 local pairs = pairs
 local ipairs = ipairs
 local unpack = unpack
 
 local CreateFrame = CreateFrame
-local StatusBarInterpolation = Enum.StatusBarInterpolation
 
 local MAX_COMBO_POINTS = MAX_COMBO_POINTS
+local SPEC_PRIEST_SHADOW = SPEC_PRIEST_SHADOW or 3
+local SPEC_SHAMAN_ELEMENTAL = SPEC_SHAMAN_ELEMENTAL or 1
 local SPEC_MONK_MISTWEAVER = SPEC_MONK_MISTWEAVER or 2
+
+local StatusBarInterpolation = Enum.StatusBarInterpolation
+local FALLBACK = Mixin({ r = 0, g = 0, b = 0, a = 0 }, ColorMixin)
+
+local AltManaTypes = {
+	Rage = 1,
+	Energy = 3,
+	LunarPower = (E.Retail or E.Mists) and 8 or nil,
+	Maelstrom = E.Retail and 11 or nil,
+	Insanity = E.Retail and 13 or nil
+}
 
 UF.ClassPowerTypes = { 'ClassPower', 'AdditionalPower', 'Runes', 'Stagger', 'Totems', 'AlternativePower', 'EclipseBar' }
 UF.ClassPowerColors = { COMBO_POINTS = 'comboPoints', CHI = 'MONK' }
-
-local FALLBACK = Mixin({ r = 0, g = 0, b = 0, a = 0 }, ColorMixin)
-
-local AltManaTypes = { Rage = 1, Energy = 3 }
-if E.Retail then
-	AltManaTypes.LunarPower = 8
-	AltManaTypes.Maelstrom = 11
-	AltManaTypes.Insanity = 13
-end
 
 function UF:GetClassPower_Construct(frame)
 	frame.ClassPower = UF:Construct_ClassBar(frame)
@@ -104,6 +106,17 @@ function UF:ClassPower_UpdateColor(powerType, rune)
 	end
 end
 
+function UF:ClassPower_ShouldShowAdditionalPower()
+	local altPower = E.db.unitframe.altManaPowers[E.myclass]
+	if not altPower then return end
+
+	for name, value in pairs(altPower) do
+		if value and AltManaTypes[name] then
+			return true
+		end
+	end
+end
+
 function UF:Configure_ClassBar(frame)
 	local db = frame.db
 	if not db then return end
@@ -114,8 +127,6 @@ function UF:Configure_ClassBar(frame)
 	bars.Holder = frame.ClassBarHolder
 	bars.AdditionalHolder = (frame.ThirdPower or frame.AdditionalPower) and frame.ClassAdditionalHolder
 	bars.origParent = frame
-
-	local MAX_CLASS_BAR = frame.MAX_CLASS_BAR
 
 	--Fix height in case it is lower than the theme allows, or in case it's higher than 30px when not detached
 	if not UF.thinBorders and (frame.CLASSBAR_HEIGHT > 0 and frame.CLASSBAR_HEIGHT < 7) then --A height of 7 means 6px for borders and just 1px for the actual power statusbar
@@ -129,29 +140,35 @@ function UF:Configure_ClassBar(frame)
 		if db.classbar then db.classbar.height = 10 end
 	end
 
-	--We don't want to modify the original frame.CLASSBAR_WIDTH value, as it bugs out when the classbar gains more buttons
-	local CLASSBAR_WIDTH = E:Scale(frame.CLASSBAR_WIDTH)
-	local SPACING = E:Scale((UF.BORDER + UF.SPACING)*2)
-	local isVertical = frame.CLASSBAR_DETACHED and db.classbar.verticalOrientation
-
 	local color = E.db.unitframe.colors.borderColor
 	if not bars.backdrop.forcedBorderColors then
 		bars.backdrop:SetBackdropBorderColor(color.r, color.g, color.b)
 	end
 
+	--We don't want to modify the original frame.CLASSBAR_WIDTH value, as it bugs out when the classbar gains more buttons
+	local CLASSBAR_WIDTH = frame.CLASSBAR_WIDTH
+	local MAX_CLASS_BAR = frame.MAX_CLASS_BAR
+	local ONE_LESS_BAR = MAX_CLASS_BAR - 1
+
 	if frame.USE_MINI_CLASSBAR and not frame.CLASSBAR_DETACHED then
 		if MAX_CLASS_BAR == 1 or frame.ClassBar == 'EclipseBar' or frame.ClassBar == 'Stagger' or frame.ClassBar == 'AlternativePower' then
-			CLASSBAR_WIDTH = CLASSBAR_WIDTH * 2 / 3
+			CLASSBAR_WIDTH = (CLASSBAR_WIDTH * 2) / 3
 		else
-			CLASSBAR_WIDTH = CLASSBAR_WIDTH * (MAX_CLASS_BAR - 1) / MAX_CLASS_BAR
+			CLASSBAR_WIDTH = (CLASSBAR_WIDTH * ONE_LESS_BAR) / MAX_CLASS_BAR
 		end
 	elseif frame.CLASSBAR_DETACHED then --Detached
 		CLASSBAR_WIDTH = db.classbar.detachedWidth
 	end
 
-	bars:Width(CLASSBAR_WIDTH - SPACING)
-	bars:Height(frame.CLASSBAR_HEIGHT - SPACING)
+	local DOUBLE_BORDER = UF.BORDER * 2
+	local SPACING = (UF.BORDER + UF.SPACING) * 2
+	local SPACING_ATTACHED = (frame.CLASSBAR_DETACHED and db.classbar.spacing or 5) + SPACING
 
+	local barsWidth = CLASSBAR_WIDTH - SPACING
+	local barsHeight = frame.CLASSBAR_HEIGHT - SPACING
+	bars:Size(barsWidth, barsHeight)
+
+	local isVertical = frame.CLASSBAR_DETACHED and db.classbar.verticalOrientation
 	if frame.ClassBar == 'ClassPower' or frame.ClassBar == 'Runes' or frame.ClassBar == 'Totems' then
 		if frame.ClassBar == 'Runes' then
 			bars.sortOrder = (db.classbar.sortDirection ~= 'NONE') and db.classbar.sortDirection
@@ -170,18 +187,18 @@ function UF:Configure_ClassBar(frame)
 					button.backdrop:SetBackdropBorderColor(color.r, color.g, color.b)
 				end
 
-				button:Height(bars:GetHeight())
+				button:Height(barsHeight)
 
 				if MAX_CLASS_BAR == 1 then
-					button:Width(CLASSBAR_WIDTH)
+					button:Width(barsWidth)
 				elseif frame.USE_MINI_CLASSBAR then
 					if frame.CLASSBAR_DETACHED and db.classbar.orientation == 'VERTICAL' then
-						button:Width(CLASSBAR_WIDTH)
+						button:Width(barsWidth)
 					else
-						button:Width((CLASSBAR_WIDTH - (((frame.CLASSBAR_DETACHED and db.classbar.spacing or 5) + (UF.BORDER*2 + UF.SPACING*2))*(MAX_CLASS_BAR - 1)) - UF.BORDER*2)/MAX_CLASS_BAR) --Width accounts for 5px spacing between each button, excluding borders
+						button:Width((CLASSBAR_WIDTH - (SPACING_ATTACHED * ONE_LESS_BAR) - DOUBLE_BORDER) / MAX_CLASS_BAR) --Width accounts for 5px spacing between each button, excluding borders
 					end
 				elseif i ~= MAX_CLASS_BAR then
-					button:Width((CLASSBAR_WIDTH - ((MAX_CLASS_BAR-1)*(UF.BORDER*2-UF.SPACING))) / MAX_CLASS_BAR) --classbar width minus total width of dividers between each button, divided by number of buttons
+					button:Width((CLASSBAR_WIDTH - (ONE_LESS_BAR * (DOUBLE_BORDER - UF.SPACING))) / MAX_CLASS_BAR) --classbar width minus total width of dividers between each button, divided by number of buttons
 				end
 
 				button:GetStatusBarTexture():SetHorizTile(false)
@@ -193,9 +210,9 @@ function UF:Configure_ClassBar(frame)
 					local prevButton = bars[i-1]
 					if frame.USE_MINI_CLASSBAR then
 						if frame.CLASSBAR_DETACHED and db.classbar.orientation == 'VERTICAL' then
-							button:Point('BOTTOM', prevButton, 'TOP', 0, (db.classbar.spacing + UF.BORDER*2 + UF.SPACING*2))
+							button:Point('BOTTOM', prevButton, 'TOP', 0, (db.classbar.spacing + SPACING))
 						else
-							button:Point('LEFT', prevButton, 'RIGHT', ((frame.CLASSBAR_DETACHED and db.classbar.spacing or 5) + UF.BORDER*2 + UF.SPACING*2), 0) --5px spacing between borders of each button(replaced with Detached Spacing option if detached)
+							button:Point('LEFT', prevButton, 'RIGHT', SPACING_ATTACHED, 0) --5px spacing between borders of each button(replaced with Detached Spacing option if detached)
 						end
 					elseif i == MAX_CLASS_BAR then
 						button:Point('LEFT', prevButton, 'RIGHT', UF.BORDER-UF.SPACING, 0)
@@ -226,14 +243,14 @@ function UF:Configure_ClassBar(frame)
 		local lr, lg, lb = unpack(ElvUF.colors.ClassBars.DRUID[1])
 		bars.LunarBar:SetMinMaxValues(-1, 1)
 		UF:SetStatusBarColor(bars.LunarBar, lr, lg, lb)
-		bars.LunarBar:Size(CLASSBAR_WIDTH - SPACING, frame.CLASSBAR_HEIGHT - SPACING)
+		bars.LunarBar:Size(barsWidth, barsHeight)
 		bars.LunarBar:SetOrientation(isVertical and 'VERTICAL' or 'HORIZONTAL')
 		E:SetSmoothing(bars.LunarBar, db.classbar.smoothbars)
 
 		local sr, sg, sb = unpack(ElvUF.colors.ClassBars.DRUID[2])
 		bars.SolarBar:SetMinMaxValues(-1, 1)
 		UF:SetStatusBarColor(bars.SolarBar, sr, sg, sb)
-		bars.SolarBar:Size(CLASSBAR_WIDTH - SPACING, frame.CLASSBAR_HEIGHT - SPACING)
+		bars.SolarBar:Size(barsWidth, barsHeight)
 		bars.SolarBar:SetOrientation(isVertical and 'VERTICAL' or 'HORIZONTAL')
 		bars.SolarBar:ClearAllPoints()
 		bars.SolarBar:Point(isVertical and 'BOTTOM' or 'LEFT', lunarTex, isVertical and 'TOP' or 'RIGHT')
@@ -328,34 +345,28 @@ function UF:Configure_ClassBar(frame)
 		bars:SetParent(frame)
 	end
 
+	local activeBar = frame.USE_CLASSBAR
+	local checkPriest = E.Retail and E.myclass == 'PRIEST'
+	local checkShaman = E.Retail and E.myclass == 'SHAMAN'
+	local allowPriest = checkPriest and E.myspec == SPEC_PRIEST_SHADOW
+	local allowShaman = checkShaman and E.myspec == SPEC_SHAMAN_ELEMENTAL
 	for _, powerType in pairs(UF.ClassPowerTypes) do
 		if frame[powerType] then
-			if frame.USE_CLASSBAR then
-				if powerType == 'AdditionalPower' then
-					local displayMana = frame.AdditionalPower.displayPairs[E.myclass]
-					wipe(displayMana)
-
-					local altMana = E.db.unitframe.altManaPowers[E.myclass]
-					if altMana then
-						for name, value in pairs(altMana) do
-							local altType = value and AltManaTypes[name]
-							if altType then
-								displayMana[altType] = value
-							end
-						end
-					end
-
-					local display = next(displayMana)
-					local enabled = frame:IsElementEnabled(powerType)
-					if display and not enabled then
-						frame:EnableElement(powerType)
-					elseif enabled and not display then
-						frame:DisableElement(powerType)
-					end
-				elseif not frame:IsElementEnabled(powerType) then
+			local enabled = frame:IsElementEnabled(powerType)
+			local additional = powerType == 'AdditionalPower'
+			local classpower = powerType == 'ClassPower'
+			if additional or classpower then
+				local special = allowPriest or allowShaman
+				local normal = not (checkPriest or checkShaman) or not special
+				local allowed = classpower and activeBar and (normal or ((special or additional) and UF:ClassPower_ShouldShowAdditionalPower()))
+				if allowed and not enabled then
 					frame:EnableElement(powerType)
+				elseif enabled and not allowed then
+					frame:DisableElement(powerType)
 				end
-			elseif frame:IsElementEnabled(powerType) then
+			elseif activeBar and not enabled then
+				frame:EnableElement(powerType)
+			elseif enabled and not activeBar then
 				frame:DisableElement(powerType)
 			end
 		end
@@ -586,7 +597,6 @@ function UF:Construct_AdditionalPowerBar(frame)
 
 	additionalPower.RaisedElementParent = UF:CreateRaisedElement(additionalPower)
 	additionalPower.text = UF:CreateRaisedText(additionalPower.RaisedElementParent)
-	additionalPower.displayPairs = {[E.myclass] = {}} -- display power types
 
 	additionalPower.bg = additionalPower:CreateTexture(nil, 'BORDER')
 	additionalPower.bg:SetTexture(E.media.blankTex)

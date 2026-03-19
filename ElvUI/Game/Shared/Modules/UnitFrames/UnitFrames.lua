@@ -13,19 +13,20 @@ local huge, strfind, gsub, format, strjoin, strmatch = math.huge, strfind, gsub,
 local pcall, min, next, pairs, ipairs, tinsert, strsub = pcall, min, next, pairs, ipairs, tinsert, strsub
 
 local CreateColor = CreateColor
-local GameTooltip = GameTooltip
 local CreateFrame = CreateFrame
+local GameTooltip = GameTooltip
+local GetInstanceInfo = GetInstanceInfo
+local GetInventoryItemLink = GetInventoryItemLink
+local GetInventorySlotInfo = GetInventorySlotInfo
+local IsInInstance = IsInInstance
 local PlaySound = PlaySound
+local RegisterStateDriver = RegisterStateDriver
 local UIParent = UIParent
 local UnitExists = UnitExists
 local UnitGUID = UnitGUID
 local UnitIsEnemy = UnitIsEnemy
 local UnitIsFriend = UnitIsFriend
-local GetInstanceInfo = GetInstanceInfo
-local GetInventorySlotInfo = GetInventorySlotInfo
-local GetInventoryItemLink = GetInventoryItemLink
 local UnregisterStateDriver = UnregisterStateDriver
-local RegisterStateDriver = RegisterStateDriver
 
 local CastingBarFrame_OnLoad = CastingBarFrame_OnLoad
 local CastingBarFrame_SetUnit = CastingBarFrame_SetUnit
@@ -268,14 +269,33 @@ function UF:ResetAuraPriority()
 	for unitName, content in pairs(E.db.unitframe.units) do
 		local default = P.unitframe.units[unitName]
 		if default then
-			if content.buffs then
-				content.buffs.priority = default.buffs.priority
+			local buffs = content.buffs
+			if buffs and buffs.filters then
+				buffs.filters.priority = default.buffs.filters.priority
 			end
-			if content.debuffs then
-				content.debuffs.priority = default.debuffs.priority
+
+			local debuffs = content.debuffs
+			if debuffs and debuffs.filters then
+				debuffs.filters.priority = default.debuffs.filters.priority
 			end
-			if content.aurabar then
-				content.aurabar.priority = default.aurabar.priority
+
+			local aurabar = content.aurabar
+			if aurabar then
+				aurabar.priority = default.aurabar.priority
+			end
+
+			for key in next, E.AuraDefaults do
+				if buffs then
+					buffs[key] = default.buffs[key]
+				end
+
+				if debuffs then
+					debuffs[key] = default.debuffs[key]
+				end
+
+				if aurabar then
+					aurabar[key] = default.aurabar[key]
+				end
 			end
 		end
 	end
@@ -454,7 +474,7 @@ function UF:GetAuraAnchorFrame(frame, attachTo)
 	elseif attachTo == 'POWER' and frame.Power then
 		return frame.Power
 	elseif attachTo == 'TRINKET' and (frame.Trinket or frame.PVPSpecIcon) then
-		local _, instanceType = GetInstanceInfo()
+		local _, instanceType = IsInInstance()
 		return (instanceType == 'arena' and frame.Trinket) or frame.PVPSpecIcon
 	else
 		return frame
@@ -592,6 +612,7 @@ function UF:UpdateColors()
 	ElvUF.colors.DebuffHighlight.Curse = E:SetColorTable(ElvUF.colors.DebuffHighlight.Curse, db.debuffHighlight.Curse)
 	ElvUF.colors.DebuffHighlight.Disease = E:SetColorTable(ElvUF.colors.DebuffHighlight.Disease, db.debuffHighlight.Disease)
 	ElvUF.colors.DebuffHighlight.Poison = E:SetColorTable(ElvUF.colors.DebuffHighlight.Poison, db.debuffHighlight.Poison)
+	ElvUF.colors.DebuffHighlight.Bleed = E:SetColorTable(ElvUF.colors.DebuffHighlight.Bleed, db.debuffHighlight.Bleed)
 end
 
 function UF:Update_StatusBars(statusbars)
@@ -719,7 +740,13 @@ do -- IDs maintained in Difficulty Datatext
 			fader.configTimer = E:ScheduleTimer(fader.ForceUpdate, 0.25, fader, true)
 		elseif frame:IsElementEnabled('Fader') then
 			frame:DisableElement('Fader')
-			E:UIFrameFadeIn(frame, 1, frame:GetAlpha(), 1)
+
+			local alpha = frame:GetAlpha()
+			if E:NotSecretValue(alpha) then
+				E:UIFrameFadeIn(frame, 1, alpha, 1)
+			else
+				frame:SetAlpha(1)
+			end
 		end
 	end
 end
@@ -1100,7 +1127,7 @@ function UF:PLAYER_ENTERING_WORLD(_, initLogin, isReload)
 	UF:RegisterRaidDebuffIndicator()
 	UF:UpdateRangeSpells()
 
-	local _, instanceType = GetInstanceInfo()
+	local _, instanceType = IsInInstance()
 	if instanceType == 'raid' then
 		if initLogin or isReload then
 			UF:ZONE_CHANGED_NEW_AREA()
@@ -1492,7 +1519,7 @@ function UF:RegisterRaidDebuffIndicator()
 	if ORD then
 		ORD:ResetDebuffData()
 
-		local _, instanceType = GetInstanceInfo()
+		local _, instanceType = IsInInstance()
 		if instanceType == 'party' or instanceType == 'raid' then
 			local instance = E.global.unitframe.raidDebuffIndicator.instanceFilter
 			local instanceSpells = ((E.global.unitframe.aurafilters[instance] and E.global.unitframe.aurafilters[instance].spells) or E.global.unitframe.aurafilters.RaidDebuffs.spells)
@@ -1951,21 +1978,7 @@ function UF:ToggleForceShowGroupFrames(group, numGroup)
 end
 
 local Blacklist = {
-	player = {
-		enable = true,
-		aurabars = true,
-		fader = true,
-		buffs = {
-			priority = true,
-			minDuration = true,
-			maxDuration = true,
-		},
-		debuffs = {
-			priority = true,
-			minDuration = true,
-			maxDuration = true,
-		},
-	},
+	player = { enable = true, fader = true, aurabars = true },
 	arena = { enable = true, fader = true },
 	assist = { enable = true, fader = true },
 	boss = { enable = true, fader = true },

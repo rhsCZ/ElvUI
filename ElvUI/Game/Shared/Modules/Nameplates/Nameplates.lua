@@ -27,8 +27,6 @@ local UnitIsPVPSanctuary = UnitIsPVPSanctuary
 local UnitIsUnit = UnitIsUnit
 local UnitName = UnitName
 local UnitReaction = UnitReaction
-local UnitSelectionType = UnitSelectionType
-local UnitThreatSituation = UnitThreatSituation
 local UnitWidgetSet = UnitWidgetSet
 
 local UnitNameplateShowsWidgetsOnly = UnitNameplateShowsWidgetsOnly
@@ -44,41 +42,36 @@ local GetCVar = C_CVar.GetCVar
 
 local POWERTYPE_ALTERNATE = Enum.PowerType.Alternate or 10
 
-do	-- credit: oUF/private.lua
-	local selectionTypes = {[0]=0,[1]=1,[2]=2,[3]=3,[4]=4,[5]=5,[6]=6,[7]=7,[8]=8,[9]=9,[13]=13}
-	-- 10 and 11 are unavailable to players, 12 is inconsistent due to bugs and its reliance on cvars
-
-	function NP:UnitSelectionType(unit, considerHostile)
-		if considerHostile and UnitThreatSituation('player', unit) then
-			return 0
-		elseif E.Retail then
-			return selectionTypes[UnitSelectionType(unit, true)]
-		end
-	end
-end
-
 local Blacklist = {
-	PLAYER = {
-		enable = true,
-		health = {
-			enable = true,
-		},
-	},
-	ENEMY_PLAYER = {},
-	FRIENDLY_PLAYER = {},
-	ENEMY_NPC = {},
-	FRIENDLY_NPC = {},
+	PLAYER = { enable = true, health = { enable = true }, },
+	ENEMY_PLAYER = { enable = true, health = { enable = true }, },
+	FRIENDLY_PLAYER = { enable = true, health = { enable = true }, },
+	ENEMY_NPC = { enable = true, health = { enable = true }, },
+	FRIENDLY_NPC = { enable = true, health = { enable = true }, },
 }
 
 function NP:ResetAuraPriority()
 	for unitType, content in pairs(E.db.nameplates.units) do
 		local default = P.nameplates.units[unitType]
 		if default then
-			if content.buffs and content.buffs.filters then
-				content.buffs.filters.priority = default.buffs.filters.priority
+			local buffs = content.buffs
+			if buffs and buffs.filters then
+				buffs.filters.priority = default.buffs.filters.priority
 			end
-			if content.debuffs and content.debuffs.filters then
-				content.debuffs.filters.priority = default.debuffs.filters.priority
+
+			local debuffs = content.debuffs
+			if debuffs and debuffs.filters then
+				debuffs.filters.priority = default.debuffs.filters.priority
+			end
+
+			for key in next, E.AuraDefaults do
+				if buffs then
+					buffs[key] = default.buffs[key]
+				end
+
+				if debuffs then
+					debuffs[key] = default.debuffs[key]
+				end
 			end
 		end
 	end
@@ -532,6 +525,7 @@ function NP:EnviromentConditionals()
 
 	local inInstance, instanceType = IsInInstance()
 	local value = (inInstance and instanceType) or (IsResting() and 'resting') or 'world'
+	NP.InInstance, NP.InstanceType = inInstance, instanceType
 
 	-- Handle friendly nameplates if friendly combat toggle is not set
 	if env.friendlyEnabled and db.showFriendlyCombat == 'DISABLED' then
@@ -868,10 +862,12 @@ function NP:CheckDeath(event, unit)
 end
 
 function NP:NamePlateCallBack(event, unit)
-	local success, nameplate = pcall(C_NamePlate_GetNamePlateForUnit, unit)
-	if not success or not nameplate or not nameplate.UpdateAllElements or nameplate.widgetsOnly then
-		return -- prevent error when loading in with our plates and Plater or on restricted units
-	end
+	local success, plate = pcall(C_NamePlate_GetNamePlateForUnit, unit)
+	if not success or not plate then return end -- prevent error on restricted units
+
+	local nameplate = plate.unitFrame
+	if not nameplate or not nameplate.UpdateAllElements then return end -- prevent error with plater
+	if nameplate.widgetsOnly then return end -- not required to update this one
 
 	if event == 'UNIT_FACTION' then
 		NP.UNIT_FACTION(nameplate, event, unit)

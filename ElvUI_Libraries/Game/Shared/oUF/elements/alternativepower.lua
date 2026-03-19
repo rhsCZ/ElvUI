@@ -119,7 +119,7 @@ local function UpdateColor(self, event, unit, powerType)
 			if oUF.isRetail then
 				local curve = color:GetCurve()
 				if curve then
-					color = UnitPowerPercent(unit, true, curve)
+					color = UnitPowerPercent(unit, nil, true, curve)
 				end
 			else
 				local adjust = 0 - (element.min or 0)
@@ -302,12 +302,6 @@ local function Enable(self, unit)
 			end
 		end
 
-		if(unit == 'player') then
-			_G.PlayerPowerBarAlt:UnregisterEvent('UNIT_POWER_BAR_SHOW')
-			_G.PlayerPowerBarAlt:UnregisterEvent('UNIT_POWER_BAR_HIDE')
-			_G.PlayerPowerBarAlt:UnregisterEvent('PLAYER_ENTERING_WORLD')
-		end
-
 		return true
 	end
 end
@@ -319,12 +313,6 @@ local function Disable(self, unit)
 
 		self:UnregisterEvent('UNIT_POWER_BAR_SHOW', VisibilityPath)
 		self:UnregisterEvent('UNIT_POWER_BAR_HIDE', VisibilityPath)
-
-		if(unit == 'player') then
-			_G.PlayerPowerBarAlt:RegisterEvent('UNIT_POWER_BAR_SHOW')
-			_G.PlayerPowerBarAlt:RegisterEvent('UNIT_POWER_BAR_HIDE')
-			_G.PlayerPowerBarAlt:RegisterEvent('PLAYER_ENTERING_WORLD')
-		end
 	end
 end
 

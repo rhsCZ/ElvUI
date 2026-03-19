@@ -16,7 +16,6 @@ local CopyTable = CopyTable
 local CreateFrame = CreateFrame
 local GetBattlefieldArenaFaction = GetBattlefieldArenaFaction
 local GetGameTime = GetGameTime
-local GetInstanceInfo = GetInstanceInfo
 local GetNumGroupMembers = GetNumGroupMembers
 local GetNumSubgroupMembers = GetNumSubgroupMembers
 local GetPartyAssignment = GetPartyAssignment
@@ -26,6 +25,7 @@ local GetSpecializationInfoForSpecID = C_SpecializationInfo.GetSpecializationInf
 local HideUIPanel = HideUIPanel
 local InCombatLockdown = InCombatLockdown
 local IsInGroup = IsInGroup
+local IsInInstance = IsInInstance
 local IsInRaid = IsInRaid
 local IsLevelAtEffectiveMaxLevel = IsLevelAtEffectiveMaxLevel
 local IsRestrictedAccount = IsRestrictedAccount
@@ -43,13 +43,14 @@ local UnitFactionGroup = UnitFactionGroup
 local UnitGroupRolesAssigned = UnitGroupRolesAssigned
 local UnitGUID = UnitGUID
 local UnitHasVehicleUI = UnitHasVehicleUI
+local UnitIsAFK = UnitIsAFK
+local UnitIsDND = UnitIsDND
 local UnitIsMercenary = UnitIsMercenary
 local UnitIsPlayer = UnitIsPlayer
 local UnitIsVisible = UnitIsVisible
 local UnitSex = UnitSex
-local UnitIsAFK = UnitIsAFK
-local UnitIsDND = UnitIsDND
 local UnitThreatSituation = UnitThreatSituation
+local UnitSelectionType = UnitSelectionType
 
 local WorldFrame = WorldFrame
 local GetWatchedFactionInfo = GetWatchedFactionInfo
@@ -204,6 +205,19 @@ E.SpecName = { -- english locale
 	[72]	= 'Fury',
 	[73]	= 'Protection',
 }
+
+do	-- credit: oUF/private.lua
+	local selectionTypes = {[0]=0,[1]=1,[2]=2,[3]=3,[4]=4,[5]=5,[6]=6,[7]=7,[8]=8,[9]=9,[13]=13}
+	-- 10 and 11 are unavailable to players, 12 is inconsistent due to bugs and its reliance on cvars
+
+	function E:UnitSelectionType(unit, considerHostile)
+		if considerHostile and UnitThreatSituation('player', unit) then
+			return 0
+		elseif E.Retail then
+			return selectionTypes[UnitSelectionType(unit, true)]
+		end
+	end
+end
 
 -- the secure header is different on retail because of evokers
 -- if both are registered on non-retail, it will fire on down and up
@@ -641,9 +655,17 @@ end
 function E:UpdateAuraCurve(which, data)
 	if not data then return end
 
-	local colors = ElvUF.colors.dispel
+	local hl = which == 'highlight'
+	local colors = (hl and ElvUF.colors.DebuffHighlight) or ElvUF.colors.dispel
 	for key, index in next, DispelIndexes do
-		data:AddPoint(index, (which == 'debuffs' or key ~= 'None') and colors[key] or E.media.bordercolor)
+		if hl then
+			local color = colors[key]
+			if color then
+				data:AddPoint(index, color)
+			end
+		else
+			data:AddPoint(index, (which == 'debuffs' or key ~= 'None') and colors[key] or E.media.bordercolor)
+		end
 	end
 end
 
@@ -675,6 +697,8 @@ function E:UpdateAuraCurves()
 			data = E:CreateColorCurve(LuaCurveTypeStep)
 
 			curves[which] = data
+		else -- empty the list
+			data:ClearPoints()
 		end
 
 		E:UpdateAuraCurve(which, data)
@@ -1025,7 +1049,7 @@ function E:PLAYER_ENTERING_WORLD(_, initLogin, isReload)
 		E.MediaUpdated = true
 	end
 
-	local _, instanceType = GetInstanceInfo()
+	local _, instanceType = IsInInstance()
 	if instanceType == 'pvp' then
 		E.BGTimer = E:ScheduleRepeatingTimer('RequestBGInfo', 5)
 		E:RequestBGInfo()
@@ -1411,18 +1435,21 @@ end
 function E:GetClassificationColor(unit)
 	if UnitIsPlayer(unit) then return end
 
+	local baseClass = UnitClassBase(unit)
+	local _, instanceType = IsInInstance()
 	local classification = UnitClassification(unit)
 	local unitLevel = E:UnitEffectiveLevel(unit)
 	local maxLevel = E.expansionLevelMax
 
-	if classification == 'worldboss' or classification == 'rareelite' or classification == 'rare' then
+	if instanceType == 'party' and baseClass == 'PALADIN' then
+		return 'caster' -- In dungeons, check caster first so elite casters aren't missed
+	elseif classification == 'worldboss' or classification == 'rareelite' or classification == 'rare' then
 		return classification
-	elseif (classification == 'elite') and (unitLevel >= (maxLevel + 2)) then
+	elseif classification == 'elite' and (unitLevel >= (maxLevel + 2)) then
 		return 'eliteBoss'
-	elseif (classification == 'elite') and (unitLevel >= (maxLevel + 1)) then
+	elseif classification == 'elite' and (unitLevel >= (maxLevel + 1)) then
 		return 'eliteMini'
 	else
-		local baseClass = UnitClassBase(unit)
 		return (baseClass == 'PALADIN' and 'caster') or 'melee'
 	end
 end

@@ -14,7 +14,6 @@ local GetCVarBool = C_CVar.GetCVarBool
 local GetCVar = C_CVar.GetCVar
 
 local carryFilterFrom, carryFilterTo
-
 local filters = {}
 
 local ORDER = 100
@@ -100,32 +99,34 @@ local function GetUnitAuras(unit, auraType)
 	group.args.sourceGroup.args.fontSize = ACH:Range(L["Font Size"], nil, 11, C.Values.FontSize)
 	group.args.sourceGroup.args.fontOutline = ACH:FontFlags(L["Font Outline"], L["Set the font outline."], 12)
 
-	local patchReady = E.wowtoc > 120000
 	group.args.midnightGroup = ACH:Group(E.Retail and L["Filters"] or L["Filters: Midnight"], nil, 50, nil, nil, nil, nil, function() return not E.Retail and not E.db.nameplates.units[unit][auraType].useMidnight end)
 
-	group.args.midnightGroup.args.isAuraPlayer = ACH:Toggle(L["Player"], L["All of your auras."], 1)
-	group.args.midnightGroup.args.isAuraRaidPlayerDispellable = ACH:Toggle(L["Player Dispellable"], L["Auras you can dispel."], 2, nil, nil, nil, nil, nil, nil, not patchReady)
+	group.args.midnightGroup.args.useBlocklist = ACH:Toggle(L["Blocklist"], E.Retail and L["Activate the blocklist filter.\n\n|cffff3333Note:|r Only non-secret auras will be checked."] or L["Activate the blocklist filter."], 1)
+	group.args.midnightGroup.args.isAuraPlayer = ACH:Toggle(L["Player"], L["All of your auras."], 2)
+	group.args.midnightGroup.args.isAuraRaidPlayerDispellable = ACH:Toggle(L["Player Dispellable"], L["Auras you can dispel."], 3, nil, nil, nil, nil, nil, nil, not E.Retail)
 
 	group.args.midnightGroup.args.player = ACH:Group(L["Player"], nil, 10)
-	group.args.midnightGroup.args.player.args.isAuraImportantPlayer = ACH:Toggle(L["Important"], nil, 1, nil, nil, nil, nil, nil, nil, not patchReady)
+	group.args.midnightGroup.args.player.args.isAuraImportantPlayer = ACH:Toggle(L["Important"], nil, 1, nil, nil, nil, nil, nil, nil, not E.Retail)
 	group.args.midnightGroup.args.player.args.isAuraRaidPlayer = ACH:Toggle(L["Raid"], nil, 2)
-	group.args.midnightGroup.args.player.args.isAuraRaidInCombatPlayer = ACH:Toggle(L["Raid Frames"], L["Auras displayed on Blizzard's raid frames."], 3, nil, nil, nil, nil, nil, nil, not patchReady)
+	group.args.midnightGroup.args.player.args.isAuraRaidInCombatPlayer = ACH:Toggle(L["Raid Frames"], L["Auras displayed on Blizzard's raid frames."], 3, nil, nil, nil, nil, nil, nil, not E.Retail)
 	group.args.midnightGroup.args.player.args.isAuraCancelablePlayer = ACH:Toggle(L["Is Cancelable"], nil, 4)
 	group.args.midnightGroup.args.player.args.notAuraCancelablePlayer = ACH:Toggle(L["Not Cancelable"], nil, 5)
-	group.args.midnightGroup.args.player.args.isAuraCrowdControlPlayer = ACH:Toggle(L["Crowd Control"], nil, 6, nil, nil, nil, nil, nil, nil, not patchReady)
-	group.args.midnightGroup.args.player.args.isAuraBigDefensivePlayer = ACH:Toggle(L["Big Defensive"], L["Defensives that are self cast."], 7, nil, nil, nil, nil, nil, nil, not patchReady)
+	group.args.midnightGroup.args.player.args.isAuraCrowdControlPlayer = ACH:Toggle(L["Crowd Control"], nil, 6, nil, nil, nil, nil, nil, nil, not E.Retail)
+	group.args.midnightGroup.args.player.args.isAuraBigDefensivePlayer = ACH:Toggle(L["Big Defensive"], L["Defensives that are self cast."], 7, nil, nil, nil, nil, nil, nil, not E.Retail)
 	group.args.midnightGroup.args.player.args.isAuraExternalDefensivePlayer = ACH:Toggle(L["External Defensive"], L["Defensives that can be cast on others."], 8, nil, nil, nil, nil, nil, nil, not E.Retail)
+	group.args.midnightGroup.args.player.args.isAuraPermanentPlayer = ACH:Toggle(L["Block Permanent"], L["Hide any permanent auras."], 9)
 	group.args.midnightGroup.args.player.inline = true
 
 	group.args.midnightGroup.args.others = ACH:Group(L["Others"], nil, 20)
-	group.args.midnightGroup.args.others.args.isAuraImportant = ACH:Toggle(L["Important"], nil, 1, nil, nil, nil, nil, nil, nil, not patchReady)
+	group.args.midnightGroup.args.others.args.isAuraImportant = ACH:Toggle(L["Important"], nil, 1, nil, nil, nil, nil, nil, nil, not E.Retail)
 	group.args.midnightGroup.args.others.args.isAuraRaid = ACH:Toggle(L["Raid"], nil, 2)
-	group.args.midnightGroup.args.others.args.isAuraRaidInCombat = ACH:Toggle(L["Raid Frames"], L["Auras displayed on Blizzard's raid frames."], 3, nil, nil, nil, nil, nil, nil, not patchReady)
+	group.args.midnightGroup.args.others.args.isAuraRaidInCombat = ACH:Toggle(L["Raid Frames"], L["Auras displayed on Blizzard's raid frames."], 3, nil, nil, nil, nil, nil, nil, not E.Retail)
 	group.args.midnightGroup.args.others.args.isAuraCancelable = ACH:Toggle(L["Is Cancelable"], nil, 4)
 	group.args.midnightGroup.args.others.args.notAuraCancelable = ACH:Toggle(L["Not Cancelable"], nil, 5)
-	group.args.midnightGroup.args.others.args.isAuraCrowdControl = ACH:Toggle(L["Crowd Control"], nil, 6, nil, nil, nil, nil, nil, nil, not patchReady)
-	group.args.midnightGroup.args.others.args.isAuraBigDefensive = ACH:Toggle(L["Big Defensive"], L["Defensives that are self cast."], 7, nil, nil, nil, nil, nil, nil, not patchReady)
+	group.args.midnightGroup.args.others.args.isAuraCrowdControl = ACH:Toggle(L["Crowd Control"], nil, 6, nil, nil, nil, nil, nil, nil, not E.Retail)
+	group.args.midnightGroup.args.others.args.isAuraBigDefensive = ACH:Toggle(L["Big Defensive"], L["Defensives that are self cast."], 7, nil, nil, nil, nil, nil, nil, not E.Retail)
 	group.args.midnightGroup.args.others.args.isAuraExternalDefensive = ACH:Toggle(L["External Defensive"], L["Defensives that can be cast on others."], 8, nil, nil, nil, nil, nil, nil, not E.Retail)
+	group.args.midnightGroup.args.others.args.isAuraPermanent = ACH:Toggle(L["Block Permanent"], L["Hide any permanent auras."], 9)
 	group.args.midnightGroup.args.others.inline = true
 
 	group.args.legacyGroup = ACH:Group(L["Filters: Legacy"], nil, 50, nil, nil, nil, nil, function() return E.Retail or E.db.nameplates.units[unit][auraType].useMidnight end)
@@ -194,7 +195,8 @@ local function GetUnitSettings(unit, name)
 	group.args.healthGroup.args.textGroup.args.format = ACH:Input(L["Text Format"], nil, 6, nil, TEXT_FORMAT_WIDTH)
 	group.args.healthGroup.args.textGroup.args.text_reset = ACH:Execute(L["Reset Text"], L["Reset the Text Format to default."], 7, function() E.db.nameplates.units[unit].health.text.format = P.nameplates.units[unit].health.text.format NP:ConfigureAll() end)
 
-	group.args.healthGroup.args.useClassificationColor = ACH:Toggle(E.NewSign..L["Use Classification Color"], nil, 10)
+	group.args.healthGroup.args.useClassificationColor = ACH:Toggle(L["Use Classification Color"], nil, 10)
+	group.args.healthGroup.args.useClassificationColorInInstance = ACH:Toggle(E.NewSign..L["In Instances"], L["Use classification color only in instances."], 11, nil, nil, nil, nil, nil, nil, function() return not E.db.nameplates.units[unit].health.useClassificationColor end)
 
 	group.args.healthGroup.args.textGroup.args.fontGroup = ACH:Group('', nil, 20)
 	group.args.healthGroup.args.textGroup.args.fontGroup.inline = true
@@ -456,7 +458,7 @@ NamePlates.generalGroup.args.clampToScreen = ACH:Toggle(L["Clamp Nameplates"], L
 NamePlates.generalGroup.args.highlight = ACH:Toggle(L["Hover Highlight"], nil, 5, nil, nil, 125)
 NamePlates.generalGroup.args.fadeIn = ACH:Toggle(L["Alpha Fading"], nil, 6, nil, nil, 125)
 NamePlates.generalGroup.args.spacer1 = ACH:Spacer(10, 'full')
-NamePlates.generalGroup.args.multiplier = ACH:Range(E.NewSign..L["Multiplier"], L["Backdrop Multiplier"], 11, { softMin = 0.2, min = 0, softMax = 0.8, max = 1, step = 0.01 })
+NamePlates.generalGroup.args.multiplier = ACH:Range(L["Multiplier"], L["Backdrop Multiplier"], 11, { softMin = 0.2, min = 0, softMax = 0.8, max = 1, step = 0.01 })
 NamePlates.generalGroup.args.overlapV = ACH:Range(L["Overlap Vertical"], L["Percentage amount for vertical overlap of Nameplates."], 12, { min = 0, max = 3, step = .1 })
 NamePlates.generalGroup.args.overlapH = ACH:Range(L["Overlap Horizontal"], L["Percentage amount for horizontal overlap of Nameplates."], 13, { min = 0, max = 3, step = .1 })
 NamePlates.generalGroup.args.lowHealthThreshold = ACH:Range(L["Low Health Threshold"], L["Make the unitframe glow when it is below this percent of health."], 14, { min = 0, softMax = .5, max = .8, step = .01, isPercent = true })
@@ -476,7 +478,7 @@ NamePlates.generalGroup.args.plateVisibility.args.playerVisibility.args.alphaDel
 NamePlates.generalGroup.args.plateVisibility.args.enemyVisibility = ACH:MultiSelect(L["Enemy"], nil, 6, { guardians = L["Guardians"], minions = L["Minions"], minus = L["Minus"], pets = L["Pets"], totems = L["Totems"] }, nil, nil, function(_, key) return E.db.nameplates.visibility.enemy[key] end, function(_, key, value) E.db.nameplates.visibility.enemy[key] = value NP:SetCVars() NP:ConfigureAll() end, function() return not E.db.nameplates.visibility.showAll end)
 NamePlates.generalGroup.args.plateVisibility.args.friendlyVisibility = ACH:MultiSelect(L["Friendly"], nil, 7, { guardians = L["Guardians"], minions = L["Minions"], npcs = L["NPC"], pets = L["Pets"], totems = L["Totems"] }, nil, nil, function(_, key) return E.db.nameplates.visibility.friendly[key] end, function(_, key, value) E.db.nameplates.visibility.friendly[key] = value NP:SetCVars() NP:ConfigureAll() end, function() return not E.db.nameplates.visibility.showAll end)
 
-NamePlates.generalGroup.args.blizzardCVars = ACH:Group(E.NewSign..L["Blizzard CVars"], nil, 55)
+NamePlates.generalGroup.args.blizzardCVars = ACH:Group(L["Blizzard CVars"], nil, 55)
 
 do
 	local cvarRanges = {
@@ -689,7 +691,7 @@ do
 		L["FACTION_STANDING_LABEL8"]
 	}
 
-	NamePlates.colorsGroup.args.reactions = ACH:Group(E.NewSign..L["Reaction Colors"], nil, 6, nil, function(info) local i = tonumber(info[#info]); local t, d = E.db.nameplates.colors.reactions[i], P.nameplates.colors.reactions[i] return t.r, t.g, t.b, t.a, d.r, d.g, d.b end, function(info, r, g, b) local i = tonumber(info[#info]); local t = E.db.nameplates.colors.reactions[i] t.r, t.g, t.b = r, g, b NP:ConfigureAll() end)
+	NamePlates.colorsGroup.args.reactions = ACH:Group(L["Reaction Colors"], nil, 6, nil, function(info) local i = tonumber(info[#info]); local t, d = E.db.nameplates.colors.reactions[i], P.nameplates.colors.reactions[i] return t.r, t.g, t.b, t.a, d.r, d.g, d.b end, function(info, r, g, b) local i = tonumber(info[#info]); local t = E.db.nameplates.colors.reactions[i] t.r, t.g, t.b = r, g, b NP:ConfigureAll() end)
 	NamePlates.colorsGroup.args.reactions.inline = true
 
 	for i = 1, 8 do

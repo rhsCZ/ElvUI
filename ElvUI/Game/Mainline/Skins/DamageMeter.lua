@@ -210,9 +210,41 @@ do
 	end
 end
 
+function S:DamageMeter_ScrollBarArrowButtonOnDisable()
+	if not self.customArrow then return end
+
+	self.customArrow:SetVertexColor(0.5, 0.5, 0.5)
+end
+
+function S:DamageMeter_ScrollBarArrowButtonOnEnable()
+	if not self.customArrow then return end
+
+	self.customArrow:SetVertexColor(1, 1, 1)
+end
+
+function S:DamageMeter_ReskinScrollBarArrow(btn, arrowDir)
+	if not btn or btn.IsSkinned then return end
+
+	if not btn.customArrow then
+		btn.customArrow = btn:CreateTexture(nil, 'ARTWORK')
+		btn.customArrow:SetTexture(E.Media.Textures.ArrowUp)
+		btn.customArrow:SetRotation(S.ArrowRotation[arrowDir])
+		btn.customArrow:Point('CENTER')
+		btn.customArrow:Size(15)
+	end
+
+	btn:HookScript('OnDisable', S.DamageMeter_ScrollBarArrowButtonOnDisable)
+	btn:HookScript('OnEnable', S.DamageMeter_ScrollBarArrowButtonOnEnable)
+
+	btn.IsSkinned = true
+end
+
 function S:DamageMeter_HandleScrollBoxes(window)
 	local ScrollBar = window.GetScrollBar and window:GetScrollBar()
-	if ScrollBar then
+	if ScrollBar then -- To avoid tainting the scroll bar, we apply minimal styling and leave the rest to HandleTrimScrollBar
+		S:DamageMeter_ReskinScrollBarArrow(ScrollBar.Back, 'up')
+		S:DamageMeter_ReskinScrollBarArrow(ScrollBar.Forward, 'down')
+
 		S:HandleTrimScrollBar(ScrollBar)
 	end
 
@@ -260,6 +292,18 @@ function S:DamageMeter_HandleSourceWindow(window, sourceWindow)
 	sourceWindow.IsSkinned = true
 end
 
+function S:DamageMeter_HandleLocalPlayerEntry()
+	local entry = self.LocalPlayerEntry
+	if not entry then return end
+
+	S.DamageMeter_HandleStatusBar(entry)
+
+	local StatusBarBackground = entry.StatusBar and entry.StatusBar.Background
+	if StatusBarBackground then -- Local player entry is floating above the other entries
+		StatusBarBackground:SetAlpha(1)
+	end
+end
+
 function S:DamageMeter_HandleSessionWindow()
 	if self.IsSkinned then return end
 
@@ -272,6 +316,10 @@ function S:DamageMeter_HandleSessionWindow()
 	S:DamageMeter_HandleSessionTimer(self, self.SessionTimer)
 	S:DamageMeter_HandleScrollBoxes(self)
 	S.DamageMeter_RepositionResizeButton(self)
+
+	if self.ShowLocalPlayerEntry then
+		hooksecurefunc(self, 'ShowLocalPlayerEntry', S.DamageMeter_HandleLocalPlayerEntry)
+	end
 
 	self.IsSkinned = true
 end
