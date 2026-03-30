@@ -68,7 +68,7 @@ function NP:Construct_Auras(nameplate)
 	Auras.SetPosition = UF.SetPosition
 	Auras.PostCreateButton = NP.Construct_AuraIcon
 	Auras.PostUpdateButton = UF.PostUpdateAura
-	Auras.BlizzardFilter = NP.GetBlizzardCrowdControl
+	Auras.GetBlizzardAuras = NP.GetBlizzardCrowdControl
 	Auras.CustomFilter = NP.AuraFilter
 
 	Buffs.PreUpdate = UF.PreUpdateAura
@@ -76,7 +76,7 @@ function NP:Construct_Auras(nameplate)
 	Buffs.SetPosition = UF.SetPosition
 	Buffs.PostCreateButton = NP.Construct_AuraIcon
 	Buffs.PostUpdateButton = UF.PostUpdateAura
-	Buffs.BlizzardFilter = NP.GetBlizzardBuffs
+	Buffs.GetBlizzardAuras = NP.GetBlizzardBuffs
 	Buffs.CustomFilter = NP.AuraFilter
 
 	Debuffs.PreUpdate = UF.PreUpdateAura
@@ -84,7 +84,7 @@ function NP:Construct_Auras(nameplate)
 	Debuffs.SetPosition = UF.SetPosition
 	Debuffs.PostCreateButton = NP.Construct_AuraIcon
 	Debuffs.PostUpdateButton = UF.PostUpdateAura
-	Debuffs.BlizzardFilter = NP.GetBlizzardDebuffs
+	Debuffs.GetBlizzardAuras = NP.GetBlizzardDebuffs
 	Debuffs.CustomFilter = NP.AuraFilter
 
 	nameplate.Auras_, nameplate.Buffs_, nameplate.Debuffs_ = Auras, Buffs, Debuffs
@@ -144,7 +144,7 @@ function NP:Configure_Auras(nameplate, which)
 	auras.db = db -- for auraSort
 
 	if which == 'Auras' then -- this wont actually use helpful for blizzard auras its just to stop it from trying debuffs too
-		auras.filter = (NP.db.useBlizzardAuras and 'HELPFUL|HARMFUL') or db.filter or 'HARMFUL'
+		auras.filter = (NP.db.useBlizzardAuras and 'HELPFUL') or db.filter or 'HARMFUL'
 	end
 
 	local index = 1
@@ -167,15 +167,11 @@ end
 function NP:Update_Auras(nameplate)
 	local db = NP:PlateDB(nameplate)
 
+	nameplate.usingBlizzardAuras = NP.db.useBlizzardAuras
+
 	if db.auras.enable or db.debuffs.enable or db.buffs.enable then
 		if not nameplate:IsElementEnabled('Auras') then
 			nameplate:EnableElement('Auras')
-		end
-
-		if NP.db.useBlizzardAuras then -- oUF wont need this we feed it the event
-			nameplate:UnregisterEvent('UNIT_AURA')
-		elseif not nameplate:IsEventRegistered('UNIT_AURA') then
-			nameplate:RegisterEvent('UNIT_AURA')
 		end
 
 		nameplate.Auras_:ClearAllPoints()

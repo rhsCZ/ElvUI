@@ -878,12 +878,11 @@ function NP:CheckDeath(event, unit)
 	end
 end
 
-function NP:AuraFilter(element, unit, button, aura, ...)
+function NP:AuraFilter(...)
 	if NP.db.useBlizzardAuras then
-		local filter = element:BlizzardFilter(self)
-		return filter[aura and aura.auraInstanceID]
+		return true -- already filtered by blizzard
 	else
-		return UF.AuraFilter(self, element, unit, button, aura, ...)
+		return UF.AuraFilter(self, ...)
 	end
 end
 
@@ -902,6 +901,8 @@ function NP:BlizzardPlate_RefreshList(listFrame, auraList)
 end
 
 function NP:BlizzardPlate_RefreshAuras(updateInfo)
+	if not NP.db.useBlizzardAuras then return end
+
 	NP:NamePlateCallBack('FAKE_REFRESH_AURAS', self.unitToken, updateInfo)
 end
 
@@ -1022,7 +1023,10 @@ function NP:BlizzardAuras_UpdateAuras(list, listFrame, auraList)
 	wipe(list)
 
 	for _, child in next, listFrame:GetLayoutChildren() do
-		list[child.auraInstanceID] = auraList[child.auraInstanceID]
+		local auraInstanceID = child.auraInstanceID
+		if auraInstanceID then
+			list[auraInstanceID] = auraList[auraInstanceID]
+		end
 	end
 end
 

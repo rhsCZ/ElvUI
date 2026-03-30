@@ -354,7 +354,7 @@ local function filterIcons(frame, which, unit, filter, limit, offset, dontHide)
 	local element = frame[which]
 	local forceShow = element.forceShow
 
-	local unitAuraFiltered = AuraFiltered[filter][unit]
+	local unitAuraFiltered = (element.GetBlizzardAuras and element:GetBlizzardAuras(frame)) or AuraFiltered[filter][unit]
 	local auraInstanceID, aura = next(unitAuraFiltered)
 	while (aura or forceShow) and (visible < limit) do
 		local result = updateAura(frame, which, unit, aura, index, offset, filter, visible)
@@ -388,7 +388,11 @@ local function filterIcons(frame, which, unit, filter, limit, offset, dontHide)
 end
 
 local function UpdateAuras(self, event, unit, updateInfo)
-	if oUF:ShouldSkipAuraUpdate(self, (event == 'FAKE_REFRESH_AURAS' and 'UNIT_AURA') or event, unit, updateInfo) then return end
+	if self.usingBlizzardAuras then
+		if event == 'UNIT_AURA' then return end -- we send a fake event: FAKE_REFRESH_AURAS
+	elseif oUF:ShouldSkipAuraUpdate(self, (event == 'FAKE_REFRESH_AURAS' and 'UNIT_AURA') or event, unit, updateInfo) then
+		return
+	end
 
 	local auras = self.Auras
 	if(auras) then
@@ -466,7 +470,7 @@ local function UpdateAuras(self, event, unit, updateInfo)
 end
 
 local function Update(self, event, unit)
-	if (self.isForced and event ~= 'ElvUI_UpdateAllElements') or (self.unit ~= unit) then return end
+	if ((self.isForced or self.usingBlizzardAuras) and event ~= 'ElvUI_UpdateAllElements') or (self.unit ~= unit) then return end
 
 	-- Assume no event means someone wants to re-anchor things. This is usually done by UpdateAllElements and :ForceUpdate.
 	if not event or event == 'ForceUpdate' or event == 'ElvUI_UpdateAllElements' then
