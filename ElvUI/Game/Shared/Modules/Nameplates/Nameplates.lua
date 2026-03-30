@@ -865,11 +865,12 @@ function NP:CheckDeath(event, unit)
 	end
 end
 
-function NP:AuraFilter(...)
+function NP:AuraFilter(element, unit, button, aura, ...)
 	if NP.db.useBlizzardAuras then
-		return true -- already filtered by blizzard
+		local filter = element:BlizzardFilter(self)
+		return filter[aura and aura.auraInstanceID]
 	else
-		return UF.AuraFilter(self, ...)
+		return UF.AuraFilter(self, element, unit, button, aura, ...)
 	end
 end
 
@@ -887,7 +888,7 @@ function NP:BlizzardPlate_RefreshList(listFrame)
 	wipe(list)
 
 	if listFrame:IsShown() then
-		NP:BlizzardAuras_GetAuras(listFrame, self.unitToken, list)
+		NP:BlizzardAuras_GetAuras(listFrame, list)
 	end
 end
 
@@ -1029,9 +1030,9 @@ function NP:GetBlizzardDebuffs(nameplate)
 	return NP:GetBlizzardAuras(nameplate, 'DebuffList')
 end
 
-function NP:BlizzardAuras_GetAuras(aurasList, unitToken, list)
+function NP:BlizzardAuras_GetAuras(aurasList, list)
 	for _, child in next, aurasList:GetLayoutChildren() do
-		list[child.auraInstanceID] = GetAuraDataByAuraInstanceID(unitToken, child.auraInstanceID)
+		list[child.auraInstanceID] = GetAuraDataByAuraInstanceID(child.unitToken, child.auraInstanceID)
 	end
 end
 
