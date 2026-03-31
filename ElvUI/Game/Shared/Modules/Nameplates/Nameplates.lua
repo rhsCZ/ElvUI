@@ -19,7 +19,6 @@ local UnitCreatureType = UnitCreatureType
 local UnitFactionGroup = UnitFactionGroup
 local UnitGUID = UnitGUID
 local UnitIsBattlePet = UnitIsBattlePet
-local UnitIsDead = UnitIsDead
 local UnitIsEnemy = UnitIsEnemy
 local UnitIsFriend = UnitIsFriend
 local UnitIsGameObject = UnitIsGameObject
@@ -729,12 +728,7 @@ function NP:UpdatePlateBase(nameplate)
 end
 
 function NP:PLAYER_TARGET_CHANGED(_, unit)
-	if self then
-		self.isDead = UnitIsDead(unit)
-	end
-
-	-- pass it, even as nil here
-	NP:SetupTarget(self)
+	NP:SetupTarget(self) -- pass it, even as nil here
 end
 
 function NP:NAME_PLATE_UNIT_ADDED(_, unit)
@@ -751,7 +745,6 @@ function NP:NAME_PLATE_UNIT_ADDED(_, unit)
 	self.isFriend = UnitIsFriend('player', unit)
 	self.isEnemy = UnitIsEnemy('player', unit)
 	self.isPlayer = UnitIsPlayer(unit)
-	self.isDead = UnitIsDead(unit)
 	self.isGameObject = UnitIsGameObject(unit)
 	self.isPVPSanctuary = UnitIsPVPSanctuary(unit)
 	self.isBattlePet = not E.Classic and UnitIsBattlePet(unit)
@@ -798,7 +791,7 @@ function NP:NAME_PLATE_UNIT_ADDED(_, unit)
 		self.widgetContainer:SetPoint(E.InversePoints[point], self, point, db.xOffset, db.yOffset)
 	end
 
-	if self.widgetsOnly or self.isGameObject or (self.isDead and not self.isPlayer) then
+	if self.widgetsOnly or self.isGameObject then
 		NP:DisablePlate(self, nil, true)
 
 		self.previousType = nil -- dont get the plate stuck for next unit
@@ -865,28 +858,22 @@ function NP:NAME_PLATE_UNIT_REMOVED(event, unit)
 	self.npcID = nil -- just cause
 end
 
-function NP:UNIT_FACTION(event, unit)
+function NP:UNIT_FACTION(_, unit)
+	if not unit or self.unit ~= unit then return end
+
+	self.isMe = UnitIsUnit(unit, 'player')
 	self.reaction = UnitReaction('player', unit) -- Player Reaction
 	self.repReaction = UnitReaction(unit, 'player') -- Reaction to Player
 	self.isFriend = UnitIsFriend('player', unit)
 	self.isEnemy = UnitIsEnemy('player', unit)
 	self.faction = UnitFactionGroup(unit)
+	self.isPVPSanctuary = UnitIsPVPSanctuary(unit)
 	self.battleFaction = E:GetUnitBattlefieldFaction(unit)
 	self.classColor = (self.isPlayer and E:ClassColor(self.classFile)) or (self.repReaction and NP.Colors.reactions[self.repReaction]) or nil
 
 	NP:UpdatePlateType(self)
 	NP:UpdatePlateSize(self)
 	NP:UpdatePlateBase(self)
-end
-
-function NP:CheckDeath(event, unit)
-	self.isDead = UnitIsDead(unit)
-
-	if self.isDead and not self.isPlayer then
-		NP:DisablePlate(self, nil, true)
-
-		self.previousType = nil -- dont get the plate stuck for next unit
-	end
 end
 
 function NP:AuraFilter(...)
@@ -948,8 +935,6 @@ function NP:NamePlateCallBack(event, unit, updateInfo)
 		end
 	elseif event == 'UNIT_FACTION' then
 		NP.UNIT_FACTION(nameplate, event, unit)
-	elseif event == 'UNIT_HEALTH' or event == 'UNIT_MAXHEALTH' then
-		NP.CheckDeath(nameplate, event, unit)
 	end
 end
 
@@ -1166,11 +1151,9 @@ function NP:Initialize()
 	NP:RegisterEvent('PLAYER_REGEN_ENABLED')
 	NP:RegisterEvent('PLAYER_REGEN_DISABLED')
 	NP:RegisterEvent('PLAYER_ENTERING_WORLD')
-	NP:RegisterEvent('UNIT_FACTION', 'NamePlateCallBack')
-	NP:RegisterEvent('UNIT_HEALTH', 'NamePlateCallBack')
-	NP:RegisterEvent('UNIT_MAXHEALTH', 'NamePlateCallBack')
 	NP:RegisterEvent('PLAYER_UPDATE_RESTING', 'EnviromentConditionals')
 	NP:RegisterEvent('ZONE_CHANGED_NEW_AREA', 'EnviromentConditionals')
+	NP:RegisterEvent('UNIT_FACTION', 'NamePlateCallBack')
 
 	if not E.Retail then
 		NP:RegisterEvent('COMBAT_LOG_EVENT_UNFILTERED')
