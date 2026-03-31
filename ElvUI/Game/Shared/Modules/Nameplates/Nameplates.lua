@@ -7,7 +7,7 @@ local ElvUF = E.oUF
 local _G = _G
 local pcall, hooksecurefunc = pcall, hooksecurefunc
 local next, strsplit, tonumber = next, strsplit, tonumber
-local pairs, ipairs, wipe, tinsert = pairs, ipairs, wipe, tinsert
+local pairs, wipe, tinsert = pairs, wipe, tinsert
 
 local CreateFrame = CreateFrame
 local IsInInstance = IsInInstance
@@ -240,7 +240,6 @@ end
 
 function NP:Construct_RaisedELement(nameplate)
 	local RaisedElement = CreateFrame('Frame', '$parent_RaisedElement', nameplate)
-	RaisedElement:SetFrameStrata(nameplate:GetFrameStrata())
 	RaisedElement:SetFrameLevel(10)
 	RaisedElement:SetAllPoints()
 	RaisedElement:EnableMouse(false)
@@ -352,6 +351,57 @@ function NP:StylePlate(nameplate)
 	hooksecurefunc(nameplate, 'UpdateAllElements', NP.PostUpdateAllElements)
 end
 
+do
+	local elements = {
+		'QuestIcons',
+		'Highlight',
+		'Portrait',
+		'PVPRole'
+	}
+
+	function NP:ReparentNotNameonly(nameplate, parent)
+		for _, name in next, elements do
+			local element = nameplate[name]
+			if element then
+				element:SetParent(parent or nameplate)
+			end
+		end
+	end
+end
+
+do
+	local elements = {
+		'Health',
+		'HealthPrediction',
+		'Power',
+		'ClassificationIndicator',
+		'Castbar',
+		'ThreatIndicator',
+		'TargetIndicator',
+		'ClassPower',
+		'PvPIndicator',
+		'PvPClassificationIndicator',
+		'Auras_',
+		'Buffs_',
+		'Debuffs_'
+	}
+
+	if E.myclass == 'DEATHKNIGHT' then
+		tinsert(elements, 'Runes')
+	elseif E.myclass == 'MONK' then
+		tinsert(elements, 'Stagger')
+	end
+
+	function NP:ReparentElements(nameplate, parent)
+		for _, name in next, elements do
+			local element = nameplate[name]
+			if element then
+				element:SetParent(parent or nameplate)
+			end
+		end
+	end
+end
+
 function NP:UpdatePlate(nameplate, updateBase)
 	NP:Update_RaidTargetIndicator(nameplate)
 	NP:Update_PVPRole(nameplate)
@@ -367,6 +417,9 @@ function NP:UpdatePlate(nameplate, updateBase)
 			nameplate.ClassPower:SetAlpha(0)
 		end
 	elseif updateBase and db.enable then
+		NP:ReparentElements(nameplate)
+		NP:ReparentNotNameonly(nameplate)
+
 		NP:Update_Tags(nameplate)
 		NP:Update_Health(nameplate)
 		NP:Update_HealthPrediction(nameplate)
@@ -393,44 +446,12 @@ function NP:UpdatePlate(nameplate, updateBase)
 	end
 end
 
-NP.DisableInNotNameOnly = {
-	'QuestIcons',
-	'Highlight',
-	'Portrait',
-	'PVPRole'
-}
-
-NP.DisableElements = {
-	'Health',
-	'HealthPrediction',
-	'Power',
-	'ClassificationIndicator',
-	'Castbar',
-	'ThreatIndicator',
-	'TargetIndicator',
-	'ClassPower',
-	'PvPIndicator',
-	'PvPClassificationIndicator',
-	'Auras'
-}
-
-if E.myclass == 'DEATHKNIGHT' then
-	tinsert(NP.DisableElements, 'Runes')
-elseif E.myclass == 'MONK' then
-	tinsert(NP.DisableElements, 'Stagger')
-end
-
 function NP:DisablePlate(nameplate, nameOnly, hideRaised)
-	for _, element in ipairs(NP.DisableElements) do
-		if nameplate:IsElementEnabled(element) then
-			nameplate:DisableElement(element)
-		end
-	end
-
 	if hideRaised and nameplate.RaisedElement:IsShown() then
-		nameplate.RaisedElement:Hide()
+		nameplate.RaisedElement:Hide() -- reshown by NAME_PLATE_UNIT_ADDED
 	end
 
+	NP:ReparentElements(nameplate, E.HiddenFrame)
 	NP:Update_PrivateAuras(nameplate, true)
 
 	if nameOnly then
@@ -460,11 +481,7 @@ function NP:DisablePlate(nameplate, nameOnly, hideRaised)
 			NP:SetupTarget(nameplate, true)
 		end
 	else
-		for _, element in ipairs(NP.DisableInNotNameOnly) do
-			if nameplate:IsElementEnabled(element) then
-				nameplate:DisableElement(element)
-			end
-		end
+		NP:ReparentNotNameonly(nameplate, E.HiddenFrame)
 	end
 end
 
@@ -833,6 +850,13 @@ function NP:NAME_PLATE_UNIT_REMOVED(event, unit)
 	-- in some cases when the plate previously had the element
 	if self.QuestIcons then
 		self.QuestIcons:Hide()
+	end
+
+	local blizzAuras = NP.db.useBlizzardAuras and self.blizzAuras
+	if blizzAuras then
+		wipe(blizzAuras.BuffList)
+		wipe(blizzAuras.DebuffList)
+		wipe(blizzAuras.CrowdControlList)
 	end
 
 	-- vars that we need to keep in a nonstale state
