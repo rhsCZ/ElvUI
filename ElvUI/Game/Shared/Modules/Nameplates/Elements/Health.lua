@@ -16,7 +16,7 @@ local CreateFrame = CreateFrame
 local StatusBarInterpolation = Enum.StatusBarInterpolation
 
 function NP:Health_UpdateColor(_, unit)
-	if not unit or self.unit ~= unit then return end
+	if self.threatHealth or (not unit or self.unit ~= unit) then return end
 
 	local element = self.Health
 	local useSelection = E.Retail and element.colorSelection and E:UnitSelectionType(unit, element.considerSelectionInCombatHostile)
@@ -88,11 +88,10 @@ function NP:Update_Health(nameplate)
 	if db.health.enable then
 		if not nameplate:IsElementEnabled('Health') then
 			nameplate:EnableElement('Health')
-
-			nameplate.Health:SetColorTapping(true)
-			nameplate.Health:SetColorSelection(E.Retail)
 		end
 
+		nameplate.Health:SetColorTapping(true)
+		nameplate.Health:SetColorSelection(E.Retail)
 		nameplate.Health.colorClassification = db.health and db.health.useClassificationColor and (not db.health.useClassificationColorInInstance or NP.InInstance)
 		nameplate.Health.colorClass = db.health and db.health.useClassColor
 
