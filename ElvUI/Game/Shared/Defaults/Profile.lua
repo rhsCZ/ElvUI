@@ -1020,8 +1020,13 @@ P.nameplates = {
 			PALADIN = { r = 0.89, g = 0.88, b = 0.06, a = 1 },
 			DEMONHUNTER = {
 				SOUL_FRAGMENTS = { r = 0.3, g = 0.15, b = 1, a = 1 },
+				SOUL_CLEAVE = { r = 0.45, g = 0.25, b = 1, a = 1 },
+			},
+			HUNTER =  {
+				SPEAR_TIP = { r = 0, g = 0.85, b = 0.85, a = 1 },
 			},
 			MAGE = {
+				FIRE_BLAST = { r = 1.00, g = 0.40, b = 0, a = 1 },
 				FROST_ICICLES = { r = 0, g = 0.80, b = 1.00, a = 1 },
 				ARCANE_CHARGES = { r = 0, g = 0.40, b = 1.00, a = 1 }
 			},
@@ -1055,7 +1060,7 @@ P.nameplates = {
 			},
 			PRIEST = { r = 0.40, g = 0.00, b = 0.80, a = 1 }, -- shadow orbs
 			WARLOCK = {
-				SOUL_SHARDS = { r = 0.58, g = 0.51, b = 0.79, a = 1 },
+				SOUL_SHARDS = { r = 0.50, g = 0.25, b = 0.80, a = 1 },
 				DEMONIC_FURY = { r = 0.788, g = 0.259, b = 0.992, a = 1 },
 				BURNING_EMBERS = {
 					{ r = 1.00, g = 0.60, b = 0.20, a = 1 },
