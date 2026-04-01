@@ -30,8 +30,6 @@ function NP:ThreatIndicator_PostUpdate(unit, status)
 		nameplate.threatScale = 1
 		NP:ScalePlate(nameplate, 1)
 	elseif status and db.enable and db.useThreatColor and not UnitIsTapDenied(unit) then
-		NP:Health_SetColors(nameplate, true)
-
 		local Color, Scale
 		if status == 3 then -- securely tanking
 			Color = (self.useSolo and colors.soloColor) or (self.isTank and colors.goodColor) or colors.badColor
@@ -47,7 +45,9 @@ function NP:ThreatIndicator_PostUpdate(unit, status)
 			Scale = (self.offTank and db.goodScale) or (self.isTank and db.badScale) or db.goodScale
 		end
 
-		nameplate.Health:SetStatusBarColor(Color.r, Color.g, Color.b)
+		if not db.skipGoodColor or (Color ~= colors.goodColor) then
+			nameplate.Health:SetStatusBarColor(Color.r, Color.g, Color.b)
+		end
 
 		if Scale then
 			nameplate.threatScale = Scale
@@ -77,11 +77,7 @@ function NP:Update_ThreatIndicator(nameplate)
 			nameplate:EnableElement('ThreatIndicator')
 		end
 
-		if db.indicator then
-			nameplate.ThreatIndicator:SetAlpha(1)
-		else
-			nameplate.ThreatIndicator:SetAlpha(0)
-		end
+		nameplate.ThreatIndicator:SetAlpha(db.indicator and 1 or 0)
 	elseif nameplate:IsElementEnabled('ThreatIndicator') then
 		nameplate:DisableElement('ThreatIndicator')
 	end
