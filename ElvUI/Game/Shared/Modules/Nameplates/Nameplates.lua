@@ -218,9 +218,11 @@ function NP:PLAYER_REGEN_ENABLED()
 end
 
 function NP:Style(unit)
+	local plate = self:GetParent()
 	local frameName = self:GetName()
 	self.frameName = frameName
-	self.isNamePlate = true
+	self.blizzPlate = plate.UnitFrame
+	self.isNamePlate = true -- used in auraskip
 
 	if frameName == 'ElvNP_Player' then
 		NP.PlayerFrame = self
@@ -237,15 +239,31 @@ function NP:Style(unit)
 	return self
 end
 
+function NP:Construct_StackingBounds(nameplate)
+	local element = CreateFrame('Frame', '$parent_StackingBounds', nameplate)
+
+	-- little magic (part one): SetStackingBoundsFrame needs it
+	local stacking = element:CreateTexture()
+	stacking:SetColorTexture(1, 0, 0, 0)
+	stacking:SetAllPoints(element)
+
+	-- little magic (part two): fixes fps drops with stacking
+	if nameplate.SetStackingBoundsFrame then
+		nameplate:SetStackingBoundsFrame(element)
+	end
+
+	return element
+end
+
 function NP:Construct_RaisedELement(nameplate)
-	local RaisedElement = CreateFrame('Frame', '$parent_RaisedElement', nameplate)
-	RaisedElement:SetFrameLevel(10)
-	RaisedElement:SetAllPoints()
-	RaisedElement:EnableMouse(false)
+	local element = CreateFrame('Frame', '$parent_RaisedElement', nameplate)
+	element:SetFrameLevel(10)
+	element:SetAllPoints()
+	element:EnableMouse(false)
 
-	RaisedElement.frameName = RaisedElement:GetName()
+	element.frameName = element:GetName()
 
-	return RaisedElement
+	return element
 end
 
 function NP:Construct_ClassPowerTwo(nameplate)
@@ -274,6 +292,7 @@ function NP:StyleTargetPlate(nameplate)
 	nameplate:Point('CENTER')
 	nameplate:Size(NP.db.clickSize.personalWidth, NP.db.clickSize.personalHeight)
 
+	nameplate.StackingBounds = NP:Construct_StackingBounds(nameplate)
 	nameplate.RaisedElement = NP:Construct_RaisedELement(nameplate)
 	nameplate.ClassPower = NP:Construct_ClassPower(nameplate)
 
@@ -317,6 +336,7 @@ function NP:StylePlate(nameplate)
 
 	nameplate.blizzAuras = { BuffList = {}, DebuffList = {}, CrowdControlList = {} }
 
+	nameplate.StackingBounds = NP:Construct_StackingBounds(nameplate)
 	nameplate.RaisedElement = NP:Construct_RaisedELement(nameplate)
 	nameplate.Health = NP:Construct_Health(nameplate)
 	nameplate.Health.Text = NP:Construct_TagText(nameplate)
@@ -362,7 +382,7 @@ do
 		for _, name in next, elements do
 			local element = nameplate[name]
 			if element then
-				element:SetParent(parent or nameplate)
+				element:SetParent(parent or (name == 'QuestIcons' and nameplate.RaisedElement) or nameplate)
 			end
 		end
 	end
@@ -731,8 +751,6 @@ end
 function NP:NAME_PLATE_UNIT_ADDED(_, unit)
 	if not unit then unit = self.unit end
 
-	local plate = self:GetParent()
-	self.blizzPlate = plate.UnitFrame
 	self.widgetsOnly = E.Retail and self.blizzPlate and UnitNameplateShowsWidgetsOnly(unit)
 	self.widgetSet = E.Retail and UnitWidgetSet(unit)
 	self.classification = UnitClassification(unit)
@@ -771,13 +789,13 @@ function NP:NAME_PLATE_UNIT_ADDED(_, unit)
 	NP:UpdatePlateType(self)
 	NP:UpdatePlateSize(self)
 
-	self.softTargetFrame = self.blizzPlate and self.blizzPlate.SoftTargetFrame
+	self.softTargetFrame = self.blizzPlate.SoftTargetFrame
 	if self.softTargetFrame then
 		self.softTargetFrame:SetParent(self)
 		self.softTargetFrame:SetIgnoreParentAlpha(true)
 	end
 
-	self.widgetContainer = self.blizzPlate and self.blizzPlate.WidgetContainer
+	self.widgetContainer = self.blizzPlate.WidgetContainer
 	if self.widgetContainer then
 		self.widgetContainer:SetParent(self)
 		self.widgetContainer:SetIgnoreParentAlpha(true)
@@ -905,7 +923,7 @@ function NP:BlizzardPlate_RefreshList(listFrame, auraList)
 	if not NP.db.useBlizzardAuras then return end
 
 	local blizzPlate = self:GetParent()
-	local plate = blizzPlate and blizzPlate:GetParent()
+	local plate = blizzPlate:GetParent()
 
 	local nameplate = plate and plate.unitFrame
 	local blizzAuras = nameplate and nameplate.blizzAuras
