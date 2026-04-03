@@ -789,13 +789,13 @@ function NP:NAME_PLATE_UNIT_ADDED(_, unit)
 	NP:UpdatePlateType(self)
 	NP:UpdatePlateSize(self)
 
-	self.softTargetFrame = self.blizzPlate.SoftTargetFrame
+	self.softTargetFrame = self.blizzPlate and self.blizzPlate.SoftTargetFrame
 	if self.softTargetFrame then
 		self.softTargetFrame:SetParent(self)
 		self.softTargetFrame:SetIgnoreParentAlpha(true)
 	end
 
-	self.widgetContainer = self.blizzPlate.WidgetContainer
+	self.widgetContainer = self.blizzPlate and self.blizzPlate.WidgetContainer
 	if self.widgetContainer then
 		self.widgetContainer:SetParent(self)
 		self.widgetContainer:SetIgnoreParentAlpha(true)
