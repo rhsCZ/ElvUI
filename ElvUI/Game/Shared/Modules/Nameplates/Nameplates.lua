@@ -241,6 +241,7 @@ end
 
 function NP:Construct_StackingBounds(nameplate)
 	local element = CreateFrame('Frame', '$parent_StackingBounds', nameplate)
+	element:SetAllPoints()
 
 	-- little magic (part one): SetStackingBoundsFrame needs it
 	local stacking = element:CreateTexture()
@@ -248,8 +249,9 @@ function NP:Construct_StackingBounds(nameplate)
 	stacking:SetAllPoints(element)
 
 	-- little magic (part two): fixes fps drops with stacking
-	if nameplate.SetStackingBoundsFrame then
-		nameplate:SetStackingBoundsFrame(element)
+	local plate = nameplate:GetParent()
+	if plate and plate.SetStackingBoundsFrame then
+		plate:SetStackingBoundsFrame(element)
 	end
 
 	return element
@@ -257,9 +259,9 @@ end
 
 function NP:Construct_RaisedELement(nameplate)
 	local element = CreateFrame('Frame', '$parent_RaisedElement', nameplate)
+	element:EnableMouse(false)
 	element:SetFrameLevel(10)
 	element:SetAllPoints()
-	element:EnableMouse(false)
 
 	element.frameName = element:GetName()
 
