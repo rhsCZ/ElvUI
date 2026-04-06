@@ -61,8 +61,8 @@ local BNET_CLIENT_WOW = BNET_CLIENT_WOW
 local LFG_LIST_AND_MORE = LFG_LIST_AND_MORE
 local UNKNOWN = UNKNOWN
 
-local GetGroupMembers = E.Retail and C_SocialQueue.GetGroupMembers
-local GetGroupQueues = E.Retail and C_SocialQueue.GetGroupQueues
+local GetGroupMembers = C_SocialQueue and C_SocialQueue.GetGroupMembers
+local GetGroupQueues = C_SocialQueue and C_SocialQueue.GetGroupQueues
 
 local GetCVar = C_CVar.GetCVar
 local GetCVarBool = C_CVar.GetCVarBool
@@ -2187,13 +2187,11 @@ function CH:MessageFormatter(frame, info, chatType, chatGroup, chatTarget, chann
 	local senderLink = linkSender and playerLink or arg2
 	if usingDifferentLanguage then
 		body = format(_G['CHAT_'..chatType..'_GET']..'[%s] %s', pflag..senderLink, arg3, message) -- arg3 is language header
-	elseif not isProtected and chatType == 'GUILD_ITEM_LOOTED' then
-		body = gsub(message, '$s', senderLink, 1)
-	elseif not isProtected and realm and chatType == 'TEXT_EMOTE' then
-		local classLink = playerLink and (info.colorNameByClass and gsub(playerLink, '(|h|c.-)|r|h$','%1-'..realm..'|r|h') or gsub(playerLink, '(|h.-)|h$','%1-'..realm..'|h'))
-		body = classLink and gsub(message, arg2..'%-'..realm, pflag..classLink, 1) or message
+	elseif chatType == 'GUILD_ITEM_LOOTED' then
+		body = not isProtected and gsub(message, '$s', senderLink, 1) or message
 	elseif chatType == 'TEXT_EMOTE' then
-		body = (E:NotSecretValue(arg2) and arg2 ~= senderLink) and gsub(message, arg2, senderLink, 1) or message
+		local classLink = realm and playerLink and not isProtected and (info.colorNameByClass and gsub(playerLink, '(|h|c.-)|r|h$','%1-'..realm..'|r|h') or gsub(playerLink, '(|h.-)|h$','%1-'..realm..'|h'))
+		body = (classLink and gsub(message, arg2..'%-'..realm, pflag..classLink, 1)) or ((E:NotSecretValue(arg2) and arg2 ~= senderLink) and gsub(message, arg2, senderLink, 1)) or message
 	else
 		body = format(_G['CHAT_'..chatType..'_GET']..message, pflag..senderLink)
 	end
@@ -3063,14 +3061,11 @@ function CH:CheckLFGRoles()
 		lfgRoles[PLAYER_NAME] = CH.RoleIcons[E.myrole]
 	end
 
-	for guid, role in next, E.GroupRoles do
-		local unit = E.GroupUnitsByRole[role][guid]
-		if unit then
-			local name, realm = UnitName(unit)
-			if role and name then
-				name = (realm and realm ~= '' and name..'-'..realm) or name..'-'..PLAYER_REALM
-				lfgRoles[name] = CH.RoleIcons[role]
-			end
+	for unit, role in next, E.GroupRoles do
+		local name, realm = UnitName(unit)
+		if role and name then
+			name = (realm and realm ~= '' and name..'-'..realm) or name..'-'..PLAYER_REALM
+			lfgRoles[name] = CH.RoleIcons[role]
 		end
 	end
 end
@@ -3103,51 +3098,49 @@ function CH:SocialQueueIsLeader(playerName, leaderName)
 	end
 end
 
-local socialQueueCache = {}
-local function RecentSocialQueue(TIME, MSG)
-	local previousMessage = false
-	if next(socialQueueCache) then
-		for guid, tbl in pairs(socialQueueCache) do
-			-- !dont break this loop! its used to keep the cache updated
+do
+	local queueCache = {}
+	local function RecentSocialQueue(TIME, MSG)
+		local previous = false -- !dont break this loop!
+		for guid, tbl in next, queueCache do -- its used to keep the cache updated
 			if TIME and (difftime(TIME, tbl[1]) >= 300) then
-				socialQueueCache[guid] = nil --remove any older than 5m
-			elseif MSG and (MSG == tbl[2]) then
-				previousMessage = true --dont show any of the same message within 5m
-				-- see note for `message` in `SocialQueueMessage` about `MSG` content
+				queueCache[guid] = nil -- remove any older than 5m
+			elseif MSG and (MSG == tbl[2]) then -- dont show any of the same message within 5m
+				previous = true -- see note for `message` in `SocialQueueMessage` about `MSG` content
 			end
 		end
+
+		return previous
 	end
-	return previousMessage
-end
 
-function CH:SocialQueueMessage(guid, message)
-	if not (guid and message) then return end
-	-- `guid` is something like `Party-1147-000011202574` and appears to update each time for solo requeue, otherwise on new group creation.
-	-- `message` is something like `|cff82c5ff|Kf58|k000000000000|k|r queued for: |cff00CCFFRandom Legion Heroic|r `
+	function CH:SocialQueueMessage(guid, message)
+		if E:IsSecretValue(message) or not (guid and message) then return end
+		-- `guid` is something like `Party-1147-000011202574` and appears to update each time for solo requeue, otherwise on new group creation.
+		-- `message` is something like `|cff82c5ff|Kf58|k000000000000|k|r queued for: |cff00CCFFRandom Legion Heroic|r `
 
-	-- prevent duplicate messages within 5 minutes
-	local TIME = time()
-	if RecentSocialQueue(TIME, message) then return end
-	socialQueueCache[guid] = {TIME, message}
+		local TIME = time() -- prevent duplicate messages within 5 minutes
+		if RecentSocialQueue(TIME, message) then return end
+		queueCache[guid] = {TIME, message}
 
-	-- UI_71_SOCIAL_QUEUEING_TOAST = 79739; appears to have no sound?
-	PlaySound(SOUND_TUTORIAL_POPUP)
+		-- UI_71_SOCIAL_QUEUEING_TOAST = 79739; appears to have no sound?
+		PlaySound(SOUND_TUTORIAL_POPUP)
 
-	E:Print(format('|Hsqu:%s|h%s|h', guid, strtrim(message)))
+		E:Print(format('|Hsqu:%s|h%s|h', guid, strtrim(message)))
+	end
 end
 
 function CH:SocialQueueEvent(_, guid, numAddedItems) -- event, guid, numAddedItems
-	if not CH.db.socialQueueMessages then return end
-	if numAddedItems == 0 or not guid then return end
+	if not CH.db.socialQueueMessages or (not guid or numAddedItems == 0) then return end
 
 	local players = GetGroupMembers(guid)
 	if not players then return end
 
 	local firstMember, numMembers, extraCount, coloredName = players[1], #players, ''
-	local playerName, nameColor = _G.SocialQueueUtil_GetRelationshipInfo(firstMember.guid, nil, firstMember.clubId)
 	if numMembers > 1 then
 		extraCount = format(' +%s', numMembers - 1)
 	end
+
+	local playerName, nameColor = _G.SocialQueueUtil_GetRelationshipInfo(firstMember.guid, nil, firstMember.clubId)
 	if playerName and playerName ~= '' then
 		coloredName = format('%s%s|r%s', nameColor, playerName, extraCount)
 	else
@@ -3156,27 +3149,27 @@ function CH:SocialQueueEvent(_, guid, numAddedItems) -- event, guid, numAddedIte
 
 	local queues = GetGroupQueues(guid)
 	local firstQueue = queues and queues[1]
-	local isLFGList = firstQueue and firstQueue.queueData and firstQueue.queueData.queueType == 'lfglist'
+	if not firstQueue then return end
 
-	if isLFGList and firstQueue and firstQueue.eligible then
+	local firstData = firstQueue.queueData
+	if firstQueue.eligible and (firstData and firstData.queueType == 'lfglist') then
 		local activityID, activityInfo, name, leaderName, isLeader
-
-		if firstQueue.queueData.lfgListID then
-			local searchResultInfo = C_LFGList_GetSearchResultInfo(firstQueue.queueData.lfgListID)
-			if searchResultInfo then
-				activityID, name, leaderName = searchResultInfo.activityID, searchResultInfo.name, searchResultInfo.leaderName
+		if firstData.lfgListID then
+			local searchInfo = C_LFGList_GetSearchResultInfo(firstData.lfgListID)
+			if searchInfo then
+				activityID, name, leaderName = searchInfo.activityID, searchInfo.name, searchInfo.leaderName
 				isLeader = CH:SocialQueueIsLeader(playerName, leaderName)
 			end
 		end
 
-		if activityID or firstQueue.queueData.activityID then
-			activityInfo = C_LFGList_GetActivityInfoTable(activityID or firstQueue.queueData.activityID)
+		if activityID or firstData.activityID then
+			activityInfo = C_LFGList_GetActivityInfoTable(activityID or firstData.activityID)
 		end
 
 		CH:SocialQueueMessage(guid, format(name and '%s %s: [%s] |cff00CCFF%s|r' or '%s %s: |cff00CCFF%s|r', coloredName, (isLeader and L["is looking for members"]) or L["joined a group"], activityInfo and activityInfo.fullName or UNKNOWN, name))
-	elseif firstQueue then
+	else
 		local output, outputCount, queueCount = '', '', 0
-		for _, queue in pairs(queues) do
+		for _, queue in next, queues do
 			if type(queue) == 'table' and queue.eligible then
 				local queueName = (queue.queueData and _G.SocialQueueUtil_GetQueueName(queue.queueData)) or ''
 				if queueName ~= '' then
@@ -3189,8 +3182,12 @@ function CH:SocialQueueEvent(_, guid, numAddedItems) -- event, guid, numAddedIte
 				end
 			end
 		end
+
 		if output ~= '' then
-			if queueCount > 0 then outputCount = format(LFG_LIST_AND_MORE, queueCount) end
+			if queueCount > 0 then
+				outputCount = format(LFG_LIST_AND_MORE, queueCount)
+			end
+
 			CH:SocialQueueMessage(guid, format('%s %s: |cff00CCFF%s|r %s', coloredName, SOCIAL_QUEUE_QUEUED_FOR, output, outputCount))
 		end
 	end
@@ -3670,7 +3667,7 @@ function CH:FCFTab_UpdateColors(tab, selected)
 		end
 
 		local name = GetChatWindowInfo(tab:GetID())
-		if name then
+		if name and E:NotSecretValue(name) then
 			tab.Text:SetText(name)
 		end
 
@@ -3681,20 +3678,21 @@ function CH:FCFTab_UpdateColors(tab, selected)
 
 		tab.selected = selected
 
-		local whisper = tab.conversationIcon and chat.chatTarget
 		local name = chat.name or UNKNOWN
+		local whisper = tab.conversationIcon and chat.chatTarget
+		tab.whisperName = (whisper and not tab.whisperName) and E:NotSecretValue(name) and gsub(E:StripMyRealm(name), '([%S]-)%-[%S]+', '%1|cFF999999*|r') or nil
 
-		if whisper and not tab.whisperName then
-			tab.whisperName = E:NotSecretValue(name) and gsub(E:StripMyRealm(name), '([%S]-)%-[%S]+', '%1|cFF999999*|r') or nil
-		end
-
+		local nameText = tab.whisperName or name
+		local nameTextNotSecret = E:NotSecretValue(nameText)
 		if selected then -- color tables are class updated in UpdateMedia
-			if CH.db.tabSelector == 'NONE' then
-				tab:SetFormattedText(CH.TabStyles.NONE, tab.whisperName or name)
-			else
-				local color = CH.db.tabSelectorColor
-				local hexColor = color and E:RGBToHex(color.r, color.g, color.b) or '|cff4cff4c'
-				tab:SetFormattedText(CH.TabStyles[CH.db.tabSelector] or CH.TabStyles.ARROW1, hexColor, tab.whisperName or name, hexColor)
+			if nameTextNotSecret then
+				if CH.db.tabSelector == 'NONE' then
+					tab:SetFormattedText(CH.TabStyles.NONE, nameText)
+				else
+					local color = CH.db.tabSelectorColor
+					local hexColor = color and E:RGBToHex(color.r, color.g, color.b) or '|cff4cff4c'
+					tab:SetFormattedText(CH.TabStyles[CH.db.tabSelector] or CH.TabStyles.ARROW1, hexColor, nameText, hexColor)
+				end
 			end
 
 			if CH.db.tabSelectedTextEnabled then
@@ -3704,13 +3702,14 @@ function CH:FCFTab_UpdateColors(tab, selected)
 				else
 					tab.Text:SetTextColor(1, 1, 1)
 				end
+
 				return -- using selected text color
 			end
 		end
 
 		if whisper then
-			if not selected then
-				tab:SetText(tab.whisperName or name)
+			if nameTextNotSecret and not selected then
+				tab:SetText(nameText)
 			end
 
 			local nameLower = not tab.classColor and E:NotSecretValue(name) and strlower(name)
@@ -3723,7 +3722,7 @@ function CH:FCFTab_UpdateColors(tab, selected)
 				tab.Text:SetTextColor(tab.classColor.r, tab.classColor.g, tab.classColor.b)
 			end
 		else
-			if not selected then
+			if nameTextNotSecret and not selected then
 				tab:SetText(name)
 			end
 
@@ -3777,7 +3776,7 @@ function CH:VoiceOverlay(event, ...)
 	if event == 'VOICE_CHAT_CHANNEL_MEMBER_SPEAKING_STATE_CHANGED' then
 		local memberID, channelID, isTalking = ...
 
-		if isTalking then
+		if E:NotSecretValue(isTalking) and isTalking then
 			CH.TalkingList[memberID] = channelID
 			CH:ConfigureHead(memberID, channelID)
 		else

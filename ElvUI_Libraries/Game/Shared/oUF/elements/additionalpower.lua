@@ -46,7 +46,6 @@ local pcall = pcall
 local unpack = unpack
 
 local CopyTable = CopyTable
-local UnitIsUnit = UnitIsUnit
 local UnitPower = UnitPower
 local UnitPowerMax = UnitPowerMax
 local UnitHasVehicleUI = UnitHasVehicleUI
@@ -59,14 +58,14 @@ local StatusBarInterpolation = Enum.StatusBarInterpolation
 local MANA = { powerName = 'MANA', powerType = 0 }
 local POWER_NAME = _G.ADDITIONAL_POWER_BAR_NAME or 'MANA'
 local POWER_INDEX = _G.ADDITIONAL_POWER_BAR_INDEX or 0
-local ALT_POWER_INFO = _G.ALT_POWER_BAR_PAIR_DISPLAY_INFO or {
+local ALT_POWER_INFO = _G.ALT_POWER_BAR_PAIR_DISPLAY_INFO and CopyTable(_G.ALT_POWER_BAR_PAIR_DISPLAY_INFO) or {
 	DRUID = { [8] = CopyTable(MANA) },		-- LunarPower
 	SHAMAN = { [11] = CopyTable(MANA) },	-- Maelstrom
 	PRIEST = { [13] = CopyTable(MANA) }		-- Insanity
 }
 
 local function UpdateColor(self, event, unit, powerType)
-	if(not (unit and UnitIsUnit(unit, 'player') and powerType == POWER_NAME)) then return end
+	if(not (unit and oUF:UnitIsUnit(unit, 'player') and powerType == POWER_NAME)) then return end
 	local element = self.AdditionalPower
 
 	local color
@@ -76,8 +75,9 @@ local function UpdateColor(self, event, unit, powerType)
 		if(element.colorPowerSmooth) then
 			if oUF.isRetail then
 				local curve = color:GetCurve()
-				if curve then
-					color = UnitPowerPercent(unit, nil, true, curve)
+				local ok, colorPercent = pcall(UnitPowerPercent, unit, nil, true, curve)
+				if ok then
+					color = colorPercent
 				end
 			else
 				local curValue, maxValue = element.cur or 1, element.max or 1
@@ -107,7 +107,7 @@ local function UpdateColor(self, event, unit, powerType)
 end
 
 local function Update(self, event, unit, powerType)
-	if(not (unit and UnitIsUnit(unit, 'player') and powerType == POWER_NAME)) then return end
+	if(not (unit and oUF:UnitIsUnit(unit, 'player') and powerType == POWER_NAME)) then return end
 	local element = self.AdditionalPower
 
 	--[[ Callback: AdditionalPower:PreUpdate(unit)
@@ -244,7 +244,7 @@ end
 
 local function Enable(self, unit)
 	local element = self.AdditionalPower
-	if(element and UnitIsUnit(unit, 'player')) then
+	if(element and oUF:UnitIsUnit(unit, 'player')) then
 		element.__owner = self
 		element.ForceUpdate = ForceUpdate
 
@@ -255,7 +255,14 @@ local function Enable(self, unit)
 		self:RegisterEvent('UNIT_DISPLAYPOWER', VisibilityPath)
 
 		if(not element.displayPairs) then
-			element.displayPairs = CopyTable(ALT_POWER_INFO)
+			local info = ALT_POWER_INFO
+
+			-- add druid info, if needed
+			if not info.DRUID then info.DRUID = {} end
+			if not info.DRUID[1] then info.DRUID[1] = CopyTable(MANA) end
+			if not info.DRUID[3] then info.DRUID[3] = CopyTable(MANA) end
+
+			element.displayPairs = info
 		end
 
 		if(element:IsObjectType('StatusBar') and not element:GetStatusBarTexture()) then

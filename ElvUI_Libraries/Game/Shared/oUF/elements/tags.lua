@@ -69,7 +69,6 @@ local _, ns = ...
 local oUF = ns.oUF
 local Private = oUF.Private
 
-local unitExists = Private.unitExists
 local validateEvent = Private.validateEvent
 local validateUnit = Private.validateUnit
 
@@ -94,14 +93,13 @@ local POWERTYPE_ARCANE_CHARGES = Enum.PowerType.ArcaneCharges or 16
 local C_Timer_NewTimer = C_Timer.NewTimer
 local GetSpecialization = C_SpecializationInfo.GetSpecialization or GetSpecialization
 local CreateFrame = CreateFrame
-local UnitIsUnit = UnitIsUnit
-local IsInRaid = IsInRaid
 
 local ScaleTo100 = CurveConstants and CurveConstants.ScaleTo100
 local GenerateTextColorCode = C_ColorUtil and C_ColorUtil.GenerateTextColorCode
 local TruncateWhenZero = C_StringUtil and C_StringUtil.TruncateWhenZero
 local WrapString = C_StringUtil and C_StringUtil.WrapString
 
+local IsInRaid = IsInRaid
 local IsResting = IsResting
 local GetArenaOpponentSpec = GetArenaOpponentSpec
 local GetCreatureDifficultyColor = GetCreatureDifficultyColor
@@ -116,17 +114,17 @@ local UnitCreatureFamily = UnitCreatureFamily
 local UnitCreatureType = UnitCreatureType
 local UnitEffectiveLevel = UnitEffectiveLevel
 local UnitHealthMax = UnitHealthMax
+local UnitHealthMissing = UnitHealthMissing
+local UnitHealthPercent = UnitHealthPercent
 local UnitIsBattlePetCompanion = UnitIsBattlePetCompanion
 local UnitIsGroupLeader = UnitIsGroupLeader
 local UnitIsPlayer = UnitIsPlayer
 local UnitIsPVP = UnitIsPVP
 local UnitIsWildBattlePet = UnitIsWildBattlePet
-local UnitHealthMissing = UnitHealthMissing
-local UnitPowerMissing = UnitPowerMissing
-local UnitPowerPercent = UnitPowerPercent
-local UnitHealthPercent = UnitHealthPercent
 local UnitLevel = UnitLevel
 local UnitPowerMax = UnitPowerMax
+local UnitPowerMissing = UnitPowerMissing
+local UnitPowerPercent = UnitPowerPercent
 local UnitPowerType = UnitPowerType
 local UnitSex = UnitSex
 local UnitThreatSituation = UnitThreatSituation
@@ -274,12 +272,13 @@ tagFunctions.difficulty = function(u)
 end
 
 tagFunctions.group = function(unit)
-	if(IsInRaid()) then
-		for index = 1, GetNumGroupMembers() do
-			if(UnitIsUnit(unit, 'raid' .. index)) then
-				local _, _, group = GetRaidRosterInfo(index)
-				return group
-			end
+	if not IsInRaid() then return end
+
+	-- TODO: use C_Secrets.CanCompareUnitTokens instead of pcall
+	for index = 1, GetNumGroupMembers() do
+		if oUF:UnitIsUnit(unit, 'raid' .. index) then
+			local _, _, group = GetRaidRosterInfo(index)
+			return group
 		end
 	end
 end
@@ -359,7 +358,10 @@ end
 
 tagFunctions.perhp = function(u)
 	if oUF.isRetail then
-		return format('%d', UnitHealthPercent(u, true, ScaleTo100))
+		local ok, precent = pcall(UnitHealthPercent, u, true, ScaleTo100)
+		if ok then
+			return format('%d', precent)
+		end
 	else
 		local m = UnitHealthMax(u)
 		if(m == 0) then
@@ -372,7 +374,10 @@ end
 
 tagFunctions.perpp = function(u)
 	if oUF.isRetail then
-		return format('%d', UnitPowerPercent(u, nil, true, ScaleTo100))
+		local ok, precent = pcall(UnitPowerPercent, u, nil, true, ScaleTo100)
+		if ok then
+			return format('%d', precent)
+		end
 	else
 		local m = UnitPowerMax(u)
 		if(m == 0) then
@@ -631,7 +636,7 @@ local function UpdateTimer(frame, elapsed)
 	local total = frame.total
 	if total >= frame.timer then
 		for fs, parent in next, frame.strings do -- isForced prevents spam in ElvUI
-			if not parent.isForced and parent:IsShown() and unitExists(parent.unit) then
+			if not parent.isForced and parent:IsShown() and oUF:UnitExists(parent.unit) then
 				fs:UpdateTag()
 			end
 		end
@@ -774,7 +779,7 @@ local function ShouldUpdateTag(frame, event, unit)
 
 	if unitlessEvents[event] then
 		return true
-	elseif validateUnit(unit) and unitExists(unit) then
+	elseif validateUnit(unit) and oUF:UnitExists(unit) then
 		if frame.unit == unit then
 			return true
 		else

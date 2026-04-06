@@ -57,6 +57,8 @@ E.NoSecretValues = oUF.NoSecretValues
 E.NotSecretTable = oUF.NotSecretTable
 E.NotSecretUnit = oUF.NotSecretUnit
 E.NotSecretValue = oUF.NotSecretValue
+E.GetThreatSituation = oUF.GetThreatSituation
+E.UnitIsUnit = oUF.UnitIsUnit
 
 Engine[1] = E
 Engine[2] = {}
@@ -82,7 +84,7 @@ E.Misc = E:NewModule('Misc','AceEvent-3.0','AceTimer-3.0','AceHook-3.0')
 E.ModuleCopy = E:NewModule('ModuleCopy','AceEvent-3.0','AceTimer-3.0','AceComm-3.0','AceSerializer-3.0')
 E.NamePlates = E:NewModule('NamePlates','AceHook-3.0','AceEvent-3.0','AceTimer-3.0')
 E.PluginInstaller = E:NewModule('PluginInstaller')
-E.PrivateAuras = E:NewModule('PrivateAuras')
+E.PrivateAuras = E:NewModule('PrivateAuras','AceEvent-3.0')
 E.RaidUtility = E:NewModule('RaidUtility','AceEvent-3.0')
 E.Skins = E:NewModule('Skins','AceTimer-3.0','AceHook-3.0','AceEvent-3.0')
 E.Tooltip = E:NewModule('Tooltip','AceTimer-3.0','AceHook-3.0','AceEvent-3.0')
@@ -141,7 +143,7 @@ end
 function E:ParseVersionString(addon)
 	local version = GetAddOnMetadata(addon, 'Version')
 	if strfind(version, 'project%-version') then
-		return 15.09, '15.09-git', nil, true
+		return 15.10, '15.10-git', nil, true
 	else
 		local release, extra = strmatch(version, '^v?([%d.]+)(.*)')
 		return tonumber(release), release..extra, extra ~= ''

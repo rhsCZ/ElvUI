@@ -15,6 +15,7 @@ local UnitName = UnitName
 local UnitReaction = UnitReaction
 local UnitSpellHaste = UnitSpellHaste
 
+local C_ClassColor_GetClassColor = C_ClassColor and C_ClassColor.GetClassColor
 local IsSpellInSpellBook = C_SpellBook.IsSpellInSpellBook or IsSpellKnownOrOverridesKnown
 local IsSpellKnown = C_SpellBook.IsSpellKnown or IsPlayerSpell
 local StatusBarInterpolation = Enum.StatusBarInterpolation
@@ -395,78 +396,89 @@ function UF:Configure_Castbar(frame)
 	end
 end
 
-function UF:CustomCastDelayText(duration, durationObject)
-	if durationObject then
-		local remain = durationObject:GetRemainingDuration()
-		self.Time:SetFormattedText('%.1f', remain)
+function UF:SetCastDisplayDelay(frame, which, duration, maximum, remain, delay)
+	local text = frame.Time
+	if not text then return end
 
-		return
-	elseif not duration then
-		return
-	end
-
-	local db = self:GetParent().db
-	if not (db and db.castbar) then return end
-	db = db.castbar.format
-
-	if self.channeling then
-		if db == 'CURRENT' then
-			self.Time:SetFormattedText('%.1f |cffaf5050%.1f|r', abs(duration - self.max), self.delay)
-		elseif db == 'CURRENTMAX' then
-			self.Time:SetFormattedText('%.1f / %.1f |cffaf5050%.1f|r', duration, self.max, self.delay)
-		elseif db == 'REMAINING' then
-			self.Time:SetFormattedText('%.1f |cffaf5050%.1f|r', duration, self.delay)
-		elseif db == 'REMAININGMAX' then
-			self.Time:SetFormattedText('%.1f / %.1f |cffaf5050%.1f|r', abs(duration - self.max), self.max, self.delay)
+	if frame.channeling then
+		if which == 'CURRENT' then
+			text:SetFormattedText('%.1f |cffaf5050%.1f|r', remain, delay)
+		elseif which == 'CURRENTMAX' then
+			text:SetFormattedText('%.1f / %.1f |cffaf5050%.1f|r', duration, maximum, delay)
+		elseif which == 'REMAINING' then
+			text:SetFormattedText('%.1f |cffaf5050%.1f|r', duration, delay)
+		elseif which == 'REMAININGMAX' then
+			text:SetFormattedText('%.1f / %.1f |cffaf5050%.1f|r', remain, maximum, delay)
 		end
-	else
-		if db == 'CURRENT' then
-			self.Time:SetFormattedText('%.1f |cffaf5050%s %.1f|r', duration, '+', self.delay)
-		elseif db == 'CURRENTMAX' then
-			self.Time:SetFormattedText('%.1f / %.1f |cffaf5050%s %.1f|r', duration, self.max, '+', self.delay)
-		elseif db == 'REMAINING' then
-			self.Time:SetFormattedText('%.1f |cffaf5050%s %.1f|r', abs(duration - self.max), '+', self.delay)
-		elseif db == 'REMAININGMAX' then
-			self.Time:SetFormattedText('%.1f / %.1f |cffaf5050%s %.1f|r', abs(duration - self.max), self.max, '+', self.delay)
-		end
+	elseif which == 'CURRENT' then
+		text:SetFormattedText('%.1f |cffaf5050%s %.1f|r', duration, '+', delay)
+	elseif which == 'CURRENTMAX' then
+		text:SetFormattedText('%.1f / %.1f |cffaf5050%s %.1f|r', duration, maximum, '+', delay)
+	elseif which == 'REMAINING' then
+		text:SetFormattedText('%.1f |cffaf5050%s %.1f|r', remain, '+', delay)
+	elseif which == 'REMAININGMAX' then
+		text:SetFormattedText('%.1f / %.1f |cffaf5050%s %.1f|r', remain, maximum, '+', delay)
 	end
 end
 
-function UF:CustomTimeText(duration, durationObject)
-	if durationObject then
-		local remain = durationObject:GetRemainingDuration()
-		self.Time:SetFormattedText('%.1f', remain)
+function UF:SetCastDisplayCustom(frame, which, duration, maximum, remain)
+	local text = frame.Time
+	if not text then return end
 
-		return
-	elseif not duration then
+	if frame.channeling then
+		if which == 'CURRENT' then
+			text:SetFormattedText('%.1f', remain)
+		elseif which == 'CURRENTMAX' then
+			text:SetFormattedText('%.1f / %.1f', remain, maximum)
+		elseif which == 'REMAINING' then
+			text:SetFormattedText('%.1f', duration)
+		elseif which == 'REMAININGMAX' then
+			text:SetFormattedText('%.1f / %.1f', duration, maximum)
+		end
+	elseif which == 'CURRENT' then
+		text:SetFormattedText('%.1f', duration)
+	elseif which == 'CURRENTMAX' then
+		text:SetFormattedText('%.1f / %.1f', duration, maximum)
+	elseif which == 'REMAINING' then
+		text:SetFormattedText('%.1f', remain)
+	elseif which == 'REMAININGMAX' then
+		text:SetFormattedText('%.1f / %.1f', remain, maximum)
+	end
+end
+
+function UF:GetCastDurations(element, duration, durationObject)
+	local remain, maximum
+	if durationObject then
+		remain = durationObject:GetRemainingDuration()
+		maximum = durationObject:GetTotalDuration()
+	elseif duration then
+		maximum = element.max
+		remain = abs(duration - maximum)
+	else -- excuse me?
 		return
 	end
+
+	return remain, maximum
+end
+
+function UF:CustomCastDelayText(duration, durationObject)
+	local remain, maximum = UF:GetCastDurations(self, duration, durationObject)
+	if not remain then return end
 
 	local db = self:GetParent().db
 	if not (db and db.castbar) then return end
-	db = db.castbar.format
 
-	if self.channeling then
-		if db == 'CURRENT' then
-			self.Time:SetFormattedText('%.1f', abs(duration - self.max))
-		elseif db == 'CURRENTMAX' then
-			self.Time:SetFormattedText('%.1f / %.1f', abs(duration - self.max), self.max)
-		elseif db == 'REMAINING' then
-			self.Time:SetFormattedText('%.1f', duration)
-		elseif db == 'REMAININGMAX' then
-			self.Time:SetFormattedText('%.1f / %.1f', duration, self.max)
-		end
-	else
-		if db == 'CURRENT' then
-			self.Time:SetFormattedText('%.1f', duration)
-		elseif db == 'CURRENTMAX' then
-			self.Time:SetFormattedText('%.1f / %.1f', duration, self.max)
-		elseif db == 'REMAINING' then
-			self.Time:SetFormattedText('%.1f', abs(duration - self.max))
-		elseif db == 'REMAININGMAX' then
-			self.Time:SetFormattedText('%.1f / %.1f', abs(duration - self.max), self.max)
-		end
-	end
+	UF:SetCastDisplayDelay(self, db.castbar.format, duration, maximum, remain, self.delay)
+end
+
+function UF:CustomTimeText(duration, durationObject)
+	local remain, maximum = UF:GetCastDurations(self, duration, durationObject)
+	if not remain then return end
+
+	local db = self:GetParent().db
+	if not (db and db.castbar) then return end
+
+	UF:SetCastDisplayCustom(self, db.castbar.format, duration, maximum, remain)
 end
 
 function UF:HideTicks(frame)
@@ -527,19 +539,23 @@ function UF:GetInterruptColor(db, unit)
 	return r, g, b
 end
 
-function UF:GetCasterColor(unit)
-	if not unit then return end
-
-	local _, className = UnitClass(unit)
-	local classColor = className and E:ClassColor(className)
-	if classColor then
-		return classColor.colorStr
+function UF:GetCasterColor(targetClass)
+	if E:IsSecretValue(targetClass) then
+		local color = targetClass and C_ClassColor_GetClassColor(targetClass)
+		if color then
+			return color:GenerateHexColor()
+		end
+	else
+		local color = targetClass and E:ClassColor(targetClass)
+		if color then
+			return color.colorStr
+		end
 	end
 end
 
-function UF:SetCastText(castbar, db, changed, spellName, targetName)
-	if E:NotSecretValue(targetName) and targetName then
-		local color = db.displayTargetClass and UF:GetCasterColor(targetName)
+function UF:SetCastText(castbar, db, changed, spellName, targetName, targetClass)
+	if targetName then
+		local color = db.displayTargetClass and UF:GetCasterColor(targetClass)
 		castbar.Text:SetFormattedText('%s: |c%s%s|r', spellName, color or 'FFdddddd', targetName)
 	elseif changed then -- always true when secret
 		castbar.Text:SetText(spellName)
@@ -556,7 +572,7 @@ function UF:PostCastStart(unit)
 	self.unit = unit
 
 	if E:IsSecretValue(self.spellID) then
-		UF:SetCastText(self, db.castbar, true, self.spellName, self.curTarget)
+		UF:SetCastText(self, db.castbar, true, self.spellName, self.targetCurrent, self.targetClass)
 
 		if self.channeling and db.castbar.ticks and parent.unitframeType == 'player' then
 			UF:HideTicks(self)
@@ -569,15 +585,16 @@ function UF:PostCastStart(unit)
 
 		if db.castbar.displayTarget then -- player or NPCs; if used on other players: the cast target doesn't match their target, can be misleading if they mouseover cast
 			if parent.unitframeType == 'player' then
-				UF:SetCastText(self, db.castbar, changed, name, self.curTarget)
+				UF:SetCastText(self, db.castbar, changed, name, self.targetCurrent, self.targetClass)
 			elseif parent.unitframeType == 'pet' or parent.unitframeType == 'boss' then
-				if self.curTarget then
-					UF:SetCastText(self, db.castbar, changed, name, self.curTarget)
-				else
+				if self.targetCurrent then
+					UF:SetCastText(self, db.castbar, changed, name, self.targetCurrent, self.targetClass)
+				elseif not E.Retail then
 					local unitName = UnitName(unit)
 					local targetName = UnitName(unit..'target')
+					local _, targetClass = UnitClass(unit..'target')
 					local allowText = E:NotSecretValue(targetName) and (targetName and targetName ~= '') and (E:NotSecretValue(unitName) and (targetName ~= unitName))
-					UF:SetCastText(self, db.castbar, changed, name, allowText and targetName)
+					UF:SetCastText(self, db.castbar, changed, name, allowText and targetName, targetClass)
 				end
 			end
 		elseif changed then

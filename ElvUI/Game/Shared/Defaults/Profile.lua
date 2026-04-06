@@ -4,6 +4,7 @@ local CopyTable = CopyTable -- Our function doesn't exist yet.
 local next = next
 
 P.gridSize = 64
+P.gridLineWidth = 1
 P.hideTutorial = true
 P.dbConverted = nil -- use this to let DBConversions run once per profile
 
@@ -301,6 +302,7 @@ P.general = {
 	},
 	privateAuras = {
 		enable = true,
+		clickThrough = false,
 		countdownFrame = true,
 		countdownNumbers = false,
 		borderScale = 2,
@@ -859,6 +861,7 @@ local NP_PrivateAuras = CopyTable(P.general.privateAuras)
 NP_PrivateAuras.enable = false
 NP_PrivateAuras.borderScale = 1
 NP_PrivateAuras.icon.size = 20
+NP_PrivateAuras.clickThrough = true
 NP_PrivateAuras.parent.point = 'BOTTOM'
 NP_PrivateAuras.duration.enable = false
 
@@ -877,6 +880,7 @@ P.nameplates = {
 	overlapH = 0.8,
 	overlapV = 1.1,
 	classColorNames = false,
+	useBlizzardAuras = false,
 	showEnemyCombat = 'DISABLED',
 	showFriendlyCombat = 'DISABLED',
 	statusbar = 'ElvUI Norm',
@@ -902,9 +906,10 @@ P.nameplates = {
 		beingTankedByTank = true,
 		goodScale = 1,
 		badScale = 1,
-		useThreatColor = true,
 		indicator = false,
-		useSoloColor = false,
+		useThreatColor = true,
+		useThreatClassification = true,
+		useSoloColor = false
 	},
 	widgets = {
 		below = true,
@@ -929,10 +934,10 @@ P.nameplates = {
 			worldboss = { r = 0.81, g = 0.69, b = 0, a = 1 },
 			rareelite = { r = 0, g = 0.74, b = 0.61, a = 1 },
 			rare = { r = 0.27, g = 0.72, b = 0, a = 1 },
-			eliteBoss = { r = 0.85, g = 0, b = 0.30, a = 1 },
+			eliteBoss = { r = 0.85, g = 0.25, b = 0.65, a = 1 },
 			eliteMini = { r = 0.47, g = 0.25, b = 0.76, a = 1 },
 			caster = { r = 0, g = 0.50, b = 0.78, a = 1 },
-			melee = { r = 0.82, g = 0.19, b = 0, a = 1 },
+			melee = { r = 0.8, g = 0.2, b = 0, a = 1 }, -- unused
 		},
 		reactions = {
 			[1] = { r = 0.80, g = 0.30, b = 0.21, a = 1 }, -- Hated
@@ -1016,8 +1021,13 @@ P.nameplates = {
 			PALADIN = { r = 0.89, g = 0.88, b = 0.06, a = 1 },
 			DEMONHUNTER = {
 				SOUL_FRAGMENTS = { r = 0.3, g = 0.15, b = 1, a = 1 },
+				SOUL_CLEAVE = { r = 0.45, g = 0.25, b = 1, a = 1 },
+			},
+			HUNTER =  {
+				SPEAR_TIP = { r = 0, g = 0.85, b = 0.85, a = 1 },
 			},
 			MAGE = {
+				FIRE_BLAST = { r = 1.00, g = 0.40, b = 0, a = 1 },
 				FROST_ICICLES = { r = 0, g = 0.80, b = 1.00, a = 1 },
 				ARCANE_CHARGES = { r = 0, g = 0.40, b = 1.00, a = 1 }
 			},
@@ -1051,7 +1061,7 @@ P.nameplates = {
 			},
 			PRIEST = { r = 0.40, g = 0.00, b = 0.80, a = 1 }, -- shadow orbs
 			WARLOCK = {
-				SOUL_SHARDS = { r = 0.58, g = 0.51, b = 0.79, a = 1 },
+				SOUL_SHARDS = { r = 0.50, g = 0.25, b = 0.80, a = 1 },
 				DEMONIC_FURY = { r = 0.788, g = 0.259, b = 0.992, a = 1 },
 				BURNING_EMBERS = {
 					{ r = 1.00, g = 0.60, b = 0.20, a = 1 },
@@ -2004,6 +2014,7 @@ local UF_PrivateAuras = CopyTable(P.general.privateAuras)
 UF_PrivateAuras.enable = false
 UF_PrivateAuras.borderScale = 1
 UF_PrivateAuras.icon.size = 24
+UF_PrivateAuras.clickThrough = true
 UF_PrivateAuras.parent.point = 'BOTTOM'
 UF_PrivateAuras.countdownNumbers = true
 UF_PrivateAuras.duration.enable = false
@@ -2742,7 +2753,6 @@ P.unitframe.units.boss.buffs.perrow = 3
 P.unitframe.units.boss.buffs.priority = 'Blacklist,Dispellable,RaidBuffsElvUI'
 P.unitframe.units.boss.buffs.sizeOverride = 22
 P.unitframe.units.boss.buffs.yOffset = 20
-P.unitframe.units.boss.privateAuras.enable = true
 P.unitframe.units.boss.privateAuras.countdownNumbers = false
 P.unitframe.units.boss.privateAuras.icon.size = 20
 P.unitframe.units.boss.privateAuras.parent.point = 'CENTER'

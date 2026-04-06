@@ -101,13 +101,14 @@ local next = next
 local GetTime = GetTime
 local CreateFrame = CreateFrame
 local GetNetStats = GetNetStats
-local UnitIsUnit = UnitIsUnit
 local UnitHealth = UnitHealth
 local UnitHealthMax = UnitHealthMax
 local UnitCastingInfo = UnitCastingInfo
 local UnitChannelInfo = UnitChannelInfo
 local UnitChannelDuration = UnitChannelDuration
 local UnitCastingDuration = UnitCastingDuration
+local UnitSpellTargetName = UnitSpellTargetName
+local UnitSpellTargetClass = UnitSpellTargetClass
 local UnitEmpoweredChannelDuration = UnitEmpoweredChannelDuration
 local UnitEmpoweredStagePercentages = UnitEmpoweredStagePercentages
 local GetUnitEmpowerHoldAtMaxTime = GetUnitEmpowerHoldAtMaxTime
@@ -187,8 +188,13 @@ local function resetAttributes(self)
 	end
 end
 
-local function UpdateCurrentTarget(element, target)
-	element.curTarget = (oUF:NotSecretValue(target) and (target and target ~= "") and target) or nil
+local function UpdateCurrentTarget(element, unit, target)
+	if UnitSpellTargetName then
+		element.targetCurrent = UnitSpellTargetName(unit)
+		element.targetClass = UnitSpellTargetClass(unit)
+	else
+		element.targetCurrent = target
+	end
 end
 
 local function CreatePip(element)
@@ -334,9 +340,9 @@ local function CastStart(self, event, unit, castGUID, spellID, castTime)
 	element.channeling = channeling
 	element.empowering = empowering
 
-	local isPlayer = UnitIsUnit(unit, 'player')
-	if not isPlayer or (real ~= 'UNIT_SPELLCAST_SENT' and real ~= 'UNIT_SPELLCAST_START' and real ~= 'UNIT_SPELLCAST_CHANNEL_START') then
-		UpdateCurrentTarget(element) -- we want to ignore the start events on player unit because sent adds the target info
+	local isPlayer = oUF:UnitIsUnit(unit, 'player')
+	if not isPlayer or (oUF.isRetail or (real ~= 'UNIT_SPELLCAST_SENT' and real ~= 'UNIT_SPELLCAST_START' and real ~= 'UNIT_SPELLCAST_CHANNEL_START')) then
+		UpdateCurrentTarget(element, unit) -- we want to ignore the start events on player unit because sent adds the target info
 	end
 
 	element.delay = 0
@@ -585,7 +591,7 @@ local function CastStop(self, event, unit, ...)
 
 	if not element:IsShown() then return end
 
-	local isPlayer = UnitIsUnit(unit, 'player')
+	local isPlayer = oUF:UnitIsUnit(unit, 'player')
 	if mergeTradeskill and isPlayer and (tradeskillCurrent == tradeskillTotal) then
 		mergeTradeskill = false
 	end
@@ -654,7 +660,7 @@ local function CastFail(self, event, unit, ...)
 
 	element.holdTime = element.timeToHold or 0
 
-	local isPlayer = UnitIsUnit(unit, 'player')
+	local isPlayer = oUF:UnitIsUnit(unit, 'player')
 	if mergeTradeskill and isPlayer then
 		mergeTradeskill = false
 	end
@@ -715,7 +721,9 @@ end
 
 -- ElvUI block
 local UNIT_SPELLCAST_SENT = function (self, event, unit, target, castID, spellID)
-	UpdateCurrentTarget(self.Castbar, target)
+	if not oUF.isRetail then
+		UpdateCurrentTarget(self.Castbar, unit, target)
+	end
 
 	local castTime = specialCast[spellID]
 	if castTime then

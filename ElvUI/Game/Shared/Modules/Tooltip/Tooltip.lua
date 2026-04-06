@@ -51,7 +51,6 @@ local UnitIsDeadOrGhost = UnitIsDeadOrGhost
 local UnitIsPlayer = UnitIsPlayer
 local UnitIsPVP = UnitIsPVP
 local UnitIsTapDenied = UnitIsTapDenied
-local UnitIsUnit = UnitIsUnit
 local UnitIsWildBattlePet = UnitIsWildBattlePet
 local UnitLevel = UnitLevel
 local UnitName = UnitName
@@ -343,10 +342,12 @@ function TT:SetUnitText(tt, unit, isPlayerUnit)
 
 			levelLine:SetFormattedText('|cff%02x%02x%02x%s|r%s %s%s', diffColor.r * 255, diffColor.g * 255, diffColor.b * 255, level > 0 and level or '??', classificationString, creatureType or '', pvpFlag)
 
-			local classText = creatureType and classLine and classLine:GetText()
-			if creatureType == classText then -- we dont want to show creatureType two times
-				classLine:SetText('') -- so just hide this one, we put it on the level line
-				classLine:Hide()
+			if classLine then
+				local classText = classLine:GetText()
+				if E:NotSecretValue(classText) and (classText == creatureType) then
+					classLine:SetText('') -- so just hide this one, we put it on the level line
+					classLine:Hide()
+				end
 			end
 		end
 
@@ -512,7 +513,7 @@ function TT:AddTargetInfo(tt, unit)
 	local isInRaid = IsInRaid()
 	for i = 1, GetNumGroupMembers() do
 		local groupUnit = (isInRaid and 'raid' or 'party')..i
-		local unitFound = not UnitIsUnit(groupUnit, 'player') and UnitIsUnit(groupUnit..'target', unit)
+		local unitFound = not E:UnitIsUnit(groupUnit, 'player') and E:UnitIsUnit(groupUnit..'target', unit)
 		if E:NotSecretValue(unitFound) and unitFound then
 			local _, className = UnitClass(groupUnit)
 			local classColor

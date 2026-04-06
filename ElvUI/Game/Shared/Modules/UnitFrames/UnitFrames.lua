@@ -71,6 +71,7 @@ UF.badHeaderPoints = {
 UF.headerFunctions = {}
 UF.classMaxResourceBar = { -- also used by Nameplates
 	DEATHKNIGHT = 6,
+	DEMONHUNTER = 6,
 	SHAMAN = E.Retail and 10 or nil,
 	PALADIN = 5,
 	WARLOCK = 5,
@@ -79,7 +80,8 @@ UF.classMaxResourceBar = { -- also used by Nameplates
 	MAGE = 4,
 	ROGUE = 7,
 	DRUID = 5,
-	PRIEST = 3
+	PRIEST = 3,
+	HUNTER = 3
 }
 
 function UF:GetAuraSortTime(which, a, b)
@@ -561,9 +563,11 @@ function UF:UpdateColors()
 	if not ElvUF.colors.ClassBars.MAGE then ElvUF.colors.ClassBars.MAGE = {} end
 	ElvUF.colors.ClassBars.MAGE.FROST_ICICLES = E:SetColorTable(ElvUF.colors.ClassBars.MAGE.FROST_ICICLES, db.classResources.MAGE.FROST_ICICLES)
 	ElvUF.colors.ClassBars.MAGE.ARCANE_CHARGES = E:SetColorTable(ElvUF.colors.ClassBars.MAGE.ARCANE_CHARGES, db.classResources.MAGE.ARCANE_CHARGES)
+	ElvUF.colors.ClassBars.MAGE.FIRE_BLAST = E:SetColorTable(ElvUF.colors.ClassBars.MAGE.FIRE_BLAST, db.classResources.MAGE.FIRE_BLAST)
 
 	if not ElvUF.colors.ClassBars.DEMONHUNTER then ElvUF.colors.ClassBars.DEMONHUNTER = {} end
 	ElvUF.colors.ClassBars.DEMONHUNTER.SOUL_FRAGMENTS = E:SetColorTable(ElvUF.colors.ClassBars.DEMONHUNTER.SOUL_FRAGMENTS, db.classResources.DEMONHUNTER.SOUL_FRAGMENTS)
+	ElvUF.colors.ClassBars.DEMONHUNTER.SOUL_CLEAVE = E:SetColorTable(ElvUF.colors.ClassBars.DEMONHUNTER.SOUL_CLEAVE, db.classResources.DEMONHUNTER.SOUL_CLEAVE)
 
 	if not ElvUF.colors.ClassBars.WARLOCK then ElvUF.colors.ClassBars.WARLOCK = {} end
 	ElvUF.colors.ClassBars.WARLOCK.SOUL_SHARDS = E:SetColorTable(ElvUF.colors.ClassBars.WARLOCK.SOUL_SHARDS, db.classResources.WARLOCK.SOUL_SHARDS)
@@ -651,22 +655,28 @@ function UF:Update_FontStrings()
 end
 
 function UF:Construct_PrivateAuras(frame)
-	return CreateFrame('Frame', frame.frameName..'PrivateAuras', frame.RaisedElementParent)
+	local element = CreateFrame('Frame', frame.frameName..'PrivateAuras', frame.RaisedElementParent)
+	element.owner = frame
+
+	return element
 end
 
 function UF:Configure_PrivateAuras(frame)
-	if not E.Retail then return end -- dont exist on classic
+	local element = E.Retail and frame.PrivateAuras
+	if not element then return end
 
-	PA:RemoveAuras(frame.PrivateAuras)
+	PA:RemoveAuras(element)
 
 	local db = frame.db and frame.db.privateAuras
-	if db and db.enable then
-		frame.PrivateAuras:SetFrameLevel(frame.RaisedElementParent.PrivateAurasLevel)
-		frame.PrivateAuras:ClearAllPoints()
-		frame.PrivateAuras:Point(E.InversePoints[db.parent.point], frame, db.parent.point, db.parent.offsetX, db.parent.offsetY)
-		frame.PrivateAuras:Size(db.icon.size)
+	element.db = db or nil
 
-		PA:SetupPrivateAuras(db, frame.PrivateAuras, frame.unit)
+	if db and db.enable then
+		element:SetFrameLevel(frame.RaisedElementParent.PrivateAurasLevel)
+		element:ClearAllPoints()
+		element:Point(E.InversePoints[db.parent.point], frame, db.parent.point, db.parent.offsetX, db.parent.offsetY)
+		element:Size(db.icon.size)
+
+		PA:SetupAuras(element)
 	end
 end
 
@@ -1612,6 +1622,7 @@ do
 	local SetFrameUp = {}
 	local SetFrameUnit = {}
 	local SetFrameHidden = {}
+	local NameplateHooked = {}
 	local DisabledElements = {}
 	local AllowedFuncs = {
 		[_G.DefaultCompactUnitFrameSetup] = true
@@ -1656,6 +1667,20 @@ do
 		frame:UnregisterAllEvents()
 
 		if isNamePlate then
+			local aurasFrame = E.Retail and frame.AurasFrame
+			if aurasFrame then
+				if NP.db.useBlizzardAuras then
+					frame:RegisterUnitEvent('UNIT_AURA', frame.unit)
+				end
+
+				if not NameplateHooked[frame] then
+					NameplateHooked[frame] = true
+
+					hooksecurefunc(aurasFrame, 'RefreshList', NP.BlizzardPlate_RefreshList)
+					hooksecurefunc(aurasFrame, 'RefreshAuras', NP.BlizzardPlate_RefreshAuras)
+				end
+			end
+
 			pcall(frame.SetAlpha, frame, 0)
 		else
 			pcall(frame.Hide, frame)
@@ -1829,10 +1854,10 @@ do
 					if not E.Retail then
 						-- For the damn vehicle support:
 						frame:RegisterEvent('PLAYER_ENTERING_WORLD')
-						frame:RegisterEvent('UNIT_ENTERING_VEHICLE')
-						frame:RegisterEvent('UNIT_ENTERED_VEHICLE')
-						frame:RegisterEvent('UNIT_EXITING_VEHICLE')
-						frame:RegisterEvent('UNIT_EXITED_VEHICLE')
+						frame:RegisterUnitEvent('UNIT_ENTERING_VEHICLE', unit)
+						frame:RegisterUnitEvent('UNIT_ENTERED_VEHICLE', unit)
+						frame:RegisterUnitEvent('UNIT_EXITING_VEHICLE', unit)
+						frame:RegisterUnitEvent('UNIT_EXITED_VEHICLE', unit)
 
 						-- User placed frames don't animate
 						frame:SetMovable(true)

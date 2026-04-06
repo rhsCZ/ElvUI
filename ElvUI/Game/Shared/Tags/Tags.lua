@@ -45,7 +45,6 @@ local UnitIsFeignDeath = UnitIsFeignDeath
 local UnitIsPlayer = UnitIsPlayer
 local UnitIsPVP = UnitIsPVP
 local UnitIsPVPFreeForAll = UnitIsPVPFreeForAll
-local UnitIsUnit = UnitIsUnit
 local UnitIsWildBattlePet = UnitIsWildBattlePet
 local UnitPowerMax = UnitPowerMax
 local UnitPowerType = UnitPowerType
@@ -247,13 +246,6 @@ if not E.Retail then
 		end
 
 		return targetName
-	end)
-
-	E:AddTag('target:translit', 'UNIT_TARGET', function(unit)
-		local targetName = UnitName(unit..'target')
-		if targetName then
-			return Translit:Transliterate(targetName, translitMark)
-		end
 	end)
 
 	E:AddTag('health:max', 'UNIT_MAXHEALTH', function(unit)
@@ -472,21 +464,6 @@ if not E.Retail then
 		end
 	end)
 
-	E:AddTag('group:raid', 'GROUP_ROSTER_UPDATE', function(unit)
-		if IsInRaid() then
-			local name, realm = UnitName(unit)
-			if name then
-				local nameRealm = (realm and realm ~= '' and format('%s-%s', name, realm)) or name
-				for i = 1, GetNumGroupMembers() do
-					local raidName, _, group = GetRaidRosterInfo(i)
-					if raidName == nameRealm then
-						return group
-					end
-				end
-			end
-		end
-	end)
-
 	E:AddTag('healthcolor', 'UNIT_HEALTH UNIT_MAXHEALTH UNIT_CONNECTION PLAYER_FLAGS_CHANGED', function(unit)
 		if UnitIsDeadOrGhost(unit) or not UnitIsConnected(unit) then
 			return Hex(0.84, 0.75, 0.65)
@@ -620,7 +597,7 @@ if not E.Retail then
 		if not UnitIsPlayer(unit) then return end
 
 		-- handle player
-		if UnitIsUnit(unit, 'player') then
+		if E:UnitIsUnit(unit, 'player') then
 			return E.myspecName
 		end
 
@@ -708,16 +685,6 @@ for textFormat, length in pairs({ veryshort = 5, short = 10, medium = 15, long =
 		return name
 	end)
 
-	E:AddTag(format('name:%s:translit', textFormat), 'UNIT_NAME_UPDATE INSTANCE_ENCOUNTER_ENGAGE_UNIT', function(unit)
-		local unitName = UnitName(unit)
-		local name = E:NotSecretValue(unitName) and Translit:Transliterate(unitName, translitMark)
-		if name then
-			return E:ShortenString(name, length)
-		end
-
-		return name
-	end)
-
 	E:AddTag(format('target:abbrev:%s', textFormat), 'UNIT_TARGET', function(unit)
 		local targetName = UnitName(unit..'target')
 		if E:NotSecretValue(targetName) and targetName and strfind(targetName, '%s') then
@@ -740,13 +707,21 @@ for textFormat, length in pairs({ veryshort = 5, short = 10, medium = 15, long =
 		return targetName
 	end)
 
+	E:AddTag(format('name:%s:translit', textFormat), 'UNIT_NAME_UPDATE INSTANCE_ENCOUNTER_ENGAGE_UNIT', function(unit)
+		local unitName = UnitName(unit)
+		local translitName = E:NotSecretValue(unitName) and Translit:Transliterate(unitName, translitMark)
+		if translitName and translitName ~= '' then
+			return E:ShortenString(translitName, length)
+		end
+
+		return unitName
+	end)
+
 	E:AddTag(format('target:%s:translit', textFormat), 'UNIT_TARGET', function(unit)
 		local targetName = UnitName(unit..'target')
-		if E:NotSecretValue(targetName) and targetName then
-			local translitName = Translit:Transliterate(targetName, translitMark)
-			if translitName then
-				return E:ShortenString(translitName, length)
-			end
+		local translitName = E:NotSecretValue(targetName) and Translit:Transliterate(targetName, translitMark)
+		if translitName and translitName ~= '' then
+			return E:ShortenString(translitName, length)
 		end
 
 		return targetName
@@ -768,8 +743,8 @@ E:AddTag('threatcolor', 'UNIT_THREAT_LIST_UPDATE UNIT_THREAT_SITUATION_UPDATE GR
 
 	local _, status = UnitDetailedThreatSituation('player', unit)
 	if E:NotSecretValue(status) and status then
-		local color = E:GetThreatStatusColor(status, true)
-		return color and Hex(color) or HEX_FALLBACK
+		local r, g, b = E:GetThreatStatusColor(status, true)
+		return r and Hex(r, g, b) or HEX_FALLBACK
 	end
 end)
 
@@ -838,34 +813,78 @@ end)
 
 E:AddTag('realm', 'UNIT_NAME_UPDATE', function(unit)
 	local _, realm = UnitName(unit)
-	if realm and realm ~= '' then
-		return realm
-	end
+	return realm
 end)
 
 E:AddTag('realm:dash', 'UNIT_NAME_UPDATE', function(unit)
 	local _, realm = UnitName(unit)
-	if realm and (realm ~= '' and realm ~= E.myrealm) then
-		return format('-%s', realm)
-	elseif realm ~= '' then
+	if E:IsSecretValue(realm) then
 		return realm
+	elseif not realm or realm == '' then
+		return
 	end
+
+	return (realm ~= E.myrealm) and format('-%s', realm) or realm
 end)
 
 E:AddTag('realm:translit', 'UNIT_NAME_UPDATE', function(unit)
-	local _, realm = Translit:Transliterate(UnitName(unit), translitMark)
-	if realm and realm ~= '' then
+	local _, realm = UnitName(unit)
+	if E:IsSecretValue(realm) then
 		return realm
+	elseif not realm or realm == '' then
+		return
 	end
+
+	local translitRealm = Translit:Transliterate(realm, translitMark)
+	if translitRealm and translitRealm ~= '' then
+		return translitRealm
+	end
+
+	return realm
 end)
 
 E:AddTag('realm:dash:translit', 'UNIT_NAME_UPDATE', function(unit)
-	local _, realm = Translit:Transliterate(UnitName(unit), translitMark)
-
-	if realm and (realm ~= '' and realm ~= E.myrealm) then
+	local _, realm = UnitName(unit)
+	if E:IsSecretValue(realm) then
 		return format('-%s', realm)
-	elseif realm ~= '' then
-		return realm
+	elseif not realm or realm == '' then
+		return
+	end
+
+	local translitRealm = Translit:Transliterate(realm, translitMark)
+	if translitRealm and translitRealm ~= '' then
+		return (realm ~= E.myrealm) and format('-%s', translitRealm) or translitRealm
+	end
+
+	return realm
+end)
+
+E:AddTag('target:translit', 'UNIT_TARGET', function(unit)
+	local targetName = UnitName(unit..'target')
+	if E:IsSecretValue(targetName) then
+		return targetName
+	end
+
+	local translitName = Translit:Transliterate(targetName, translitMark)
+	if translitName and translitName ~= '' then
+		return translitName
+	end
+
+	return targetName
+end)
+
+E:AddTag('group:raid', 'GROUP_ROSTER_UPDATE', function(unit)
+	if not IsInRaid() then return end
+
+	local name, realm = UnitName(unit)
+	if E:IsSecretValue(realm) or not name then return end
+
+	local nameRealm = (realm and realm ~= '' and format('%s-%s', name, realm)) or name
+	for i = 1, GetNumGroupMembers() do
+		local raidName, _, group = GetRaidRosterInfo(i)
+		if raidName == nameRealm then
+			return group
+		end
 	end
 end)
 
@@ -884,7 +903,7 @@ E:AddTag('pvptimer', 1, function(unit)
 end)
 
 E:AddTag('distance', 0.1, function(unit)
-	if UnitIsConnected(unit) and not UnitIsUnit(unit, 'player') then
+	if UnitIsConnected(unit) and not E:UnitIsUnit(unit, 'player') then
 		local distance = E:GetDistance('player', unit)
 		if distance then
 			return format('%.1f', distance)
@@ -918,16 +937,22 @@ E:AddTag('guild:translit', 'UNIT_NAME_UPDATE PLAYER_GUILD_UPDATE', function(unit
 	if not UnitIsPlayer(unit) then return end
 
 	local guildName = GetGuildInfo(unit)
-	if guildName then
-		return Translit:Transliterate(guildName, translitMark)
+	local translitGuild = E:NotSecretValue(guildName) and Translit:Transliterate(guildName, translitMark)
+	if translitGuild and translitGuild ~= '' then
+		return translitGuild
 	end
+
+	return guildName
 end)
 
 E:AddTag('guild:brackets:translit', 'PLAYER_GUILD_UPDATE', function(unit)
 	local guildName = GetGuildInfo(unit)
-	if guildName then
-		return format('<%s>', Translit:Transliterate(guildName, translitMark))
+	local translitGuild = E:NotSecretValue(guildName) and Translit:Transliterate(guildName, translitMark)
+	if translitGuild and translitGuild ~= '' then
+		return format('<%s>', translitGuild)
 	end
+
+	return guildName
 end)
 
 E:AddTag('guild:rank', 'UNIT_NAME_UPDATE', function(unit)
@@ -943,7 +968,7 @@ E:AddTag('arena:number', 'UNIT_NAME_UPDATE', function(unit)
 	local _, instanceType = IsInInstance()
 	if instanceType == 'arena' then
 		for i = 1, 5 do
-			if UnitIsUnit(unit, 'arena'..i) then
+			if E:UnitIsUnit(unit, 'arena'..i) then
 				return i
 			end
 		end
@@ -1037,13 +1062,11 @@ for _, var in ipairs({4,8,10,15,20,25,30,35,40}) do
 		local inRange = 0
 
 		if UnitIsConnected(unit) then
-			for _, units in next, E.GroupUnitsByRole do
-				for _, unitToken in next, units do
-					if UnitIsConnected(unitToken) and not UnitIsUnit(unit, unitToken) then
-						local distance = E:GetDistance(unit, unitToken)
-						if distance and distance <= var then
-							inRange = inRange + 1
-						end
+			for unitToken in next, E.GroupRoles do
+				if UnitIsConnected(unitToken) and not E:UnitIsUnit(unit, unitToken) then
+					local distance = E:GetDistance(unit, unitToken)
+					if distance and distance <= var then
+						inRange = inRange + 1
 					end
 				end
 			end
@@ -1184,7 +1207,7 @@ end
 
 E:AddTag('loyalty', 'UNIT_HAPPINESS PET_UI_UPDATE', function(unit)
 	local hasPetUI, isHunterPet = HasPetUI()
-	if hasPetUI and isHunterPet and UnitIsUnit('pet', unit) then
+	if hasPetUI and isHunterPet and E:UnitIsUnit('pet', unit) then
 		return (gsub(GetPetLoyalty(), '.-(%d).*', '%1'))
 	end
 end, not (E.Classic or E.TBC or E.Wrath))
@@ -1207,35 +1230,35 @@ if E.Classic or E.TBC or E.Wrath then
 
 	E:AddTag('happiness:full', 'UNIT_HAPPINESS PET_UI_UPDATE', function(unit)
 		local hasPetUI, isHunterPet = HasPetUI()
-		if hasPetUI and isHunterPet and UnitIsUnit('pet', unit) then
+		if hasPetUI and isHunterPet and E:UnitIsUnit('pet', unit) then
 			return _G['PET_HAPPINESS'..GetPetHappiness()]
 		end
 	end)
 
 	E:AddTag('happiness:icon', 'UNIT_HAPPINESS PET_UI_UPDATE', function(unit)
 		local hasPetUI, isHunterPet = HasPetUI()
-		if hasPetUI and isHunterPet and UnitIsUnit('pet', unit) then
+		if hasPetUI and isHunterPet and E:UnitIsUnit('pet', unit) then
 			return emotionsIcons[GetPetHappiness()]
 		end
 	end)
 
 	E:AddTag('happiness:discord', 'UNIT_HAPPINESS PET_UI_UPDATE', function(unit)
 		local hasPetUI, isHunterPet = HasPetUI()
-		if hasPetUI and isHunterPet and UnitIsUnit('pet', unit) then
+		if hasPetUI and isHunterPet and E:UnitIsUnit('pet', unit) then
 			return emotionsDiscord[GetPetHappiness()]
 		end
 	end)
 
 	E:AddTag('happiness:color', 'UNIT_HAPPINESS PET_UI_UPDATE', function(unit)
 		local hasPetUI, isHunterPet = HasPetUI()
-		if hasPetUI and isHunterPet and UnitIsUnit('pet', unit) then
+		if hasPetUI and isHunterPet and E:UnitIsUnit('pet', unit) then
 			return Hex(_COLORS.happiness[GetPetHappiness()])
 		end
 	end)
 
 	E:AddTag('diet', 'UNIT_HAPPINESS PET_UI_UPDATE', function(unit)
 		local hasPetUI, isHunterPet = HasPetUI()
-		if hasPetUI and isHunterPet and UnitIsUnit('pet', unit) then
+		if hasPetUI and isHunterPet and E:UnitIsUnit('pet', unit) then
 			return GetPetFoodTypes()
 		end
 	end)

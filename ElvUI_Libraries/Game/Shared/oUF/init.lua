@@ -8,6 +8,11 @@ local unpack = unpack
 local issecretvalue = issecretvalue
 local issecrettable = issecrettable
 local canaccessvalue = canaccessvalue
+
+local UnitExists = UnitExists
+local UnitIsUnit = UnitIsUnit
+local UnitIsVisible = UnitIsVisible
+local UnitThreatSituation = UnitThreatSituation
 local ShouldUnitIdentityBeSecret = C_Secrets and C_Secrets.ShouldUnitIdentityBeSecret
 
 local _, _, _, wowtoc = GetBuildInfo()
@@ -92,6 +97,27 @@ do -- API for secrets by Simpy
 
 	function oUF:NoSecretValues(object)
 		return not oUF:HasSecretValues(object)
+	end
+end
+
+-- TODO: use C_Secrets.CanCompareUnitTokens instead of pcall
+function oUF:UnitIsUnit(unit1, unit2)
+	local ok, isUnit = pcall(UnitIsUnit, unit1, unit2)
+	return ok and isUnit
+end
+
+function oUF:UnitExists(unit)
+	return unit and (UnitExists(unit) or UnitIsVisible(unit))
+end
+
+-- BUG: Non-existent '*target' or '*pet' units cause UnitThreatSituation() errors
+function oUF:GetThreatSituation(unit, feedbackUnit)
+	if not unit or not oUF:UnitExists(unit) then return end
+
+	if feedbackUnit and feedbackUnit ~= unit and oUF:UnitExists(feedbackUnit) then
+		return UnitThreatSituation(feedbackUnit, unit)
+	else
+		return UnitThreatSituation(unit)
 	end
 end
 

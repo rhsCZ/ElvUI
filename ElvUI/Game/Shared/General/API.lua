@@ -35,19 +35,18 @@ local IsWargame = IsWargame
 local IsXPUserDisabled = IsXPUserDisabled
 local RequestBattlefieldScoreData = RequestBattlefieldScoreData
 local UIParent = UIParent
+local UnitExists = UnitExists
+local UnitIsVisible = UnitIsVisible
 local UIParentLoadAddOn = UIParentLoadAddOn
 local UnitClassBase = UnitClassBase
 local UnitClassification = UnitClassification
-local UnitExists = UnitExists
 local UnitFactionGroup = UnitFactionGroup
 local UnitGroupRolesAssigned = UnitGroupRolesAssigned
-local UnitGUID = UnitGUID
 local UnitHasVehicleUI = UnitHasVehicleUI
 local UnitIsAFK = UnitIsAFK
 local UnitIsDND = UnitIsDND
 local UnitIsMercenary = UnitIsMercenary
 local UnitIsPlayer = UnitIsPlayer
-local UnitIsVisible = UnitIsVisible
 local UnitSex = UnitSex
 local UnitThreatSituation = UnitThreatSituation
 local UnitSelectionType = UnitSelectionType
@@ -1371,20 +1370,10 @@ do -- complicated backwards compatible menu
 end
 
 function E:UnitTankedByGroup(unit)
-	for _, unitToken in next, E.GroupUnitsByRole.TANK do
+	for unitToken in next, E.GroupUnitsByRole.TANK do
 		if E:GetThreatSituation(unit, unitToken) == 3 then
 			return unitToken
 		end
-	end
-end
-
-function E:GetThreatSituation(unit, feedbackUnit)
-	if not unit or not E:UnitExists(unit) then return end
-
-	if feedbackUnit and feedbackUnit ~= unit and E:UnitExists(feedbackUnit) then
-		return UnitThreatSituation(feedbackUnit, unit)
-	else
-		return UnitThreatSituation(unit)
 	end
 end
 
@@ -1398,16 +1387,19 @@ function E:GROUP_ROSTER_UPDATE()
 		wipe(units)
 	end
 
-	if E.IsInGroup then
-		local group = isInRaid and 'raid' or 'party'
-		for i = 1, (isInRaid and GetNumGroupMembers()) or GetNumSubgroupMembers() do
-			local unit = group..i
-			local guid = UnitGUID(unit)
-			local role = guid and (not E.allowRoles and (GetPartyAssignment('MAINTANK', unit) and 'TANK' or 'NONE') or UnitGroupRolesAssigned(unit))
-			if role then
-				E.GroupRoles[guid] = role
-				E.GroupUnitsByRole[role][guid] = unit
+	if not E.IsInGroup then return end
+
+	local group = isInRaid and 'raid' or 'party'
+	for i = 1, (isInRaid and GetNumGroupMembers()) or GetNumSubgroupMembers() do
+		local unit = group..i
+		local role = not E.allowRoles and (GetPartyAssignment('MAINTANK', unit) and 'TANK' or 'NONE') or UnitGroupRolesAssigned(unit)
+		if role then
+			if E:UnitIsUnit(unit, 'player') then
+				unit = 'player'
 			end
+
+			E.GroupRoles[unit] = role
+			E.GroupUnitsByRole[role][unit] = true
 		end
 	end
 end
@@ -1432,7 +1424,7 @@ function E:UnitEffectiveLevel(unit)
 	end
 end
 
-function E:GetClassificationColor(unit)
+function E:GetClassificationType(unit)
 	if UnitIsPlayer(unit) then return end
 
 	local baseClass = UnitClassBase(unit)
@@ -1449,8 +1441,8 @@ function E:GetClassificationColor(unit)
 		return 'eliteBoss'
 	elseif classification == 'elite' and (unitLevel >= (maxLevel + 1)) then
 		return 'eliteMini'
-	else
-		return (baseClass == 'PALADIN' and 'caster') or 'melee'
+	elseif baseClass == 'PALADIN' then
+		return 'caster'
 	end
 end
 
