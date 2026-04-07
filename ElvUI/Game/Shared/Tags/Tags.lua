@@ -903,7 +903,7 @@ E:AddTag('pvptimer', 1, function(unit)
 end)
 
 E:AddTag('distance', 0.1, function(unit)
-	if UnitIsConnected(unit) and not E:UnitIsUnit(unit, 'player') then
+	if UnitIsConnected(unit) and E:UnitNotUnit(unit, 'player') then
 		local distance = E:GetDistance('player', unit)
 		if distance then
 			return format('%.1f', distance)
@@ -1063,7 +1063,7 @@ for _, var in ipairs({4,8,10,15,20,25,30,35,40}) do
 
 		if UnitIsConnected(unit) then
 			for unitToken in next, E.GroupRoles do
-				if UnitIsConnected(unitToken) and not E:UnitIsUnit(unit, unitToken) then
+				if UnitIsConnected(unitToken) and E:UnitNotUnit(unit, unitToken) then
 					local distance = E:GetDistance(unit, unitToken)
 					if distance and distance <= var then
 						inRange = inRange + 1
