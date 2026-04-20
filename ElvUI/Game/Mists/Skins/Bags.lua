@@ -43,6 +43,8 @@ end
 function S:ContainerFrame()
 	if E.private.bags.enable or not (E.private.skins.blizzard.enable and E.private.skins.blizzard.bags) then return end
 
+	S:HandleEditBox(_G.BagItemSearchBox)
+
 	-- ContainerFrame
 	for i = 1, _G.NUM_CONTAINER_FRAMES do
 		local frame = _G['ContainerFrame'..i]
@@ -148,8 +150,8 @@ function S:ContainerFrame()
 	local BankFrame = _G.BankFrame
 	BankFrame:StripTextures(true)
 	S:HandleFrame(BankFrame, true, nil, 12, 0, 10, 80)
-
-	S:HandleCloseButton(_G.BankCloseButton, BankFrame.backdrop)
+	S:HandleEditBox(_G.BankItemSearchBox)
+	S:HandleCloseButton(_G.BankFrameCloseButton, BankFrame.backdrop)
 
 	_G.BankSlotsFrame:StripTextures()
 
