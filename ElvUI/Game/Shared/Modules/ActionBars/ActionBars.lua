@@ -1210,7 +1210,7 @@ function AB:IconIntroTracker_Skin()
 end
 
 do
-	local modernBars = E.Retail or E.TBC or E.Wrath
+	local modernBars = E.Retail or E.TBC or E.Wrath or E.Mists
 	local untaint = {
 		MultiBar5 = true,
 		MultiBar6 = true,
@@ -1299,7 +1299,7 @@ do
 				frame:SetParent(E.HiddenFrame)
 				frame:UnregisterAllEvents()
 
-				if not (E.Retail or E.TBC or E.Wrath) then
+				if not (E.Retail or E.TBC or E.Wrath or E.Mists) then
 					AB:SetNoopsi(frame)
 				end
 			end
@@ -1323,7 +1323,7 @@ do
 		-- modified to fix a taint when closing the options while in combat
 		_G.SettingsPanel:SetScript('OnHide', AB.SettingsPanel_OnHide)
 
-		if E.Retail or E.TBC or E.Wrath then
+		if E.Retail or E.TBC or E.Wrath or E.Mists then
 			_G.StatusTrackingBarManager:Kill()
 			_G.ActionBarController:RegisterEvent('UPDATE_EXTRA_ACTIONBAR') -- this is needed to let the ExtraActionBar show
 

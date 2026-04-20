@@ -1004,7 +1004,7 @@ function NP:HideInterfaceOptions()
 end
 
 function NP:SetNamePlateSizes()
-	if E.Retail then
+	if E.Retail or E.Mists then
 		NP.PlateDriver:SetSize(NP.db.clickSize.width, NP.db.clickSize.height)
 	else
 		C_NamePlate_SetNamePlateSelfSize(NP.db.clickSize.personalWidth * E.uiscale, NP.db.clickSize.personalHeight * E.uiscale)

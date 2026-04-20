@@ -98,7 +98,6 @@
 	<Script file='Mists\Skins\Channels.lua'/>
 	<Script file='Mists\Skins\Character.lua'/>
 	<Script file='Mists\Skins\Collectables.lua'/>
-	<Script file='Mists\Skins\CombatLog.lua'/>
 	<Script file='Mists\Skins\Communities.lua'/>
 	<Script file='Mists\Skins\Debug.lua'/>
 	<Script file='Mists\Skins\DressingRoom.lua'/>
