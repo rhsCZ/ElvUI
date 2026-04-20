@@ -63,6 +63,7 @@ local defaults = {
 		auraIndex = 1,
 		showCountdownFrame = true,
 		showCountdownNumbers = true,
+		isContainer = false,
 		parent = nil, -- dynamically added in CreateAnchor
 		iconInfo = nil, -- added on creation
 		durationAnchor = nil, -- added on creation
