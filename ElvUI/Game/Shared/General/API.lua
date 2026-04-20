@@ -1157,7 +1157,7 @@ function E:PositionGameMenuButton()
 			GameMenuFrame.Header.Text:SetTextColor(unpack(E.media.rgbvaluecolor))
 		end
 
-		local offset = (E.Retail or E.Mists) and 35 or 20
+		local offset = E.Retail and 35 or 20
 		for button in GameMenuFrame.buttonPool:EnumerateActive() do
 			local text = button:GetText()
 
@@ -1165,7 +1165,7 @@ function E:PositionGameMenuButton()
 
 			local lastIndex = gameMenuLastButtons[text]
 			if lastIndex == gameMenuLastButtons.ElvUI and GameMenuFrame.ElvUI then
-				GameMenuFrame.ElvUI:Point('TOPLEFT', button, 'BOTTOMLEFT', 0, -10)
+				GameMenuFrame.ElvUI:Point('TOPLEFT', button, 'BOTTOMLEFT', 0, E.Mists and -20 or -10)
 			elseif not lastIndex then
 				button:NudgePoint(nil, -offset)
 			end
