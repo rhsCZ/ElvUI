@@ -101,6 +101,7 @@
 	<Script file='Mists\Skins\Communities.lua'/>
 	<Script file='Mists\Skins\Debug.lua'/>
 	<Script file='Mists\Skins\DressingRoom.lua'/>
+	<Script file='Mists\Skins\EditorManager.lua'/>
 	<Script file='Mists\Skins\EncounterJournal.lua'/>
 	<Script file='Mists\Skins\EventTrace.lua'/>
 	<Script file='Mists\Skins\Friends.lua'/>
