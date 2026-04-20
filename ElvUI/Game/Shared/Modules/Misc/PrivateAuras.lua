@@ -5,7 +5,6 @@ local _G = _G
 local next = next
 local format = format
 local hooksecurefunc = hooksecurefunc
-1
 local CreateFrame = CreateFrame
 local CopyTable = CopyTable
 local UIParent = UIParent
