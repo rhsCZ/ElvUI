@@ -1195,7 +1195,7 @@ function NP:Initialize()
 	NP:RegisterEvent('ZONE_CHANGED_NEW_AREA', 'EnviromentConditionals')
 	NP:RegisterEvent('UNIT_FACTION', 'NamePlateCallBack')
 
-	if not E.Retail then
+	if not (E.Retail or E.Mists) then -- why is mist here blizzard?
 		NP:RegisterEvent('COMBAT_LOG_EVENT_UNFILTERED')
 	end
 
