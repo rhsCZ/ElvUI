@@ -222,7 +222,7 @@ end
 -- the secure header is different on retail because of evokers
 -- if both are registered on non-retail, it will fire on down and up
 function E:RegisterClicks(frame)
-	if E.Retail or E.TBC or E.Wrath then
+	if E.hasEditMode then
 		frame:RegisterForClicks('AnyDown', 'AnyUp')
 	else
 		frame:RegisterForClicks('AnyUp')
@@ -1152,12 +1152,12 @@ else
 end
 
 function E:PositionGameMenuButton()
-	if E.Retail or E.TBC or E.Wrath then
+	if E.hasEditMode then
 		if E.private.skins.blizzard.enable and E.private.skins.blizzard.misc then
 			GameMenuFrame.Header.Text:SetTextColor(unpack(E.media.rgbvaluecolor))
 		end
 
-		local offset = E.Retail and 35 or 20
+		local offset = (E.Retail and 35) or 20
 		for button in GameMenuFrame.buttonPool:EnumerateActive() do
 			local text = button:GetText()
 
@@ -1210,7 +1210,7 @@ end
 function E:SetupGameMenu()
 	if GameMenuFrame.ElvUI then return end
 
-	if E.Retail or E.TBC or E.Wrath then
+	if E.hasEditMode then
 		local button = CreateFrame('Button', 'ElvUI_GameMenuButton', GameMenuFrame, 'MainMenuFrameButtonTemplate')
 		button:SetScript('OnClick', E.ClickGameMenu)
 
@@ -1418,7 +1418,7 @@ function E:UnitExists(unit)
 end
 
 function E:UnitEffectiveLevel(unit)
-	if E.Retail or E.Mists or E.Wrath or E.TBC then
+	if E.Retail or E.TBC or E.Wrath or E.Mists then
 		return _G.UnitEffectiveLevel(unit)
 	else
 		return _G.UnitLevel(unit)
