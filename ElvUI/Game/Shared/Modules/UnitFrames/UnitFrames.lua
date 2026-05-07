@@ -1769,6 +1769,10 @@ do
 	local MAX_BOSS_FRAMES = 5
 
 	local handledUnits = {}
+	local handledPlates = {}
+	local disabledBoss = false
+	local disabledParty = false
+	local disabledArena = false
 	local lockedFrames = {}
 
 	-- lock Boss, Party, and Arena
@@ -1813,15 +1817,21 @@ do
 	end
 
 	function ElvUF:DisableBlizzard(unit)
-		if not unit or handledUnits[unit] then return end
-		handledUnits[unit] = true
+		if not unit then return end
 
-		if strmatch(unit, 'nameplate%d?%d?%d?$') then
+		if strmatch(unit, 'nameplate%d+$') then
 			if E.private.nameplates.enable then
 				local frame = GetNamePlateForUnit(unit)
-				HideFrame(frame and frame.UnitFrame, 2)
+				local plate = frame and frame.UnitFrame
+				if plate and not handledPlates[plate] then
+					handledPlates[plate] = true
+
+					HideFrame(plate, 2)
+				end
 			end
-		elseif E.private.unitframe.enable then
+		elseif E.private.unitframe.enable and not handledUnits[unit] then
+			handledUnits[unit] = true
+
 			local disable = E.private.unitframe.disabledBlizzardFrames
 			if unit == 'player' then
 				if disable.player then
@@ -1865,18 +1875,17 @@ do
 				HideFrame(_G.TargetofFocusFrame)
 			elseif disable.target and unit == 'targettarget' then
 				HideFrame(_G.TargetFrameToT)
-			elseif disable.boss and strmatch(unit, 'boss%d?$') then
+			elseif not disabledBoss and disable.boss and strmatch(unit, 'boss%d+$') then
+				disabledBoss = true
+
 				HideFrame(_G.BossTargetFrameContainer, 1)
 
-				local id = strmatch(unit, 'boss(%d)')
-				if id then
-					HideFrame(_G['Boss'..id..'TargetFrame'], true)
-				else
-					for i = 1, MAX_BOSS_FRAMES do
-						HideFrame(_G['Boss'..i..'TargetFrame'], true)
-					end
+				for i = 1, MAX_BOSS_FRAMES do
+					HideFrame(_G['Boss'..i..'TargetFrame'], true)
 				end
-			elseif disable.party and strmatch(unit, 'party%d?$') then
+			elseif not disabledParty and disable.party and strmatch(unit, 'boss%d+$') then
+				disabledParty = true
+
 				local frame = _G.PartyFrame
 				if frame then -- Retail
 					HideFrame(frame, 1)
@@ -1888,17 +1897,13 @@ do
 					HideFrame(_G.PartyMemberBackground)
 				end
 
-				local id = strmatch(unit, 'party(%d)')
-				if id then
-					HideFrame(_G['PartyMemberFrame'..id])
-					HideFrame(_G['CompactPartyFrameMember'..id])
-				else
-					for i = 1, MAX_PARTY do
-						HideFrame(_G['PartyMemberFrame'..i])
-						HideFrame(_G['CompactPartyFrameMember'..i])
-					end
+				for i = 1, MAX_PARTY do
+					HideFrame(_G['PartyMemberFrame'..i])
+					HideFrame(_G['CompactPartyFrameMember'..i])
 				end
-			elseif disable.arena and strmatch(unit, 'arena%d?$') then
+			elseif not disabledArena and disable.arena and strmatch(unit, 'arena%d+$') then
+				disabledArena = true
+
 				if _G.CompactArenaFrame then -- Retail
 					HideFrame(_G.CompactArenaFrame, 1)
 
@@ -1914,20 +1919,15 @@ do
 					-- reference on oUF and clear the global frame reference, to fix ClearAllPoints taint
 					ElvUF.ArenaEnemyFrames = _G.ArenaEnemyFrames
 					ElvUF.ArenaPrepFrames = _G.ArenaPrepFrames
+
 					_G.ArenaEnemyFrames = nil
 					_G.ArenaPrepFrames = nil
 				end
 
 				-- actually handle the sub frames now
-				local id = strmatch(unit, 'arena(%d)')
-				if id then
-					HideFrame(_G['ArenaEnemyMatchFrame'..id], true)
-					HideFrame(_G['ArenaEnemyPrepFrame'..id], true)
-				else
-					for i = 1, MAX_ARENA_ENEMIES do
-						HideFrame(_G['ArenaEnemyMatchFrame'..i], true)
-						HideFrame(_G['ArenaEnemyPrepFrame'..i], true)
-					end
+				for i = 1, MAX_ARENA_ENEMIES do
+					HideFrame(_G['ArenaEnemyMatchFrame'..i], true)
+					HideFrame(_G['ArenaEnemyPrepFrame'..i], true)
 				end
 			end
 		end
