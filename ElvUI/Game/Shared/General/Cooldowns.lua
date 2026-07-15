@@ -108,27 +108,29 @@ end
 do
 	local YEAR, DAY, HOUR, MINUTE, SECOND = 31557600, 86400, 3600, 60, 1
 	local Y, D, H, M = YEAR - DAY, DAY - HOUR, HOUR - MINUTE, MINUTE - SECOND
-	local default = { r = 1, g = 1, b = 1, a = 1 }
-	local times = { -- fake entries: key, fmt
-		{ key = 'expiring', fmt = '%.1f', threshold = 0, step = 0.1 },
-		{ key = 'seconds', fmt = '%.0f', threshold = 5, step = 1 },
-		{ key = 'minutes', fmt = '%.0fm', threshold = M, components = {{ div = M }} },
-		{ key = 'hours', fmt = '%.0fh', threshold = H, components = {{ div = H }} },
-		{ key = 'days', fmt = '%.0fd', threshold = D, components = {{ div = D }} },
-		{ key = 'years', fmt = '%.0fy', threshold = Y, components = {{ div = Y }} }
+	local breakpoints, default, color = {}, { r = 1, g = 1, b = 1, a = 1 }, CreateColor(1, 1, 1, 1)
+	local times = { -- fake entries: key, fmt, thr
+		{ key = 'expiring', fmt = '%.1f', thr = 0, step = 0.1 },
+		{ key = 'seconds', fmt = '%.0f', thr = 5, step = 1 },
+		{ key = 'minutes', fmt = '%.0fm', thr = M, components = {{ div = M }} },
+		{ key = 'hours', fmt = '%.0fh', thr = H, components = {{ div = H }} },
+		{ key = 'days', fmt = '%.0fd', thr = D, components = {{ div = D }} },
+		{ key = 'years', fmt = '%.0fy', thr = Y, components = {{ div = Y }} }
 	}
 
 	function E:CooldownBreakpoints(db, data)
-		local breakpoints = data.breakpoints
 		for index, point in next, times do
 			if point.key == 'seconds' then
 				point.rounding = (db.roundup and ROUNDUP) or ROUNDDOWN
-				point.threshold = db.minThreshold or point.threshold
+				point.threshold = db.minThreshold or point.thr
+			else
+				point.rounding = nil
+				point.threshold = point.thr
 			end
 
 			local colors = db.colors[point.key] or default
-			data.color:SetRGBA(colors.r, colors.g, colors.b, colors.a)
-			point.format = data.color:WrapTextInColorCode(point.fmt)
+			color:SetRGBA(colors.r, colors.g, colors.b, colors.a)
+			point.format = color:WrapTextInColorCode(point.fmt)
 
 			breakpoints[index] = point
 		end
@@ -190,7 +192,7 @@ function E:RegisterCooldown(cooldown, which)
 
 	-- storage by cooldown (to grab a cooldowns data)
 	if not E.RegisteredCooldowns[cooldown] then
-		E.RegisteredCooldowns[cooldown] = { which = which, breakpoints = {}, color = CreateColor(1, 1, 1, 1) }
+		E.RegisteredCooldowns[cooldown] = { which = which }
 	else -- this cooldown was already added
 		return -- stop here
 	end
