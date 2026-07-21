@@ -154,16 +154,9 @@ function AB:HandleButtonAutoCast(bar, button)
 	local buttonWidth = db.buttonSize
 	local buttonHeight = (db.keepSizeRatio and db.buttonSize) or db.buttonHeight
 
+	local offset = E.Retail and 3 or 1
 	local autoCast = button.AutoCastOverlay or button.AutoCastable
-	if E.Retail then
-		autoCast:SetOutside(button, 3, 3)
-	elseif (E.TBC or E.Mists or E.Wrath) then
-		autoCast:SetOutside(button, 1, 1)
-	else
-		local autoCastWidth = (buttonWidth * 0.5) - (buttonWidth / 7.5)
-		local autoCastHeight = (buttonHeight * 0.5) - (buttonHeight / 7.5)
-		autoCast:SetOutside(button, autoCastWidth, autoCastHeight)
-	end
+	autoCast:SetOutside(button, offset, offset)
 
 	local corners = autoCast.Corners
 	if corners then
@@ -1012,18 +1005,6 @@ do
 	end
 end
 
-do -- these calls are tainted when accessed by ValidateActionBarTransition
-	local noops = { 'ClearAllPoints', 'SetPoint', 'SetScale', 'SetShown' }
-	function AB:SetNoopsi(frame)
-		if not frame then return end
-		for _, func in pairs(noops) do
-			if frame[func] ~= E.noop then
-				frame[func] = E.noop
-			end
-		end
-	end
-end
-
 do
 	local function BindOnEnter(button)
 		AB:BindUpdate(button, 'SPELL')
@@ -1232,20 +1213,16 @@ do
 		OverrideActionBar = true,
 		MainMenuBar = true,
 		BagsBar = (E.TBC or E.Wrath) or nil,
-		MainActionBar = E.hasEditMode or nil,
-		[E.hasEditMode and 'StanceBar' or 'StanceBarFrame'] = true,
-		[E.hasEditMode and 'PetActionBar' or 'PetActionBarFrame'] = true,
-		[E.hasEditMode and 'PossessActionBar' or 'PossessBarFrame'] = true
+		MainActionBar = true,
+		StanceBar = true,
+		PetActionBar = true,
+		PossessActionBar = true
 	}
 
 	local untaintButtons = {
 		MultiCastActionButton = ((E.Wrath or E.Mists) and E.myclass ~= 'SHAMAN') or nil,
 		OverrideActionBarButton = E.Wrath or E.Mists or nil
 	}
-
-	if E.Wrath and _G.UIPARENT_MANAGED_FRAME_POSITIONS then
-		_G.UIPARENT_MANAGED_FRAME_POSITIONS.MultiCastActionBarFrame = nil
-	end
 
 	local settingsHider = CreateFrame('Frame')
 	settingsHider:SetScript('OnEvent', function(frame, event)
@@ -1299,18 +1276,10 @@ do
 
 	function AB:DisableBlizzard()
 		for name in next, untaint do
-			if _G.UIPARENT_MANAGED_FRAME_POSITIONS then
-				_G.UIPARENT_MANAGED_FRAME_POSITIONS[name] = nil
-			end
-
 			local frame = _G[name]
 			if frame then
 				frame:SetParent(E.HiddenFrame)
 				frame:UnregisterAllEvents()
-
-				if not E.hasEditMode then
-					AB:SetNoopsi(frame)
-				end
 			end
 		end
 
@@ -1332,31 +1301,21 @@ do
 		-- modified to fix a taint when closing the options while in combat
 		_G.SettingsPanel:SetScript('OnHide', AB.SettingsPanel_OnHide)
 
-		if E.hasEditMode then
-			_G.StatusTrackingBarManager:Kill()
-			_G.ActionBarController:RegisterEvent('UPDATE_EXTRA_ACTIONBAR') -- this is needed to let the ExtraActionBar show
+		_G.StatusTrackingBarManager:Kill()
+		_G.ActionBarController:RegisterEvent('UPDATE_EXTRA_ACTIONBAR') -- this is needed to let the ExtraActionBar show
 
-			-- lets only keep ExtraActionButtons in here
-			hooksecurefunc(_G.ActionBarButtonEventsFrame, 'RegisterFrame', AB.ButtonEventsRegisterFrame)
-			AB.ButtonEventsRegisterFrame()
+		-- lets only keep ExtraActionButtons in here
+		hooksecurefunc(_G.ActionBarButtonEventsFrame, 'RegisterFrame', AB.ButtonEventsRegisterFrame)
+		AB.ButtonEventsRegisterFrame()
 
-			-- crop the new spells being added to the actionbars
-			_G.IconIntroTracker:HookScript('OnEvent', AB.IconIntroTracker_Skin)
+		-- crop the new spells being added to the actionbars
+		_G.IconIntroTracker:HookScript('OnEvent', AB.IconIntroTracker_Skin)
 
-			-- dont reopen game menu and fix settings panel not being able to close during combat
-			_G.SettingsPanel.TransitionBackOpeningPanel = AB.SettingsPanel_TransitionBackOpeningPanel
+		-- dont reopen game menu and fix settings panel not being able to close during combat
+		_G.SettingsPanel.TransitionBackOpeningPanel = AB.SettingsPanel_TransitionBackOpeningPanel
 
-			-- change the text of the remove paging
-			hooksecurefunc(_G.SettingsPanel.Container.SettingsList.ScrollBox, 'Update', SettingsListScrollUpdate)
-		else
-			AB:SetNoopsi(_G.MainMenuBarArtFrame)
-			AB:SetNoopsi(_G.MainMenuBarArtFrameBackground)
-			_G.MainMenuBarArtFrame:UnregisterAllEvents()
-
-			-- this would taint along with the same path as the SetNoopers: ValidateActionBarTransition
-			_G.VerticalMultiBarsContainer:Size(10) -- dummy values so GetTop etc doesnt fail without replacing
-			AB:SetNoopsi(_G.VerticalMultiBarsContainer)
-		end
+		-- change the text of the remove paging
+		hooksecurefunc(_G.SettingsPanel.Container.SettingsList.ScrollBox, 'Update', SettingsListScrollUpdate)
 
 		for name in next, untaintButtons do
 			local index = 1
