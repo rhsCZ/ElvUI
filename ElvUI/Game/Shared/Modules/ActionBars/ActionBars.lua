@@ -2,7 +2,7 @@ local E, L, V, P, G = unpack(ElvUI)
 local AB = E:GetModule('ActionBars')
 
 local _G = _G
-local ipairs, pairs, strmatch, next, type, unpack, tonumber = ipairs, pairs, strmatch, next, type, unpack, tonumber
+local strmatch, next, type, unpack, tonumber = strmatch, next, type, unpack, tonumber
 local format, wipe, gsub, strsplit, strfind, strsub, strupper = format, wipe, gsub, strsplit, strfind, strsub, strupper
 
 local ClearOnBarHighlightMarks = ClearOnBarHighlightMarks
@@ -35,6 +35,7 @@ local SaveBindings = SaveBindings
 local VehicleExit = VehicleExit
 
 local SPELLS_PER_PAGE = SPELLS_PER_PAGE
+local MAX_ACCOUNT_MACROS = MAX_ACCOUNT_MACROS
 local TOOLTIP_UPDATE_TIME = TOOLTIP_UPDATE_TIME
 local NUM_ACTIONBAR_BUTTONS = NUM_ACTIONBAR_BUTTONS
 local CLICK_BINDING_NOT_AVAILABLE = CLICK_BINDING_NOT_AVAILABLE
@@ -622,7 +623,7 @@ function AB:UpdateVehicleLeave()
 end
 
 function AB:OverrideBinds(bar)
-	for _, button in ipairs(bar.buttons) do
+	for _, button in next, bar.buttons do
 		if button.keyBoundTarget then
 			for _, key in next, { GetBindingKey(button.keyBoundTarget) } do
 				if key ~= '' then
@@ -640,13 +641,11 @@ function AB:UpdateBinds(event, func)
 		return
 	end
 
-	for _, bar in pairs(AB.handledBars) do
-		if bar then
-			ClearOverrideBindings(bar)
+	for _, bar in next, AB.handledBars do
+		ClearOverrideBindings(bar)
 
-			if func and type(func) == 'function' then
-				func(AB, bar)
-			end
+		if func and type(func) == 'function' then
+			func(AB, bar)
 		end
 	end
 end
@@ -689,7 +688,7 @@ do
 			E.db.actionbar['bar'..i][option] = value
 		end
 
-		for _, bar in pairs(bars) do
+		for _, bar in next, bars do
 			E.db.actionbar[bar][option] = value
 		end
 	end
@@ -697,7 +696,7 @@ do
 	function AB:ApplyTextOption(option, value, fonts)
 		if fonts then
 			local upperOption = gsub(option, '^%w', strupper) -- font>Font, fontSize>FontSize, fontOutline>FontOutline
-			for _, object in pairs(texts) do
+			for _, object in next, texts do
 				SaveSetting(object..upperOption, value)
 			end
 		else
@@ -717,12 +716,12 @@ function AB:UpdateButtonSettings(specific)
 		return
 	end
 
-	for barName, bar in pairs(AB.handledBars) do
+	for barName, bar in next, AB.handledBars do
 		if not specific or specific == barName then
 			AB:UpdateButtonConfig(barName, bar.bindButtons) -- config them first
 			AB:PositionAndSizeBar(barName) -- db is set here, button style, and paging also runs here
 
-			for _, button in ipairs(bar.buttons) do
+			for _, button in next, bar.buttons do
 				AB:StyleFlyout(button)
 
 				if button.ProfessionQualityOverlayFrame then
@@ -898,7 +897,7 @@ function AB:FadeBlings(alpha)
 
 	for _, bar in next, { AB.fadeParent:GetChildren() } do
 		if bar.buttons then
-			for _, button in ipairs(bar.buttons) do
+			for _, button in next, bar.buttons do
 				E:CooldownBling(button.cooldown, alpha)
 			end
 		end
@@ -908,7 +907,7 @@ end
 function AB:FadeBarBlings(bar, alpha)
 	if E.db.cooldown.actionbar.hideBling then return end
 
-	for _, button in ipairs(bar.buttons) do
+	for _, button in next, bar.buttons do
 		E:CooldownBling(button.cooldown, alpha)
 	end
 end
@@ -1172,7 +1171,7 @@ end
 
 function AB:IconIntroTracker_Skin()
 	local left, right, top, bottom = E:GetTexCoords()
-	for _, iconIntro in ipairs(self.iconList) do
+	for _, iconIntro in next, self.iconList do
 		if not iconIntro.IsSkinned then
 			iconIntro.trail1.icon:SetTexCoord(left, right, top, bottom)
 			iconIntro.trail1.bg:SetTexCoord(left, right, top, bottom)
@@ -1481,7 +1480,7 @@ function AB:UpdateButtonConfig(barName, buttonName)
 		buttonName = bar.bindButtons
 	end
 
-	for i, button in ipairs(bar.buttons) do
+	for i, button in next, bar.buttons do
 		local keyTarget = AB:GetKeyTarget(buttonName, i)
 		config.keyBoundTarget = keyTarget -- for LAB
 		button.keyBoundTarget = keyTarget -- for bind mode
@@ -1715,7 +1714,7 @@ function AB:SetTargetAuraCooldowns(enabled)
 end
 
 function AB:ToggleCooldownOptions()
-	for button in pairs(LAB.actionButtons) do
+	for button in next, LAB.actionButtons do
 		if button._state_type == 'action' then
 			local start, duration = button:GetCooldown()
 			AB:SetButtonDesaturation(button, start, duration)
@@ -1855,7 +1854,7 @@ end
 do
 	-- some functions to show the rotation assisted highlighting
 	function AB:AssistedUpdate(nextSpell)
-		for button in pairs(LAB.activeButtons) do
+		for button in next, LAB.activeButtons do
 			local spellID = button:GetSpellId()
 			local nextcast, alertActive = spellID and spellID == nextSpell, LAB.activeAlerts[spellID]
 			if (nextcast or alertActive) and _G.AssistedCombatManager:IsRotationSpell(spellID) then
@@ -1929,10 +1928,50 @@ do
 	end
 end
 
+do
+	local function OnEnter(button)
+		AB:BindUpdate(button, 'MACRO')
+	end
+
+	local function MacroSelectorScrollUpdateChild(button)
+		button:HookScript('OnEnter', OnEnter)
+	end
+
+	local function MacroSelectorScrollUpdate(frame)
+		if frame.MacroSelector then
+			frame.MacroSelector.ScrollBox:ForEachFrame(MacroSelectorScrollUpdateChild)
+		end
+
+		AB:Unhook(frame, 'Update')
+	end
+
+	function AB:ADDON_LOADED(_, addon)
+		print(addon)
+
+		if addon == 'Blizzard_MacroUI' then
+			if _G.MacroFrame.Update then
+				AB:SecureHook(_G.MacroFrame, 'Update', MacroSelectorScrollUpdate)
+			else
+				for i = 1, MAX_ACCOUNT_MACROS do
+					_G['MacroButton'..i]:HookScript('OnEnter', OnEnter)
+				end
+			end
+
+			AB:UnregisterEvent('ADDON_LOADED')
+		elseif addon == 'Blizzard_PlayerSpells' then
+			AB:FixSpellBookTaint()
+		end
+	end
+end
+
+function AB:PLAYER_LOGIN()
+	AB:ShowPetButtons()
+end
+
 function AB:Initialize()
 	_G.BINDING_HEADER_ELVUI = E.title
 
-	for _, barNumber in pairs({2, 7, 8, 9, 10}) do
+	for _, barNumber in next, { 2, 7, 8, 9, 10 } do
 		for slot = 1, 12 do
 			_G[format('BINDING_NAME_ELVUIBAR%dBUTTON%d', barNumber, slot)] = format('ActionBar %d Button %d', barNumber, slot)
 		end
@@ -1953,6 +1992,7 @@ function AB:Initialize()
 
 	AB.fadeParent = CreateFrame('Frame', 'Elv_ABFade', UIParent)
 	AB.fadeParent:SetAlpha(1 - (AB.db.globalFadeAlpha or 0))
+	AB.fadeParent:SetScript('OnEvent', AB.FadeParent_OnEvent)
 	AB.fadeParent:RegisterEvent('PLAYER_REGEN_DISABLED')
 	AB.fadeParent:RegisterEvent('PLAYER_REGEN_ENABLED')
 	AB.fadeParent:RegisterEvent('PLAYER_TARGET_CHANGED')
@@ -1985,8 +2025,6 @@ function AB:Initialize()
 		AB:RegisterEvent('PET_BATTLE_OPENING_DONE', 'UpdateBinds') -- no function passed, clears bindings
 	end
 
-	AB.fadeParent:SetScript('OnEvent', AB.FadeParent_OnEvent)
-
 	AB:DisableBlizzard()
 	AB:SetupMicroBar()
 
@@ -2007,6 +2045,7 @@ function AB:Initialize()
 
 	AB:SetTargetAuraCooldowns(E.db.cooldown.targetaura.enable)
 
+	AB:RegisterEvent('PLAYER_LOGIN')
 	AB:RegisterEvent('ADDON_LOADED')
 	AB:RegisterEvent('PLAYER_ENTERING_WORLD')
 	AB:RegisterEvent('UPDATE_BINDINGS', 'UpdateAllBinds')
