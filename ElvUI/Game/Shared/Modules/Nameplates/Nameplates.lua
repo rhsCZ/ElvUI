@@ -755,6 +755,10 @@ function NP:NAME_PLATE_UNIT_ADDED(_, unit)
 	NP:UpdatePlateType(self)
 	NP:UpdatePlateSize(self)
 
+	if E.PTR then
+		NP:Configure_UnitAuras(self)
+	end
+
 	self.softTargetFrame = self.blizzPlate and self.blizzPlate.SoftTargetFrame
 	if self.softTargetFrame then
 		self.softTargetFrame:SetParent(self)
@@ -878,7 +882,7 @@ function NP:GetThreatSituationScale(indicator, db, status)
 end
 
 function NP:AuraFilter(...)
-	if NP.db.useBlizzardAuras then
+	if not E.PTR and NP.db.useBlizzardAuras then
 		return true -- already filtered by blizzard
 	else
 		return UF.AuraFilter(self, ...)
@@ -886,7 +890,7 @@ function NP:AuraFilter(...)
 end
 
 function NP:BlizzardPlate_RefreshList(listFrame, auraList)
-	if not NP.db.useBlizzardAuras then return end
+	if E.PTR or not NP.db.useBlizzardAuras then return end
 
 	local blizzPlate = self:GetParent()
 	local plate = blizzPlate:GetParent()
@@ -912,7 +916,7 @@ function NP:BlizzardPlate_RefreshList(listFrame, auraList)
 end
 
 function NP:BlizzardPlate_RefreshAuras(updateInfo)
-	if not NP.db.useBlizzardAuras then return end
+	if E.PTR or not NP.db.useBlizzardAuras then return end
 
 	NP:NamePlateCallBack('FAKE_REFRESH_AURAS', self.unitToken, updateInfo)
 end
@@ -920,7 +924,7 @@ end
 do
 	local hookedPlates = {}
 	function NP:BlizzardPlate_HookAuras(frame)
-		local auras = E.Retail and frame.AurasFrame
+		local auras = not E.PTR and E.Retail and frame.AurasFrame
 		if not auras then return end
 
 		if NP.db.useBlizzardAuras then
@@ -1050,7 +1054,7 @@ function NP:BlizzardAuras_UpdateAuras(list, listFrame, auraList)
 end
 
 function NP:BlizzardAuras_GetAuras(nameplate, which)
-	if not NP.db.useBlizzardAuras or not nameplate.blizzAuras then return end
+	if E.PTR or not NP.db.useBlizzardAuras or not nameplate.blizzAuras then return end
 
 	return nameplate.blizzAuras[which] or nil
 end

@@ -556,40 +556,63 @@ function A:UpdateHeader(header)
 	local db = A.db[header.auraType]
 	local width, height = db.size, (db.keepSizeRatio and db.size) or db.height
 
-	E:UpdateClassColor(db.barColor)
-
-	header:SetAttribute('config-width', width)
-	header:SetAttribute('config-height', height)
-	header:SetAttribute('template', 'ElvUIAuraTemplate')
-	header:SetAttribute('weaponTemplate', header.filter == 'HELPFUL' and 'ElvUIAuraTemplate' or nil)
-	header:SetAttribute('separateOwn', db.seperateOwn)
-	header:SetAttribute('sortMethod', db.sortMethod)
-	header:SetAttribute('sortDirection', db.sortDir)
-	header:SetAttribute('maxWraps', db.maxWraps)
-	header:SetAttribute('wrapAfter', db.wrapAfter)
-	header:SetAttribute('point', DIRECTION_TO_POINT[db.growthDirection])
-	header:SetAttribute('initialConfigFunction', A.AttributeInitialConfig)
-
+	local minWidth, minHeight, xOffset, yOffset, wrapXOffset, wrapYOffset
 	if IS_HORIZONTAL_GROWTH[db.growthDirection] then
-		header:SetAttribute('minWidth', ((db.wrapAfter == 1 and 0 or db.horizontalSpacing) + width) * db.wrapAfter)
-		header:SetAttribute('minHeight', (db.verticalSpacing + height) * db.maxWraps)
-		header:SetAttribute('xOffset', DIRECTION_TO_HORIZONTAL_SPACING_MULTIPLIER[db.growthDirection] * (db.horizontalSpacing + width))
-		header:SetAttribute('yOffset', 0)
-		header:SetAttribute('wrapXOffset', 0)
-		header:SetAttribute('wrapYOffset', DIRECTION_TO_VERTICAL_SPACING_MULTIPLIER[db.growthDirection] * (db.verticalSpacing + height))
+		minWidth = ((db.wrapAfter == 1 and 0 or db.horizontalSpacing) + width) * db.wrapAfter
+		minHeight = (db.verticalSpacing + height) * db.maxWraps
+		xOffset = DIRECTION_TO_HORIZONTAL_SPACING_MULTIPLIER[db.growthDirection] * (db.horizontalSpacing + width)
+		yOffset = 0
+		wrapXOffset = 0
+		wrapYOffset = DIRECTION_TO_VERTICAL_SPACING_MULTIPLIER[db.growthDirection] * (db.verticalSpacing + height)
 	else
-		header:SetAttribute('minWidth', (db.horizontalSpacing + width) * db.maxWraps)
-		header:SetAttribute('minHeight', ((db.wrapAfter == 1 and 0 or db.verticalSpacing) + height) * db.wrapAfter)
-		header:SetAttribute('xOffset', 0)
-		header:SetAttribute('yOffset', DIRECTION_TO_VERTICAL_SPACING_MULTIPLIER[db.growthDirection] * (db.verticalSpacing + height))
-		header:SetAttribute('wrapXOffset', DIRECTION_TO_HORIZONTAL_SPACING_MULTIPLIER[db.growthDirection] * (db.horizontalSpacing + width))
-		header:SetAttribute('wrapYOffset', 0)
+		minWidth = (db.horizontalSpacing + width) * db.maxWraps
+		minHeight = ((db.wrapAfter == 1 and 0 or db.verticalSpacing) + height) * db.wrapAfter
+		xOffset = 0
+		yOffset = DIRECTION_TO_VERTICAL_SPACING_MULTIPLIER[db.growthDirection] * (db.verticalSpacing + height)
+		wrapXOffset = DIRECTION_TO_HORIZONTAL_SPACING_MULTIPLIER[db.growthDirection] * (db.horizontalSpacing + width)
+		wrapYOffset = 0
 	end
 
-	header:ForEachChild(A.UpdateChild, db)
+	if E.PTR then
+		header.width = width
+		header.height = height
+		header.spacingX = db.horizontalSpacing
+		header.spacingY = db.verticalSpacing
+		header.keepSizeRatio = db.keepSizeRatio
+		header.sortMethod = E.AuraContainerSort[db.sortMethod]
+		header.sortDirection = E.AuraContainerSortDirection[db.sortDir]
 
-	if header.MasqueGroup then
-		A:UpdateMasque(header)
+		header:SetSize(minWidth, minHeight)
+
+		E:Auras_UpdateElements(header)
+		E:Auras_SetContainer(header, header.filter)
+	else
+		E:UpdateClassColor(db.barColor)
+
+		header:SetAttribute('config-width', width)
+		header:SetAttribute('config-height', height)
+		header:SetAttribute('template', 'ElvUIAuraTemplate')
+		header:SetAttribute('weaponTemplate', header.filter == 'HELPFUL' and 'ElvUIAuraTemplate' or nil)
+		header:SetAttribute('separateOwn', db.seperateOwn)
+		header:SetAttribute('sortMethod', db.sortMethod)
+		header:SetAttribute('sortDirection', db.sortDir)
+		header:SetAttribute('maxWraps', db.maxWraps)
+		header:SetAttribute('wrapAfter', db.wrapAfter)
+		header:SetAttribute('point', DIRECTION_TO_POINT[db.growthDirection])
+		header:SetAttribute('initialConfigFunction', A.AttributeInitialConfig)
+
+		header:SetAttribute('minWidth', minWidth)
+		header:SetAttribute('minHeight', minHeight)
+		header:SetAttribute('xOffset', xOffset)
+		header:SetAttribute('yOffset', yOffset)
+		header:SetAttribute('wrapXOffset', wrapXOffset)
+		header:SetAttribute('wrapYOffset', wrapYOffset)
+
+		header:ForEachChild(A.UpdateChild, db)
+
+		if header.MasqueGroup then
+			A:UpdateMasque(header)
+		end
 	end
 end
 
@@ -693,8 +716,17 @@ function A:Initialize()
 	local mapOffsetX = 6 + E.Border
 
 	if E.private.auras.buffsHeader then
-		A.BuffFrame = A:CreateAuraHeader('HELPFUL')
-		A:UpdateHeader(A.BuffFrame)
+		if E.PTR then
+			A.BuffFrame = E:Auras_Create(E.UIParent, nil, 'ElvUIPlayerBuffs')
+			A.BuffFrame.auraType = 'buffs'
+			A.BuffFrame.filter = 'HELPFUL'
+
+			A:UpdateHeader(A.BuffFrame)
+			E:Auras_SetUnit(A.BuffFrame, 'player')
+		else
+			A.BuffFrame = A:CreateAuraHeader('HELPFUL')
+			A:UpdateHeader(A.BuffFrame)
+		end
 
 		A.BuffFrame:ClearAllPoints()
 		A.BuffFrame:SetPoint('TOPRIGHT', mapAnchor, 'TOPLEFT', -mapOffsetX, -mapOffsetY)
@@ -703,8 +735,17 @@ function A:Initialize()
 	end
 
 	if E.private.auras.debuffsHeader then
-		A.DebuffFrame = A:CreateAuraHeader('HARMFUL')
-		A:UpdateHeader(A.DebuffFrame)
+		if E.PTR then
+			A.DebuffFrame = E:Auras_Create(E.UIParent, nil, 'ElvUIPlayerDebuffs')
+			A.DebuffFrame.auraType = 'debuffs'
+			A.DebuffFrame.filter = 'HARMFUL'
+
+			A:UpdateHeader(A.DebuffFrame)
+			E:Auras_SetUnit(A.DebuffFrame, 'player')
+		else
+			A.DebuffFrame = A:CreateAuraHeader('HARMFUL')
+			A:UpdateHeader(A.DebuffFrame)
+		end
 
 		A.DebuffFrame:ClearAllPoints()
 		A.DebuffFrame:SetPoint('BOTTOMRIGHT', mapAnchor, 'BOTTOMLEFT', -mapOffsetX, -mapOffsetY)
