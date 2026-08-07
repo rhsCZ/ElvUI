@@ -579,13 +579,13 @@ function A:UpdateHeader(header)
 		header.spacingX = db.horizontalSpacing
 		header.spacingY = db.verticalSpacing
 		header.keepSizeRatio = db.keepSizeRatio
-		header.sortMethod = E.AuraContainerSort[db.sortMethod]
+		header.sortMethod = E.AuraContainerSortMethod[db.sortMethod]
 		header.sortDirection = E.AuraContainerSortDirection[db.sortDir]
 
 		header:SetSize(minWidth, minHeight)
 
-		E:Auras_UpdateElements(header)
 		E:Auras_SetContainer(header, header.filter)
+		E:Auras_UpdateElements(header)
 	else
 		E:UpdateClassColor(db.barColor)
 

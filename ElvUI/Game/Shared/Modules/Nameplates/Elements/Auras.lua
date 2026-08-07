@@ -168,12 +168,14 @@ function NP:Configure_Auras(nameplate, which)
 	if E.PTR then
 		auras.keepSizeRatio = db.keepSizeRatio
 		auras.maxFrameCount = auras.numAuras
-		auras.sortMethod = E.AuraContainerSort[db.sortMethod]
+		auras.sortMethod = E.AuraContainerSortMethod[db.sortMethod]
+		auras.nameplateType = nameplate.frameType
+		auras.noMouse = true
 
 		E:Auras_SetUnit(auras, nameplate.unit)
 		E:Auras_SetContainer(auras, auras.filter)
-		E:Auras_UpdateElements(auras)
 		E:Auras_SetLineSize(auras)
+		E:Auras_UpdateElements(auras)
 	else
 		local index = 1
 		while auras[index] do
@@ -186,12 +188,13 @@ function NP:Configure_Auras(nameplate, which)
 
 			index = index + 1
 		end
+
+		auras:Size(db.numAuras * db.size + ((db.numAuras - 1) * db.spacing), 1)
 	end
 
 	auras:SetFrameLevel(7)
 	auras:ClearAllPoints()
 	auras:Point(auras.initialAnchor, auras.attachTo, auras.anchorPoint, auras.xOffset, auras.yOffset)
-	auras:Size(db.numAuras * db.size + ((db.numAuras - 1) * db.spacing), 1)
 end
 
 function NP:Update_Auras(nameplate)

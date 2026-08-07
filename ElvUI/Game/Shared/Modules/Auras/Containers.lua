@@ -8,9 +8,12 @@ local _G = _G
 local next = next
 local type = type
 local unpack = unpack
+local strlower = strlower
 local huge = math.huge
 
 local AnchorUtil = AnchorUtil
+local AuraButtonBorderStyle = AuraButtonBorderStyle
+local InCombatLockdown = InCombatLockdown
 local CreateFrame = CreateFrame
 
 local FLOWDIRECTION = AnchorUtil and AnchorUtil.FlowDirection
@@ -18,20 +21,27 @@ local SORTDIRECTION = _G.AuraContainerSortDirection
 local SORTMETHOD = _G.AuraContainerSortMethod
 
 E.AuraContainerSortDirection = {}
-E.AuraContainerSort = {}
+E.AuraContainerSortMethod = {}
+
 E.AuraTarget = {}
 E.AuraFocus = {}
+E.AuraDispel = {
+	style = AuraButtonBorderStyle.Color,
+	showWhenHarmful = true,
+	showWhenHelpful = false
+}
+
 E.AuraEvents = {
 	PLAYER_TARGET_CHANGED = E.AuraTarget,
 	PLAYER_FOCUS_CHANGED = E.AuraFocus
 }
 
 if SORTMETHOD then -- add the new ones (?)
-	E.AuraContainerSort.TIME_REMAINING = SORTMETHOD.Expiration
-	E.AuraContainerSort.DURATION = SORTMETHOD.Default
-	E.AuraContainerSort.NAME = SORTMETHOD.Name
-	E.AuraContainerSort.PLAYER = SORTMETHOD.ImportantOnly -- player doesnt exist (?)
-	E.AuraContainerSort.INDEX = SORTMETHOD.AuraInstanceIDOnly
+	E.AuraContainerSortMethod.TIME_REMAINING = SORTMETHOD.Expiration
+	E.AuraContainerSortMethod.DURATION = SORTMETHOD.Default
+	E.AuraContainerSortMethod.NAME = SORTMETHOD.Name
+	E.AuraContainerSortMethod.PLAYER = SORTMETHOD.ImportantOnly -- player doesnt exist (?)
+	E.AuraContainerSortMethod.INDEX = SORTMETHOD.AuraInstanceIDOnly
 end
 
 if SORTDIRECTION then
@@ -99,6 +109,10 @@ function E:Auras_CreateElements(button)
 	statusbar:OffsetFrameLevel()
 	button.statusbar = statusbar
 
+	local cooldown = CreateFrame('Cooldown', nil, button, 'CooldownFrameTemplate')
+	cooldown:SetAllPoints(texture)
+	button.cooldown = cooldown
+
 	local textFrame = CreateFrame('Frame', nil, button)
 	if textFrame then
 		textFrame:SetAllPoints()
@@ -118,6 +132,7 @@ end
 function E:Auras_UpdateElement(container, button)
 	local width, height = E:Auras_GetSize(container)
 	button:SetSize(width, height)
+	button:SetMouseMotionEnabled(not container.noMouse)
 
 	if button.texture then
 		if container.keepSizeRatio or (width == height) then
@@ -130,18 +145,32 @@ function E:Auras_UpdateElement(container, button)
 		button:SetIcon(button.texture)
 	end
 
+	if button.cooldown then
+		button:SetDurationCooldown(button.cooldown)
+
+		-- will also update the cooldown when needed
+		if container.unitframeType then -- unitframe
+			E:RegisterCooldown(button.cooldown, 'unitframe', container.unitframeType, container.auraType)
+		elseif container.nameplateType then -- nameplate
+			E:RegisterCooldown(button.cooldown, 'nameplates', container.nameplateType, container.auraType)
+		elseif container.auraType then -- top auras
+			E:RegisterCooldown(button.cooldown, 'auras')
+		end
+	end
+
 	if button.statusbar then
 		button:SetDurationBar(button.statusbar)
 	end
 
 	if button.dispelBorder then
-		button.dispelBorder:Hide()
+		button:SetAuraBorder(button.dispelBorder, E.AuraDispel)
 	end
 
 	local textFrame = button.textFrame
 	if textFrame then
 		button:SetApplicationCount(textFrame.count)
-		button:SetDurationText(textFrame.time, { formatter = nil })
+
+		-- button:SetDurationText(textFrame.time, { formatter = nil })
 	end
 
 	if container.unit == 'player' and container.filter == 'HELPFUL' then
@@ -154,11 +183,14 @@ function E:Auras_UpdateElement(container, button)
 end
 
 function E:Auras_CreateButton(container, button)
+	button.container = container
+
 	E:Auras_CreateElements(button)
-	E:Auras_UpdateElement(container, button)
 end
 
 function E:Auras_UpdateElements(container)
+	if InCombatLockdown() then return end
+
 	for button in next, container.buttons do
 		E:Auras_UpdateElement(container, button)
 	end
@@ -169,6 +201,7 @@ function E:Auras_GenerateInitialize(container)
 		container.buttons[button] = container
 
 		E:Auras_CreateButton(container, button)
+		E:Auras_UpdateElement(container, button)
 	end
 end
 
@@ -243,6 +276,10 @@ function E:Auras_Create(parent, which, override)
 	container.filters = {}
 	container.buttons = {}
 	container.layout = {}
+
+	if which then -- top auras dont set this here
+		container.auraType = strlower(which)
+	end
 
 	return container
 end
