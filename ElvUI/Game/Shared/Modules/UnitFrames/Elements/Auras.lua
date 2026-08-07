@@ -4,7 +4,7 @@ local NP = E:GetModule('NamePlates')
 local AB = E:GetModule('ActionBars')
 
 local format, strlower, strfind = format, strlower, strfind
-local tinsert, strsplit, strmatch = tinsert, strsplit, strmatch
+local tinsert, strsplit, strmatch, strjoin = tinsert, strsplit, strmatch, strjoin
 local sort, wipe, next, unpack, floor = sort, wipe, next, unpack, floor
 local utf8sub = string.utf8sub
 
@@ -272,11 +272,52 @@ function UF:Construct_AuraIcon(button)
 	UF:UpdateAuraSettings(button)
 end
 
-function UF:UpdateFilters(button)
-	local db = button.db
+function UF:AddFilter(group, filter, yes, big)
+	if not yes then return end
 
-	if not button.auraFilters then
-		button.auraFilters = {}
+	group[big] = strjoin('', filter, '|', big)
+end
+
+function UF:GroupFilters(frame, filter)
+	local filters = frame.auraFilters
+	if not filters then return end
+
+	local group = frame.filters
+	if not group then return end
+
+	wipe(frame.filters) -- start over
+
+	-- question: who is she?
+	UF:AddFilter(group, filter, filters.isRaidPlayerDispellable, 'RAID_PLAYER_DISPELLABLE')
+
+	-- player: you obviously
+	if filters.isPlayer then
+		UF:AddFilter(group, filter, filters.isPlayer, 'PLAYER')
+	else
+		UF:AddFilter(group, filter, filters.isCrowdControlPlayer, 'CROWD_CONTROL|PLAYER')
+		UF:AddFilter(group, filter, filters.isBigDefensivePlayer, 'BIG_DEFENSIVE|PLAYER')
+		UF:AddFilter(group, filter, filters.isRaidInCombatPlayer, 'RAID_IN_COMBAT|PLAYER')
+		UF:AddFilter(group, filter, filters.isExternalDefensivePlayer, 'EXTERNAL_DEFENSIVE|PLAYER')
+		UF:AddFilter(group, filter, filters.isCancelablePlayer, 'CANCELABLE|PLAYER')
+		UF:AddFilter(group, filter, filters.notCancelablePlayer, '!CANCELABLE|PLAYER')
+		UF:AddFilter(group, filter, filters.isRaidPlayer, 'RAID|PLAYER')
+	end
+
+	-- others: not player
+	UF:AddFilter(group, filter, filters.isCrowdControl, 'CROWD_CONTROL|!PLAYER')
+	UF:AddFilter(group, filter, filters.isBigDefensive, 'BIG_DEFENSIVE|!PLAYER')
+	UF:AddFilter(group, filter, filters.isRaidInCombat, 'RAID_IN_COMBAT|!PLAYER')
+	UF:AddFilter(group, filter, filters.isExternalDefensive, 'EXTERNAL_DEFENSIVE|!PLAYER')
+	UF:AddFilter(group, filter, filters.isCancelable, 'CANCELABLE|!PLAYER')
+	UF:AddFilter(group, filter, filters.notCancelable, '!CANCELABLE|!PLAYER')
+	UF:AddFilter(group, filter, filters.isRaid, 'RAID|!PLAYER')
+end
+
+function UF:UpdateFilters(frame)
+	local db = frame.db
+
+	if not frame.auraFilters then
+		frame.auraFilters = {}
 	end
 
 	local isPlayer = db and db.isAuraPlayer
@@ -298,7 +339,7 @@ function UF:UpdateFilters(button)
 	local isPermanent = db and db.isAuraPermanent
 	local isPermanentPlayer = db and db.isAuraPermanentPlayer
 
-	local filters = button.auraFilters
+	local filters = frame.auraFilters
 	local filterList = (db and db.useBlocklist) and E.global.unitframe.aurafilters
 	filters.Blocklist = filterList and filterList.Blocklist and filterList.Blocklist.spells or nil
 	filters.isPermanent = isPermanent
@@ -321,13 +362,13 @@ function UF:UpdateFilters(button)
 	filters.isRaid = isRaid
 	filters.isRaidPlayer = isRaidPlayer
 
-	button.useMidnight = db and db.useMidnight
+	frame.useMidnight = db and db.useMidnight
 
 	local shared = isPlayer or isCancelable or isCancelablePlayer or notCancelable or notCancelablePlayer or isRaid or isRaidPlayer
 	if E.Retail then
-		button.noFilter = db and not (shared or isRaidPlayerDispellable or isCrowdControl or isCrowdControlPlayer or isBigDefensive or isBigDefensivePlayer or isRaidInCombat or isRaidInCombatPlayer or isExternalDefensive or isExternalDefensivePlayer)
+		frame.noFilter = db and not (shared or isRaidPlayerDispellable or isCrowdControl or isCrowdControlPlayer or isBigDefensive or isBigDefensivePlayer or isRaidInCombat or isRaidInCombatPlayer or isExternalDefensive or isExternalDefensivePlayer)
 	else
-		button.noFilter = db and not shared
+		frame.noFilter = db and not shared
 	end
 end
 
@@ -472,15 +513,22 @@ function UF:Configure_Auras(frame, which)
 	end
 
 	if E.PTR then
-		auras.keepSizeRatio = db.keepSizeRatio
+		auras.keepSizeRatio = settings.keepSizeRatio
 		auras.maxFrameCount = auras.numAuras
 		auras.sortMethod = E.AuraContainerSortMethod[settings.sortMethod]
 		auras.sortDirection = E.AuraContainerSortDirection[settings.sortDirection]
 		auras.unitframeType = frame.unitframeType
 
 		if settings.enable then
+			auras.allowList = E:Auras_GetFilter(E.global.unitframe.aurafilters, 'Whitelist')
+			auras.blockList = E:Auras_GetFilter(E.global.unitframe.aurafilters, 'Blacklist')
+
+			UF:UpdateFilters(auras, settings) -- attach the objects
+			UF:GroupFilters(auras, auras.filter) -- build the groups
+			E:Auras_CanidateFilters(auras.auraFilters, auras.allowList, auras.blockList)
+
 			E:Auras_SetUnit(auras, frame.unit)
-			E:Auras_SetContainer(auras, auras.filter)
+			E:Auras_SetContainer(auras)
 			E:Auras_SetLineSize(auras)
 			E:Auras_UpdateElements(auras)
 		end
