@@ -79,13 +79,6 @@ function E:Auras_CreateElements(button)
 	border:SetAllPoints()
 	button.border = border
 
-	-- local mask = button:CreateMaskTexture()
-	-- mask:SetTexture(E.Media.Textures.White8x8, 'CLAMPTOBLACKADDITIVE')
-	-- mask:Point('TOP')
-	-- mask:Point('BOTTOM')
-	-- mask:Point('LEFT')
-	-- button.mask = mask
-
 	local backdrop = button:CreateTexture(nil, 'BACKGROUND', nil, -3)
 	backdrop:SetTexture(E.media.blankTex)
 	backdrop:SetVertexColor(0, 0, 0)
@@ -150,9 +143,6 @@ function E:Auras_UpdateElement(container, button)
 	local bgR, bgG, bgB, bgA = unpack(E.media.backdropfadecolor)
 	if button.border then
 		if container.isAuraBar then
-			--button.border:AddMaskTexture(button.mask)
-
-			--local r, g, b = unpack(E.media.backdropcolor)
 			local color = container.barColor
 			if container.invertAurabars then
 				button.border:SetTexture(container.statusbarTexture)
@@ -218,8 +208,6 @@ function E:Auras_UpdateElement(container, button)
 				button.statusbar:SetStatusBarColor(color.r, color.g, color.b)
 			end
 
-			--button.mask:Point('RIGHT', button.statusbar:GetStatusBarTexture(), 'LEFT')
-
 			if button.border then
 				button.border:ClearAllPoints()
 				button.border:Point('TOP')
@@ -257,8 +245,6 @@ function E:Auras_UpdateElement(container, button)
 		if container.isAuraBar then
 			button:SetSpellName(textFrame.nameText)
 		end
-
-		-- button:SetDurationText(textFrame.time, { formatter = nil })
 	end
 
 	if container.unit == 'player' and strmatch(container.filter, 'HELPFUL') then
@@ -312,13 +298,24 @@ end
 
 do
 	local temp = {}
+	function E:Auras_CanidateFilters(allow, block, maxDuration)
+		temp.includeSpellIDs = allow
+		temp.excludeSpellIDs = block
+		temp.maxDuration = maxDuration
+
+		return temp
+	end
+end
+
+do
+	local temp = {}
 	function E:Auras_SetupGroup(container, filter, layout, maxCount, sortMethod, sortDirection)
 		temp.maxFrameCount = maxCount
 		temp.sortMethod = sortMethod
 		temp.sortDirection = sortDirection
 		temp.initializeFrame = E:Auras_GenerateInitialize(container)
+		temp.candidateFilters = filter
 		temp.layout = layout
-		temp.candidateFilters = type(filter) == 'table' and filter or nil
 
 		return temp
 	end
@@ -326,11 +323,11 @@ end
 
 function E:Auras_AddGroup(container, key, filter, layout, maxCount, sortMethod, sortDirection)
 	local group = E:Auras_SetupGroup(container, filter, layout, maxCount, sortMethod, sortDirection)
-	container:AddAuraGroup(key, filter, group)
+	container:AddAuraGroup(key, key, group)
 end
 
 function E:Auras_UpdateGroup(container, key, filter, layout, maxCount, sortMethod, sortDirection)
-	if type(filter) == 'table' then
+	if filter then
 		container:SetAuraGroupCandidateFilters(key, filter)
 	end
 
@@ -357,23 +354,24 @@ function E:Auras_SetContainer(container)
 	local horizontal, vertical = E:Auras_FlowDirection(container.growthX, container.growthY)
 	container:SetFlowLayoutGrowthDirection(horizontal, vertical)
 
-	for index, filter in next, container.active do -- known but not active anymore
-		if container.known[filter] and not container.filters[index] then
+	for filter in next, container.active do -- known but not active anymore
+		local clear = container.known[filter] and not container.filters[filter]
+		if clear then
 			container:SetAuraGroupMaxFrameCount(filter, 0)
 		end
 
-		container.active[index] = nil
+		container.active[filter] = nil
 	end
 
-	for index, filter in next, container.filters do
-		container.active[index] = filter -- set all active
+	for filter, index in next, container.filters do
+		container.active[filter] = index -- set all active
 
 		if container.known[filter] then
-			E:Auras_UpdateGroup(container, filter, filter, layout, maxCount, sortMethod, sortDirection)
+			E:Auras_UpdateGroup(container, filter, container.candidateFilters, layout, maxCount, sortMethod, sortDirection)
 		else
-			E:Auras_AddGroup(container, filter, filter, layout, maxCount, sortMethod, sortDirection)
+			E:Auras_AddGroup(container, filter, container.candidateFilters, layout, maxCount, sortMethod, sortDirection)
 
-			container.known[filter] = filter
+			container.known[filter] = index
 		end
 	end
 end
@@ -411,16 +409,6 @@ function E:Auras_GetFilter(obj, key)
 	end
 
 	return list
-end
-
--- local blockPermanent = (player and db.isAuraPermanentPlayer) or (not player and db.isAuraPermanent)
--- or (blockPermanent and huge)
-
-function E:Auras_CanidateFilters(db, allow, block)
-	local maxDuration = (db.maxDuration and db.maxDuration > 0 and db.maxDuration) or nil
-	if not (maxDuration or allow or block) then return end
-
-	return { includeSpellIDs = allow, excludeSpellIDs = block, maxDuration = maxDuration }
 end
 
 function E:Auras_Create(parent, which, override)
