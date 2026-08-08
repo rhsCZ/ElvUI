@@ -136,9 +136,9 @@ function NP:Configure_UnitAuras(nameplate)
 end
 
 function NP:Configure_AllAuras(nameplate)
-	E:Auras_UpdateElements(nameplate.Auras_)
-	E:Auras_UpdateElements(nameplate.Buffs_)
-	E:Auras_UpdateElements(nameplate.Debuffs_)
+	E:Auras_UpdateButtons(nameplate.Auras_)
+	E:Auras_UpdateButtons(nameplate.Buffs_)
+	E:Auras_UpdateButtons(nameplate.Debuffs_)
 end
 
 function NP:Configure_Auras(nameplate, which)
@@ -176,16 +176,15 @@ function NP:Configure_Auras(nameplate, which)
 		auras.maxFrameCount = auras.numAuras
 		auras.sortMethod = E.AuraContainerSortMethod[db.sortMethod]
 		auras.nameplateType = nameplate.frameType
+		auras.maxDuration = (db.maxDuration and db.maxDuration > 0) and db.maxDuration or nil
 		auras.noMouse = true
 
-		auras.allowList = E:Auras_GetFilter(E.global.unitframe.aurafilters, 'Whitelist')
-		auras.blockList = E:Auras_GetFilter(E.global.unitframe.aurafilters, 'Blacklist')
+		-- UF:UpdateFilters(auras) -- attach the objects
+		-- UF:GroupFilters(auras, auras.filter) -- build the groups
 
-		UF:UpdateFilters(auras) -- attach the objects
-		UF:GroupFilters(auras, auras.filter) -- build the groups
-		E:Auras_CanidateFilters(db, auras.allowList, auras.blockList)
+		auras.filters[auras.filter] = 0
+		auras.candidateFilters = E:Auras_CanidateFilters(db.useAllowlist and NP.FilterAllow or nil, db.useBlocklist and NP.FilterBlock or nil, auras.maxDuration)
 
-		E:Auras_SetUnit(auras, nameplate.unit)
 		E:Auras_SetContainer(auras)
 		E:Auras_SetLineSize(auras)
 	else

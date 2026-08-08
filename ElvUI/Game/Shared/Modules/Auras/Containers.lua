@@ -5,11 +5,8 @@ local E, L, V, P, G = unpack(ElvUI)
 local A = E:GetModule('Auras')
 
 local _G = _G
-local next = next
-local type = type
-local unpack = unpack
-local strmatch = strmatch
-local strlower = strlower
+local next, type, wipe = next, type, wipe
+local unpack, strlower = unpack, strlower
 local huge = math.huge
 
 local AnchorUtil = AnchorUtil
@@ -68,7 +65,54 @@ function E:Auras_FlowDirection(growthX, growthY)
 	return (growthX == 'LEFT' and FLOWDIRECTION.Left) or FLOWDIRECTION.Right, (growthY == 'DOWN' and FLOWDIRECTION.Down) or FLOWDIRECTION.Up
 end
 
-function E:Auras_CreateElements(button)
+function E:Auras_CreateIndicator(button)
+	local backdrop = button:CreateTexture(nil, 'BACKGROUND', nil, -3)
+	backdrop:SetTexture(E.media.blankTex)
+	backdrop:SetVertexColor(0, 0, 0)
+	backdrop:SetAllPoints()
+	button.backdrop = backdrop
+
+	local texture = button:CreateTexture(nil, 'ARTWORK')
+	texture:SetInside()
+	button.texture = texture
+
+	local cooldown = CreateFrame('Cooldown', nil, button, 'CooldownFrameTemplate')
+	cooldown:SetAllPoints(texture)
+	button.cooldown = cooldown
+end
+
+function E:Auras_UpdateIndicator(container, button)
+	local data = button.data -- the data
+	local width, height = E:Auras_GetSize(container)
+	button:ClearAllPoints()
+	button:Point(data.point, data.xOffset, data.yOffset)
+	button:Size(width, height)
+	button:SetMouseMotionEnabled(not container.noMouse)
+
+	if button.cooldown then
+		button:SetDurationCooldown(button.cooldown)
+
+		E:RegisterCooldown(button.cooldown, 'auraindicator')
+	end
+
+	if button.texture then
+		button.texture:SetTexCoords()
+
+		--local textureIcon = data.style == 'texturedIcon'
+		--local onlyText = data.style == 'timerOnly'
+		local colorIcon = data.style == 'coloredIcon'
+		if colorIcon then
+			local color = data.color
+			button.texture:SetTexture(E.media.blankTex)
+			button.texture:SetVertexColor(color.r, color.g, color.b)
+		else
+			button:SetIcon(button.texture)
+			button.texture:SetVertexColor(1, 1, 1)
+		end
+	end
+end
+
+function E:Auras_CreateButton(button)
 	local dispel = button:CreateTexture(nil, 'BACKGROUND', nil, -1)
 	dispel:SetTexture(E.media.blankTex)
 	dispel:SetAllPoints()
@@ -123,7 +167,7 @@ function E:Auras_CreateElements(button)
 	end
 end
 
-function E:Auras_UpdateElement(container, button)
+function E:Auras_UpdateButton(container, button)
 	local width, height = E:Auras_GetSize(container)
 	button:SetSize(width, height)
 	button:SetMouseMotionEnabled(not container.noMouse)
@@ -247,7 +291,7 @@ function E:Auras_UpdateElement(container, button)
 		end
 	end
 
-	if container.unit == 'player' and strmatch(container.filter, 'HELPFUL') then
+	if container.unit == 'player' then
 		button:SetCancelAuraButtons('RightButtonUp')
 	end
 
@@ -256,26 +300,50 @@ function E:Auras_UpdateElement(container, button)
 	end
 end
 
-function E:Auras_CreateButton(container, button)
+function E:Auras_BuildButton(container, button)
 	button.container = container
 
-	E:Auras_CreateElements(button)
+	E:Auras_CreateButton(button)
 end
 
-function E:Auras_UpdateElements(container)
+function E:Auras_UpdateButtons(container)
 	if InCombatLockdown() then return end
 
 	for button in next, container.buttons do
-		E:Auras_UpdateElement(container, button)
+		E:Auras_UpdateButton(container, button)
 	end
 end
 
-function E:Auras_GenerateInitialize(container)
+function E:Auras_BuildIndicator(container, button)
+	button.container = container
+
+	E:Auras_CreateIndicator(button)
+end
+
+function E:Auras_UpdateButtons(container)
+	if InCombatLockdown() then return end
+
+	for button in next, container.indicators do
+		E:Auras_UpdateButton(container, button)
+	end
+end
+
+function E:Auras_GenerateButton(container)
 	return function(button)
 		container.buttons[button] = container
 
-		E:Auras_CreateButton(container, button)
-		E:Auras_UpdateElement(container, button)
+		E:Auras_BuildButton(container, button)
+		E:Auras_UpdateButton(container, button)
+	end
+end
+
+function E:Auras_GenerateSlot(container, data)
+	return function(button)
+		container.indicators[button] = container
+		button.data = data
+
+		E:Auras_BuildIndicator(container, button)
+		E:Auras_UpdateIndicator(container, button)
 	end
 end
 
@@ -309,13 +377,38 @@ end
 
 do
 	local temp = {}
+	local spell = {}
+	function E:Auras_FilterIndicator(data)
+		temp.includeSpellIDs = spell
+
+		wipe(spell)
+		spell[data.id] = true
+
+		return temp
+	end
+end
+
+do
+	local temp = {}
 	function E:Auras_SetupGroup(container, filter, layout, maxCount, sortMethod, sortDirection)
-		temp.maxFrameCount = maxCount
-		temp.sortMethod = sortMethod
-		temp.sortDirection = sortDirection
-		temp.initializeFrame = E:Auras_GenerateInitialize(container)
+		temp.initializeFrame = E:Auras_GenerateButton(container)
 		temp.candidateFilters = filter
+		temp.maxFrameCount = maxCount
+		temp.sortDirection = sortDirection
+		temp.sortMethod = sortMethod
 		temp.layout = layout
+
+		return temp
+	end
+end
+
+do
+	local temp = {}
+	function E:Auras_SetupSlot(container, filter, sortMethod, sortDirection, data)
+		temp.initializeFrame = E:Auras_GenerateSlot(container, data)
+		temp.candidateFilters = filter
+		temp.sortDirection = sortDirection
+		temp.sortMethod = sortMethod
 
 		return temp
 	end
@@ -342,6 +435,43 @@ function E:Auras_SetEnchantments(container)
 	container:AddItemEnchantment(OFFHAND, group)
 end
 
+function E:Auras_UpdateSlot(container, key, filter, sortMethod, sortDirection)
+	if filter then
+		container:SetAuraSlotCandidateFilters(key, filter)
+	end
+
+	container:SetAuraSlotSortMethod(key, sortMethod, sortDirection)
+end
+
+function E:Auras_AddSlot(container, key, filter, sortMethod, sortDirection, data)
+	local slot = E:Auras_SetupSlot(container, filter, sortMethod, sortDirection, data)
+	container:AddAuraSlot(key, container.filter, slot)
+end
+
+function E:Auras_SetIndicator(container)
+	local sortMethod = container.sortMethod or SORTMETHOD.Default
+	local sortDirection = container.sortDirection or SORTDIRECTION.Normal
+
+	for key, data in next, container.keys do
+		local candidateFilters = E:Auras_FilterIndicator(data)
+		if container.known[key] then
+			E:Auras_UpdateSlot(container, key, candidateFilters, sortMethod, sortDirection)
+		else
+			E:Auras_AddSlot(container, key, candidateFilters, sortMethod, sortDirection, data)
+
+			container.known[key] = data
+		end
+	end
+end
+
+function E:Auras_SetupIndicator(container, auraTable)
+	for spell, data in next, auraTable do
+		if data.enabled then
+			container.keys[spell..''] = data
+		end
+	end
+end
+
 function E:Auras_SetContainer(container)
 	local maxCount = container.maxFrameCount or 32
 	local sortMethod = container.sortMethod or SORTMETHOD.Default
@@ -355,8 +485,7 @@ function E:Auras_SetContainer(container)
 	container:SetFlowLayoutGrowthDirection(horizontal, vertical)
 
 	for filter in next, container.active do -- known but not active anymore
-		local clear = container.known[filter] and not container.filters[filter]
-		if clear then
+		if container.known[filter] and not container.filters[filter] then
 			container:SetAuraGroupMaxFrameCount(filter, 0)
 		end
 
@@ -413,7 +542,14 @@ end
 
 function E:Auras_Create(parent, which, override)
 	local container = CreateFrame('AuraContainer', override or (parent:GetName() .. which), parent, 'CustomAuraContainerTemplate, DisableUntrustedLayoutScriptsTemplate')
+	-- both
 	container.known = {}
+
+	-- indicators
+	container.keys = {}
+	container.indicators = {}
+
+	-- groups
 	container.active = {}
 	container.buttons = {}
 	container.layout = {}
