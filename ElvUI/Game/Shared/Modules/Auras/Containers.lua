@@ -44,11 +44,19 @@ E.AuraEvents = {
 }
 
 if SORTMETHOD then -- add the new ones (?)
+	-- top aura conversion
+	E.AuraContainerSortMethod.TIME = SORTMETHOD.Expiration -- not in UF or NP
+	E.AuraContainerSortMethod.INDEX = SORTMETHOD.AuraInstanceIDOnly
+	E.AuraContainerSortMethod.NAME = SORTMETHOD.Name
+
+	-- unitframe and nameplates
 	E.AuraContainerSortMethod.TIME_REMAINING = SORTMETHOD.Expiration
 	E.AuraContainerSortMethod.DURATION = SORTMETHOD.Default
-	E.AuraContainerSortMethod.NAME = SORTMETHOD.Name
-	E.AuraContainerSortMethod.PLAYER = SORTMETHOD.ImportantOnly -- player doesnt exist (?)
-	E.AuraContainerSortMethod.INDEX = SORTMETHOD.AuraInstanceIDOnly
+	E.AuraContainerSortMethod.PLAYER = SORTMETHOD.UnitFrameDebuff -- player doesnt exist (?)
+
+	-- new ones for 12.1
+	E.AuraContainerSortMethod.DEFENSIVE = SORTMETHOD.BigDefensive
+	E.AuraContainerSortMethod.IMPORTANT = SORTMETHOD.ImportantOnly
 end
 
 if SORTDIRECTION then
@@ -112,13 +120,13 @@ end
 
 function E:Auras_UpdateIndicator(container, button)
 	local data = button.data -- the data
-	local width, height = E:Auras_GetSize(container)
-	button:Size(width, height)
 	button:ClearAllPoints()
 	button:Point(data.point or 'BOTTOMLEFT', data.anchor or container.anchor or nil, data.relativePoint or nil, data.xOffset or 0, data.yOffset or 0)
 	button:SetMouseMotionEnabled(not container.noMouse)
 
 	if container.useStatusbar then -- not used atm
+		local width, height = E:Auras_GetSize(container)
+		button:Size(width, height)
 		button.backdrop:Hide()
 
 		if button.statusbar then
@@ -128,18 +136,63 @@ function E:Auras_UpdateIndicator(container, button)
 			button.statusbar:SetAllPoints()
 		end
 	else
-		if button.cooldown then
-			button:SetDurationCooldown(button.cooldown)
+		local textureIcon = data.style == 'texturedIcon'
+		local onlyText = data.style == 'timerOnly'
+		local colorIcon = data.style == 'coloredIcon'
+		local cooldown = button.cooldown
+		if cooldown then
+			button:SetDurationCooldown(cooldown)
 
-			E:RegisterCooldown(button.cooldown, 'auraindicator')
+			E:RegisterCooldown(cooldown, 'auraindicator')
+
+			if colorIcon or textureIcon then
+				if button.texture then
+					button.texture:Show()
+					button.backdrop:Show()
+				end
+
+				cooldown:SetDrawSwipe(true)
+				cooldown:SetDrawEdge(true)
+			elseif onlyText then
+				if button.texture then
+					button.texture:Hide()
+					button.backdrop:Hide()
+				end
+
+				cooldown:SetDrawSwipe(false)
+				cooldown:SetDrawEdge(false)
+			end
+
+			cooldown:SetHideCountdownNumbers(not onlyText and not data.displayText)
+
+			local text = cooldown.Text or cooldown:GetRegions()
+			if text then -- CD module aquires the text to Text but without it we need to grab it
+				text:ClearAllPoints()
+				text:Point(data.cooldownAnchor or 'CENTER', data.cooldownX or 1, data.cooldownY or 1)
+
+				local db = data.cooldownDB
+				local color = (onlyText and data.color) or (db and db.colors.text)
+				if color then
+					text:SetTextColor(color.r, color.g, color.b)
+
+					-- currently the entire system is PTR only but check anyways
+					if cooldown.SetCountdownFormatter then -- this overrides the coloring
+						cooldown:SetCountdownFormatter()
+					end
+				end
+			end
+		end
+
+		local size = container.size
+		if not data.sizeOffset or data.sizeOffset == 0 then
+			button:Size(size, size)
+		else
+			button:Size(data.sizeOffset + size, data.sizeOffset + size)
 		end
 
 		if button.texture then
 			button.texture:SetTexCoords()
 
-			--local textureIcon = data.style == 'texturedIcon'
-			--local onlyText = data.style == 'timerOnly'
-			local colorIcon = data.style == 'coloredIcon'
 			if colorIcon then
 				local color = data.color
 				button.texture:SetTexture(E.media.blankTex)
@@ -201,6 +254,7 @@ function E:Auras_CreateButton(button)
 
 		local countText = textFrame:CreateFontString(nil, 'OVERLAY')
 		countText:FontTemplate()
+		countText:Point('BOTTOMRIGHT')
 		textFrame.count = countText
 
 		local timeText = textFrame:CreateFontString(nil, 'OVERLAY')
