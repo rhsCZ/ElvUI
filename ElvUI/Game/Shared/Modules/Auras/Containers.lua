@@ -29,7 +29,7 @@ E.AuraContainerSortMethod = {}
 
 E.AuraFocus = {}
 E.AuraTarget = {}
-E.AuraHighlight = {
+E.AuraHighlight = { -- customDispelColorCurve is added from UpdateAuraCurves
 	style = AuraButtonBorderStyle and AuraButtonBorderStyle.Color or nil
 }
 
@@ -133,8 +133,9 @@ end
 
 function E:Auras_UpdateIndicator(container, button)
 	local data = button.data -- the data
+	local point = data.point or 'BOTTOMLEFT'
 	button:ClearAllPoints()
-	button:Point(data.point or 'BOTTOMLEFT', data.anchor or container.anchor or nil, data.relativePoint or nil, data.xOffset or 0, data.yOffset or 0)
+	button:Point(point, data.anchor or container.anchor or nil, data.relativePoint or point or nil, data.xOffset or 0, data.yOffset or 0)
 	button:SetMouseMotionEnabled(not container.noMouse)
 
 	if container.useStatusbar then -- not used atm
