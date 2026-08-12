@@ -305,32 +305,6 @@ P.general = {
 	privateRaidWarning = {
 		scale = 1,
 	},
-	privateAuras = {
-		enable = true,
-		clickThrough = false,
-		countdownFrame = true,
-		countdownNumbers = false,
-		borderScale = 2,
-		icon = {
-			offset = 3,
-			point = 'LEFT',
-			amount = 2,
-			size = 32
-		},
-		duration = {
-			enable = true,
-			point = 'BOTTOM',
-			offsetX = 0,
-			offsetY = -1
-		},
-		parent = {
-			invertAnchor = true,
-			anchorPoint = 'CENTER',
-			point = 'TOP',
-			offsetX = 0,
-			offsetY = 0
-		}
-	},
 	queueStatus = {
 		enable = true,
 		scale = 0.5,
@@ -866,14 +840,6 @@ local NP_QuestIcon = {
 	fontSize = 12
 }
 
-local NP_PrivateAuras = CopyTable(P.general.privateAuras)
-NP_PrivateAuras.enable = false
-NP_PrivateAuras.borderScale = 1
-NP_PrivateAuras.icon.size = 20
-NP_PrivateAuras.clickThrough = true
-NP_PrivateAuras.parent.point = 'BOTTOM'
-NP_PrivateAuras.duration.enable = false
-
 --NamePlate
 P.nameplates = {
 	clampToScreen = false,
@@ -1211,7 +1177,6 @@ for unit, data in next, P.nameplates.units do
 		data.power = CopyTable(NP_Power)
 		data.pvpindicator = CopyTable(NP_PvPIcon)
 		data.raidTargetIndicator = CopyTable(NP_RaidTargetIndicator)
-		data.privateAuras = CopyTable(NP_PrivateAuras)
 		data.title = CopyTable(NP_Title)
 
 		local npcFriendly = unit == 'FRIENDLY_NPC'
@@ -1225,6 +1190,7 @@ for unit, data in next, P.nameplates.units do
 		data.auras.enable = useCCDebuffs -- enemy npc and players
 
 		if useCCDebuffs then
+			data.auras.allowOthers = true
 			data.auras.isAuraCrowdControl = true
 			data.auras.isAuraCrowdControlPlayer = true
 			data.auras.priority = 'Blacklist,CCDebuffs'
@@ -1257,6 +1223,7 @@ P.nameplates.units.PLAYER.level.enable = false
 P.nameplates.units.PLAYER.power.enable = true
 P.nameplates.units.PLAYER.castbar.yOffset = -20
 
+P.nameplates.units.FRIENDLY_PLAYER.buffs.allowOthers = true
 P.nameplates.units.FRIENDLY_PLAYER.buffs.isAuraBigDefensive = true
 P.nameplates.units.FRIENDLY_PLAYER.buffs.isAuraRaidInCombatPlayer = true
 P.nameplates.units.FRIENDLY_PLAYER.buffs.priority = 'Blacklist,Whitelist,blockNoDuration,Personal,TurtleBuffs'
@@ -1264,11 +1231,13 @@ P.nameplates.units.FRIENDLY_PLAYER.debuffs.anchorPoint = 'TOPRIGHT'
 P.nameplates.units.FRIENDLY_PLAYER.debuffs.growthX = 'LEFT'
 P.nameplates.units.FRIENDLY_PLAYER.debuffs.growthY = 'UP'
 P.nameplates.units.FRIENDLY_PLAYER.debuffs.yOffset = 35
+P.nameplates.units.FRIENDLY_PLAYER.debuffs.allowOthers = true
 P.nameplates.units.FRIENDLY_PLAYER.debuffs.isAuraImportant = true
 P.nameplates.units.FRIENDLY_PLAYER.debuffs.isAuraImportantPlayer = true
 P.nameplates.units.FRIENDLY_PLAYER.debuffs.isAuraRaidPlayerDispellable = true
 P.nameplates.units.FRIENDLY_PLAYER.debuffs.priority = 'Blacklist,Dispellable'
 
+P.nameplates.units.ENEMY_PLAYER.buffs.allowOthers = true
 P.nameplates.units.ENEMY_PLAYER.buffs.isAuraBigDefensive = true
 P.nameplates.units.ENEMY_PLAYER.buffs.isAuraExternalDefensive = true
 P.nameplates.units.ENEMY_PLAYER.buffs.priority = 'Blacklist,Whitelist,Dispellable,TurtleBuffs'
@@ -1277,11 +1246,13 @@ P.nameplates.units.ENEMY_PLAYER.debuffs.anchorPoint = 'TOPRIGHT'
 P.nameplates.units.ENEMY_PLAYER.debuffs.growthX = 'LEFT'
 P.nameplates.units.ENEMY_PLAYER.debuffs.growthY = 'UP'
 P.nameplates.units.ENEMY_PLAYER.debuffs.yOffset = 35
+P.nameplates.units.ENEMY_PLAYER.debuffs.allowOthers = true
 P.nameplates.units.ENEMY_PLAYER.debuffs.isAuraPlayer = true
 P.nameplates.units.ENEMY_PLAYER.debuffs.isAuraCrowdControl = true
 P.nameplates.units.ENEMY_PLAYER.debuffs.priority = 'Blacklist,blockNoDuration,Personal'
 P.nameplates.units.ENEMY_PLAYER.name.format = E.Retail and '[classcolor][name]' or '[classcolor][name:abbrev:long]'
 
+P.nameplates.units.FRIENDLY_NPC.buffs.allowOthers = true
 P.nameplates.units.FRIENDLY_NPC.buffs.isAuraExternalDefensive = true
 P.nameplates.units.FRIENDLY_NPC.buffs.isAuraExternalDefensivePlayer = true
 P.nameplates.units.FRIENDLY_NPC.buffs.isAuraImportant = true
@@ -1291,6 +1262,7 @@ P.nameplates.units.FRIENDLY_NPC.debuffs.anchorPoint = 'TOPRIGHT'
 P.nameplates.units.FRIENDLY_NPC.debuffs.growthX = 'LEFT'
 P.nameplates.units.FRIENDLY_NPC.debuffs.growthY = 'UP'
 P.nameplates.units.FRIENDLY_NPC.debuffs.yOffset = 35
+P.nameplates.units.FRIENDLY_NPC.debuffs.allowOthers = true
 P.nameplates.units.FRIENDLY_NPC.debuffs.isAuraRaid = true
 P.nameplates.units.FRIENDLY_NPC.debuffs.isAuraRaidPlayer = true
 P.nameplates.units.FRIENDLY_NPC.debuffs.priority = 'Blacklist,Dispellable,blockNoDuration,CCDebuffs'
@@ -1298,6 +1270,7 @@ P.nameplates.units.FRIENDLY_NPC.level.format = '[difficultycolor][level][shortcl
 P.nameplates.units.FRIENDLY_NPC.name.format = '[reactioncolor][name]'
 P.nameplates.units.FRIENDLY_NPC.title.format = '[npctitle]'
 
+P.nameplates.units.ENEMY_NPC.buffs.allowOthers = true
 P.nameplates.units.ENEMY_NPC.buffs.isAuraImportant = true
 P.nameplates.units.ENEMY_NPC.buffs.isAuraImportantPlayer = true
 P.nameplates.units.ENEMY_NPC.buffs.isAuraRaidPlayerDispellable = true
@@ -2027,15 +2000,6 @@ local UF_ClassAdditional = {
 	frameLevel = 1,
 }
 
-local UF_PrivateAuras = CopyTable(P.general.privateAuras)
-UF_PrivateAuras.enable = false
-UF_PrivateAuras.borderScale = 1
-UF_PrivateAuras.icon.size = 24
-UF_PrivateAuras.clickThrough = true
-UF_PrivateAuras.parent.point = 'BOTTOM'
-UF_PrivateAuras.countdownNumbers = true
-UF_PrivateAuras.duration.enable = false
-
 --UnitFrame
 P.unitframe = {
 	statusbar = 'ElvUI Norm',
@@ -2278,8 +2242,7 @@ P.unitframe = {
 			raidicon = CopyTable(UF_RaidIcon),
 			raidRoleIcons = CopyTable(UF_RaidRoles),
 			resurrectIcon = CopyTable(UF_Ressurect),
-			strataAndLevel = CopyTable(UF_StrataAndLevel),
-			privateAuras = CopyTable(UF_PrivateAuras)
+			strataAndLevel = CopyTable(UF_StrataAndLevel)
 		},
 		target = {
 			enable = true,
@@ -2317,8 +2280,7 @@ P.unitframe = {
 			raidicon = CopyTable(UF_RaidIcon),
 			raidRoleIcons = CopyTable(UF_RaidRoles),
 			resurrectIcon = CopyTable(UF_Ressurect),
-			strataAndLevel = CopyTable(UF_StrataAndLevel),
-			privateAuras = CopyTable(UF_PrivateAuras)
+			strataAndLevel = CopyTable(UF_StrataAndLevel)
 		},
 		targettarget = {
 			enable = true,
@@ -2378,8 +2340,7 @@ P.unitframe = {
 			portrait = CopyTable(UF_Portrait),
 			power = CopyTable(UF_Power),
 			raidicon = CopyTable(UF_RaidIcon),
-			strataAndLevel = CopyTable(UF_StrataAndLevel),
-			privateAuras = CopyTable(UF_PrivateAuras)
+			strataAndLevel = CopyTable(UF_StrataAndLevel)
 		},
 		pet = {
 			enable = true,
@@ -2410,8 +2371,7 @@ P.unitframe = {
 			portrait = CopyTable(UF_Portrait),
 			power = CopyTable(UF_Power),
 			raidicon = CopyTable(UF_RaidIcon),
-			strataAndLevel = CopyTable(UF_StrataAndLevel),
-			privateAuras = CopyTable(UF_PrivateAuras)
+			strataAndLevel = CopyTable(UF_StrataAndLevel)
 		},
 		boss = {
 			enable = true,
@@ -2444,8 +2404,7 @@ P.unitframe = {
 			portrait = CopyTable(UF_Portrait),
 			power = CopyTable(UF_Power),
 			raidicon = CopyTable(UF_RaidIcon),
-			strataAndLevel = CopyTable(UF_StrataAndLevel),
-			privateAuras = CopyTable(UF_PrivateAuras)
+			strataAndLevel = CopyTable(UF_StrataAndLevel)
 		},
 		arena = {
 			enable = true,
@@ -2536,8 +2495,7 @@ P.unitframe = {
 			roleIcon = CopyTable(UF_RoleIcon),
 			summonIcon = CopyTable(UF_SummonIcon),
 			targetsGroup = CopyTable(UF_SubGroup),
-			strataAndLevel = CopyTable(UF_StrataAndLevel),
-			privateAuras = CopyTable(UF_PrivateAuras)
+			strataAndLevel = CopyTable(UF_StrataAndLevel)
 		},
 		tank = {
 			enable = true,
@@ -2566,8 +2524,7 @@ P.unitframe = {
 			raidicon = CopyTable(UF_RaidIcon),
 			rdebuffs = CopyTable(UF_RaidDebuffs),
 			targetsGroup = CopyTable(UF_SubGroup),
-			strataAndLevel = CopyTable(UF_StrataAndLevel),
-			privateAuras = CopyTable(UF_PrivateAuras)
+			strataAndLevel = CopyTable(UF_StrataAndLevel)
 		},
 	},
 }
@@ -2579,12 +2536,14 @@ P.unitframe.units.player.aurabar.enemyAuraType = 'HARMFUL'
 P.unitframe.units.player.aurabar.friendlyAuraType = 'HELPFUL'
 P.unitframe.units.player.aurabar.maxDuration = 120
 P.unitframe.units.player.aurabar.priority = 'Blacklist,blockNoDuration,Personal,RaidDebuffs'
+P.unitframe.units.player.aurabar.allowOthers = true
 P.unitframe.units.player.aurabar.isAuraImportant = true
 P.unitframe.units.player.aurabar.isAuraImportantPlayer = true
 P.unitframe.units.player.aurabar.isAuraBigDefensive = true
 P.unitframe.units.player.aurabar.isAuraExternalDefensive = true
 P.unitframe.units.player.aurabar.isAuraExternalDefensivePlayer = true
 P.unitframe.units.player.buffs.attachTo = 'DEBUFFS'
+P.unitframe.units.player.buffs.allowOthers = true
 P.unitframe.units.player.buffs.isAuraExternalDefensive = true
 P.unitframe.units.player.buffs.isAuraExternalDefensivePlayer = true
 P.unitframe.units.player.buffs.isAuraBigDefensive = true
@@ -2615,9 +2574,11 @@ P.unitframe.units.player.power.xOffset = -2
 
 P.unitframe.units.target.aurabar.maxDuration = 120
 P.unitframe.units.target.aurabar.priority = 'Blacklist,blockNoDuration,Personal,RaidDebuffs'
+P.unitframe.units.target.aurabar.allowOthers = true
 P.unitframe.units.target.aurabar.isAuraRaid = true
 P.unitframe.units.target.aurabar.isAuraRaidPlayer = true
 P.unitframe.units.target.auras.enable = true
+P.unitframe.units.target.auras.allowOthers = true
 P.unitframe.units.target.auras.isAuraCrowdControl = true
 P.unitframe.units.target.auras.isAuraCrowdControlPlayer = true
 P.unitframe.units.target.auras.priority = 'Blacklist,CCDebuffs'
@@ -2651,6 +2612,7 @@ P.unitframe.units.targettarget.buffs.numrows = 1
 P.unitframe.units.targettarget.buffs.perrow = 7
 P.unitframe.units.targettarget.buffs.priority = 'Blacklist,Personal,Dispellable'
 P.unitframe.units.targettarget.debuffs.enable = true
+P.unitframe.units.targettarget.debuffs.allowOthers = true
 P.unitframe.units.targettarget.debuffs.isAuraRaid = true
 P.unitframe.units.targettarget.debuffs.isAuraRaidPlayer = true
 P.unitframe.units.targettarget.debuffs.anchorPoint = 'BOTTOMRIGHT'
@@ -2676,8 +2638,10 @@ P.unitframe.units.focus.aurabar.detachedWidth = 190
 P.unitframe.units.focus.aurabar.maxBars = 3
 P.unitframe.units.focus.aurabar.maxDuration = 120
 P.unitframe.units.focus.aurabar.priority = 'Blacklist,blockNoDuration,Personal,RaidDebuffs'
+P.unitframe.units.focus.aurabar.allowOthers = true
 P.unitframe.units.focus.aurabar.isAuraRaid = true
 P.unitframe.units.focus.aurabar.isAuraRaidPlayer = true
+P.unitframe.units.focus.buffs.allowOthers = true
 P.unitframe.units.focus.buffs.isAuraBigDefensive = true
 P.unitframe.units.focus.buffs.isAuraExternalDefensive = true
 P.unitframe.units.focus.buffs.isAuraExternalDefensivePlayer = true
@@ -2688,6 +2652,7 @@ P.unitframe.units.focus.buffs.perrow = 7
 P.unitframe.units.focus.buffs.priority = 'Blacklist,Personal,NonPersonal'
 P.unitframe.units.focus.castbar.width = 190
 P.unitframe.units.focus.debuffs.enable = true
+P.unitframe.units.focus.debuffs.allowOthers = true
 P.unitframe.units.focus.debuffs.isAuraPlayer = true
 P.unitframe.units.focus.debuffs.isAuraRaid = true
 P.unitframe.units.focus.debuffs.isAuraBigDefensive = true
@@ -2715,7 +2680,6 @@ P.unitframe.units.focustarget.infoPanel.height = 12
 P.unitframe.units.focustarget.threatStyle = 'NONE'
 P.unitframe.units.focustarget.aurabar = nil
 P.unitframe.units.focustarget.castbar = nil
-P.unitframe.units.focustarget.privateAuras = nil
 P.unitframe.units.focustarget.buffIndicator = nil
 P.unitframe.units.focustarget.debuffHighlight = nil
 P.unitframe.units.focustarget.CombatIcon = nil
@@ -2726,6 +2690,7 @@ P.unitframe.units.pet.aurabar.maxDuration = 120
 P.unitframe.units.pet.aurabar.detachedWidth = 130
 P.unitframe.units.pet.aurabar.yOffset = 2
 P.unitframe.units.pet.aurabar.spacing = 2
+P.unitframe.units.pet.buffs.allowOthers = true
 P.unitframe.units.pet.buffs.isAuraRaid = true
 P.unitframe.units.pet.buffs.isAuraRaidPlayer = true
 P.unitframe.units.pet.buffs.isAuraExternalDefensive = true
@@ -2756,12 +2721,12 @@ P.unitframe.units.pettarget.height = 26
 P.unitframe.units.pettarget.threatStyle = 'NONE'
 P.unitframe.units.pettarget.aurabar = nil
 P.unitframe.units.pettarget.castbar = nil
-P.unitframe.units.pettarget.privateAuras = nil
 P.unitframe.units.pettarget.buffIndicator = nil
 P.unitframe.units.pettarget.debuffHighlight = nil
 
 P.unitframe.units.boss.buffs.enable = true
 P.unitframe.units.boss.buffs.anchorPoint = 'LEFT'
+P.unitframe.units.boss.buffs.allowOthers = true
 P.unitframe.units.boss.buffs.isAuraImportant = true
 P.unitframe.units.boss.buffs.isAuraImportantPlayer = true
 P.unitframe.units.boss.buffs.isAuraRaidPlayerDispellable = true
@@ -2770,9 +2735,6 @@ P.unitframe.units.boss.buffs.perrow = 3
 P.unitframe.units.boss.buffs.priority = 'Blacklist,Dispellable,RaidBuffsElvUI'
 P.unitframe.units.boss.buffs.sizeOverride = 22
 P.unitframe.units.boss.buffs.yOffset = 20
-P.unitframe.units.boss.privateAuras.countdownNumbers = false
-P.unitframe.units.boss.privateAuras.icon.size = 20
-P.unitframe.units.boss.privateAuras.parent.point = 'CENTER'
 P.unitframe.units.boss.castbar.width = 215
 P.unitframe.units.boss.castbar.positionsGroup = {anchorPoint = 'BOTTOM', xOffset = 0, yOffset = 0 }
 P.unitframe.units.boss.debuffs.enable = true
@@ -2793,6 +2755,7 @@ P.unitframe.units.boss.power.text_format = E.Retail and '||cFF007ACC[perpp<%]||r
 P.unitframe.units.boss.power.xOffset = -2
 
 P.unitframe.units.arena.buffs.enable = true
+P.unitframe.units.arena.buffs.allowOthers = true
 P.unitframe.units.arena.buffs.isAuraBigDefensive = true
 P.unitframe.units.arena.buffs.isAuraExternalDefensive = true
 P.unitframe.units.arena.buffs.isAuraExternalDefensivePlayer = true
@@ -2806,6 +2769,7 @@ P.unitframe.units.arena.buffs.yOffset = 16
 P.unitframe.units.arena.castbar.width = 256
 P.unitframe.units.arena.castbar.positionsGroup = {anchorPoint = 'BOTTOM', xOffset = 0, yOffset = 0 }
 P.unitframe.units.arena.debuffs.enable = true
+P.unitframe.units.arena.debuffs.allowOthers = true
 P.unitframe.units.arena.debuffs.isAuraCrowdControl = true
 P.unitframe.units.arena.debuffs.isAuraPlayer = true
 P.unitframe.units.arena.debuffs.anchorPoint = 'LEFT'
@@ -2828,6 +2792,7 @@ P.unitframe.units.arena.power.xOffset = -2
 
 P.unitframe.units.party.health.position = 'LEFT'
 P.unitframe.units.party.health.xOffset = 2
+P.unitframe.units.party.buffs.allowOthers = true
 P.unitframe.units.party.buffs.isAuraBigDefensive = true
 P.unitframe.units.party.buffs.isAuraBigDefensivePlayer = true
 P.unitframe.units.party.buffs.isAuraRaidInCombatPlayer = true
@@ -2837,15 +2802,12 @@ P.unitframe.units.party.buffs.anchorPoint = 'LEFT'
 P.unitframe.units.party.buffs.maxDuration = 300
 P.unitframe.units.party.buffs.priority = 'Blacklist,TurtleBuffs'
 P.unitframe.units.party.buffIndicator.enable = true
-P.unitframe.units.party.privateAuras.enable = true
-P.unitframe.units.party.privateAuras.countdownNumbers = false
-P.unitframe.units.party.privateAuras.icon.size = 20
-P.unitframe.units.party.privateAuras.parent.point = 'CENTER'
 P.unitframe.units.party.castbar.enable = false
 P.unitframe.units.party.castbar.width = 256
 P.unitframe.units.party.castbar.positionsGroup = {anchorPoint = 'BOTTOM', xOffset = 0, yOffset = 0 }
 P.unitframe.units.party.CombatIcon.enable = false
 P.unitframe.units.party.debuffs.enable = true
+P.unitframe.units.party.debuffs.allowOthers = true
 P.unitframe.units.party.debuffs.anchorPoint = 'RIGHT'
 P.unitframe.units.party.debuffs.useBlocklist = true
 P.unitframe.units.party.debuffs.maxDuration = 300
@@ -2871,6 +2833,7 @@ P.unitframe.units.raid1 = CopyTable(P.unitframe.units.party)
 P.unitframe.units.raid1.customName = ''
 P.unitframe.units.raid1.groupsPerRowCol = 1
 P.unitframe.units.raid1.groupBy = 'GROUP'
+P.unitframe.units.raid1.buffs.allowOthers = true
 P.unitframe.units.raid1.buffs.isAuraBigDefensive = true
 P.unitframe.units.raid1.buffs.isAuraBigDefensivePlayer = true
 P.unitframe.units.raid1.buffs.isAuraRaidInCombatPlayer = true
@@ -2879,13 +2842,10 @@ P.unitframe.units.raid1.buffs.isAuraExternalDefensivePlayer = true
 P.unitframe.units.raid1.buffs.numrows = 1
 P.unitframe.units.raid1.buffs.perrow = 3
 P.unitframe.units.raid1.buffIndicator.enable = true
-P.unitframe.units.raid1.privateAuras.enable = true
-P.unitframe.units.raid1.privateAuras.countdownNumbers = false
-P.unitframe.units.raid1.privateAuras.icon.size = 18
-P.unitframe.units.raid1.privateAuras.parent.point = 'CENTER'
 P.unitframe.units.raid1.castbar = nil
 P.unitframe.units.raid1.CombatIcon.enable = false
 P.unitframe.units.raid1.debuffs.enable = false
+P.unitframe.units.raid1.debuffs.allowOthers = true
 P.unitframe.units.raid1.debuffs.useBlocklist = true
 P.unitframe.units.raid1.debuffs.numrows = 1
 P.unitframe.units.raid1.debuffs.perrow = 3
@@ -2950,10 +2910,6 @@ P.unitframe.units.tank.debuffs.yOffset = 1
 P.unitframe.units.tank.name.position = 'CENTER'
 P.unitframe.units.tank.name.text_format = E.Retail and '[classcolor][name]' or '[classcolor][name:medium]'
 P.unitframe.units.tank.name.xOffset = 0
-P.unitframe.units.tank.privateAuras.enable = true
-P.unitframe.units.tank.privateAuras.countdownNumbers = false
-P.unitframe.units.tank.privateAuras.icon.size = 18
-P.unitframe.units.tank.privateAuras.parent.point = 'CENTER'
 P.unitframe.units.tank.targetsGroup.name.position = 'CENTER'
 P.unitframe.units.tank.targetsGroup.name.text_format = E.Retail and '[classcolor][name]' or '[classcolor][name:medium]'
 P.unitframe.units.tank.targetsGroup.name.xOffset = 0
@@ -3454,7 +3410,6 @@ E.LayoutMoverPositions = {
 		ObjectiveFrameMover = 'TOPRIGHT,ElvUIParent,TOPRIGHT,-163,-325',
 		PetAB = 'RIGHT,ElvUIParent,RIGHT,-4,0',
 		PowerBarContainerMover = 'TOP,ElvUIParent,TOP,0,-75',
-		PrivateAurasMover = 'TOPRIGHT,ElvUI_MinimapHolder,BOTTOMLEFT,-10,-4',
 		PrivateRaidWarningMover = 'TOP,RaidBossEmoteFrame,TOP,0,0',
 		QueueStatusMover = 'BOTTOMRIGHT,ElvUI_MinimapHolder,BOTTOMRIGHT,-5,25',
 		ReputationBarMover = 'TOPRIGHT,ElvUIParent,TOPRIGHT,-2,-243',
@@ -3558,7 +3513,6 @@ E.LayoutMoverPositions = {
 		PlayerPortraitMover = 'BOTTOM,ElvUIParent,BOTTOM,-365,163',
 		PlayerPowerBarMover = 'BOTTOM,ElvUIParent,BOTTOM,0,209',
 		PowerBarContainerMover = 'TOP,ElvUIParent,TOP,0,-46',
-		PrivateAurasMover = 'TOPRIGHT,ElvUIParent,TOPRIGHT,-4,-177',
 		PrivateRaidWarningMover = 'TOP,ElvUIParent,TOP,0,-240',
 		ProfessionsMover = 'TOPRIGHT,ElvUIParent,TOPRIGHT,-3,-184',
 		PvPMover = 'TOP,ElvUIParent,TOP,0,-28',
