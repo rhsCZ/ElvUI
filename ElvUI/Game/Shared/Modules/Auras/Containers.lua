@@ -16,7 +16,7 @@ local InCombatLockdown = InCombatLockdown
 local CreateFrame = CreateFrame
 local CopyTable = CopyTable
 
-local ItemEnchantmentSlot = AuraContainerItemEnchantmentSlot
+local ItemEnchantmentSlot = _G.AuraContainerItemEnchantmentSlot
 local MAINHAND = ItemEnchantmentSlot and ItemEnchantmentSlot.MainHand
 local OFFHAND = ItemEnchantmentSlot and ItemEnchantmentSlot.OffHand
 local FLOWDIRECTION = AnchorUtil and AnchorUtil.FlowDirection
@@ -449,7 +449,7 @@ function E:Auras_UpdateIndicators(container)
 	if E:Auras_IsInRestriction() then return end
 
 	for button in next, container.indicators do
-		E:Auras_UpdateButton(container, button)
+		E:Auras_UpdateIndicator(container, button)
 	end
 end
 
@@ -530,7 +530,11 @@ do
 		temp.includeSpellIDs = spell
 
 		wipe(spell)
-		spell[data.id] = true
+
+		local dataID = data.id
+		if dataID then
+			spell[dataID] = true
+		end
 
 		return temp
 	end

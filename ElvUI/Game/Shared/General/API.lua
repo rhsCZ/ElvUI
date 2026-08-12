@@ -572,7 +572,7 @@ end
 
 function E:GetPlayerRole()
 	local role = E.allowRoles and UnitGroupRolesAssigned('player') or 'NONE'
-	return (role ~= 'NONE' and role) or E.myspecRole or 'NONE'
+	return E:NotSecretValue(role) and (role ~= 'NONE' and role) or E.myspecRole or 'NONE'
 end
 
 function E:CheckRole()
@@ -1370,7 +1370,7 @@ function E:GROUP_ROSTER_UPDATE()
 	for i = 1, (isInRaid and GetNumGroupMembers()) or GetNumSubgroupMembers() do
 		local unit = group..i
 		local role = not E.allowRoles and (GetPartyAssignment('MAINTANK', unit) and 'TANK' or 'NONE') or UnitGroupRolesAssigned(unit)
-		if role then
+		if E:NotSecretValue(role) and role then
 			if E:UnitIsUnit(unit, 'player') then
 				unit = 'player'
 			end
@@ -1482,14 +1482,16 @@ function E:LoadAPI()
 	E.ScanTooltip.GetHyperlinkInfo = E.ScanTooltip_HyperlinkInfo
 	E.ScanTooltip.GetInventoryInfo = E.ScanTooltip_InventoryInfo
 
-	if E.Retail or E.Mists then
+	if C_MountJournal_GetMountIDs then
 		for _, mountID in next, C_MountJournal_GetMountIDs() do
 			local _, _, sourceText = C_MountJournal_GetMountInfoExtraByID(mountID)
 			local _, spellID = C_MountJournal_GetMountInfoByID(mountID)
 			E.MountIDs[spellID] = mountID
 			E.MountText[mountID] = sourceText
 		end
+	end
 
+	if E.Retail or E.Mists then
 		E:RegisterEvent('NEUTRAL_FACTION_SELECT_RESULT')
 		E:RegisterEvent('PLAYER_SPECIALIZATION_CHANGED', 'CheckRole')
 		E:RegisterEvent('PET_BATTLE_CLOSE', 'AddNonPetBattleFrames')
