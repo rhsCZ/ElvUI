@@ -414,16 +414,16 @@ tagFunctions.pvp = function(u)
 end
 
 tagFunctions.raidcolor = function(u)
-	local _, class = UnitClass(u)
-	if(class) then
-		return Hex(_COLORS.class[class])
+	local _, classToken = UnitClass(u)
+	if oUF:NotSecretValue(classToken) and classToken then
+		return Hex(_COLORS.class[classToken])
 	else
 		local id = u:match('arena(%d)$')
-		if(id) then
-			local specID = GetArenaOpponentSpec(tonumber(id))
-			if(specID and specID > 0) then
-				_, _, _, _, _, class = GetSpecializationInfoByID(specID)
-				return Hex(_COLORS.class[class])
+		local specID = id and GetArenaOpponentSpec(tonumber(id))
+		if specID and specID > 0 then
+			local _, _, _, _, _, classSpec = GetSpecializationInfoByID(specID)
+			if oUF:NotSecretValue(classSpec) and classSpec then
+				return Hex(_COLORS.class[classSpec])
 			end
 		end
 	end
@@ -457,6 +457,10 @@ end
 
 tagFunctions.sex = function(u)
 	local s = UnitSex(u)
+	if oUF:IsSecretValue(s) then
+		return
+	end
+
 	if(s == 2) then
 		return 'Male'
 	elseif(s == 3) then
