@@ -351,8 +351,7 @@ function UF:CreateRaisedElement(frame)
 	RaisedElement.frameName = RaisedElement:GetName()
 	RaisedElement.__owner = frame
 
-	-- layer levels (level +1 is icons)
-	RaisedElement.AuraHighlightLevel = RaisedLevel - 10
+	-- layers: level +1 is icons
 	RaisedElement.AuraLevel = RaisedLevel + 10
 	RaisedElement.PrivateAurasLevel = RaisedLevel + 15
 	RaisedElement.PVPSpecLevel = RaisedLevel + 20
@@ -2230,7 +2229,12 @@ do
 		E:Auras_GroupUnit(frame.Debuffs, unit)
 		E:Auras_GroupUnit(frame.AuraBars, unit)
 		E:Auras_GroupUnit(frame.AuraWatch, unit)
-		E:Auras_GroupUnit(frame.AuraHighlight, unit)
+
+		local highlight = frame.AuraHighlight
+		if highlight then
+			E:Auras_GroupUnit(highlight.good, unit)
+			E:Auras_GroupUnit(highlight.bad, unit)
+		end
 	end
 end
 

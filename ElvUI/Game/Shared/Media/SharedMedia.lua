@@ -239,9 +239,14 @@ do	-- LSM late loader ~Simpy
 	function E:LSM_Update()
 		pendingRefresh = nil
 
+		if not E.private then
+			return -- way too soon
+		end
+
 		if pendingFonts then
 			pendingFonts = nil
 
+			E:UpdateBlizzardSpecialFonts()
 			E:UpdateBlizzardFonts()
 			E:UpdateFontTemplates()
 
@@ -313,8 +318,6 @@ do	-- LSM Font Preloader ~Simpy
 		end
 
 		local isBars = mediaType == 'statusbar' or mediaType == 'background'
-		if E.Initialized then -- only need this afterwards
-			E:LSM_Register(mediaType, isFont, isBars)
-		end
+		E:LSM_Register(mediaType, isFont, isBars)
 	end)
 end

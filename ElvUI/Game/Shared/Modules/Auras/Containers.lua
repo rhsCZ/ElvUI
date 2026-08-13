@@ -16,6 +16,7 @@ local InCombatLockdown = InCombatLockdown
 local CreateFrame = CreateFrame
 local CopyTable = CopyTable
 
+local ItemEnchantmentPlacement = _G.CustomAuraContainerItemEnchantmentPlacement
 local ItemEnchantmentSlot = _G.AuraContainerItemEnchantmentSlot
 local MAINHAND = ItemEnchantmentSlot and ItemEnchantmentSlot.MainHand
 local OFFHAND = ItemEnchantmentSlot and ItemEnchantmentSlot.OffHand
@@ -23,6 +24,8 @@ local FLOWDIRECTION = AnchorUtil and AnchorUtil.FlowDirection
 local SORTDIRECTION = _G.AuraContainerSortDirection
 local SORTMETHOD = _G.AuraContainerSortMethod
 local DispelTypes = E.Libs.Dispel:GetMyDispelTypes()
+
+local FALLBACK = Mixin({ r = 1, g = 1, b = 1, a = 1 }, ColorMixin)
 
 E.AuraContainerSortDirection = {}
 E.AuraContainerSortMethod = {}
@@ -107,7 +110,13 @@ end
 
 function E:Auras_UpdateHighlight(container, button)
 	if button.highlight then
-		button:SetAuraBorder(button.highlight, E.AuraHighlight)
+		if container.key == 'bad' then
+			button:SetAuraBorder(button.highlight, E.AuraHighlight)
+		else
+			local color = button.data.color or FALLBACK
+			button.highlight:SetVertexColor(color.r or 1, color.g or 1, color.b or 1, color.a or 1)
+		end
+
 		button.highlight:SetBlendMode(container.blendMode)
 	end
 end
@@ -120,8 +129,6 @@ function E:Auras_CreateIndicator(button)
 	button.backdrop = backdrop
 
 	local statusbar = CreateFrame('StatusBar', nil, button)
-	-- statusbar:CreateBackdrop('Transparent')
-	-- statusbar.backdrop.Center:Hide()
 	button.statusbar = statusbar
 
 	local texture = button:CreateTexture(nil, 'ARTWORK')
@@ -213,6 +220,7 @@ function E:Auras_UpdateIndicator(container, button)
 				local color = data.color
 				button.texture:SetTexture(E.media.blankTex)
 				button.texture:SetVertexColor(color.r, color.g, color.b)
+				button:ClearIcon()
 			else
 				button:SetIcon(button.texture)
 				button.texture:SetVertexColor(1, 1, 1)
@@ -256,7 +264,6 @@ function E:Auras_CreateButton(button)
 
 	local statusbar = CreateFrame('StatusBar', nil, button)
 	statusbar:CreateBackdrop('Transparent', nil, true) -- these are forbidden, ignore updates
-	statusbar.backdrop.Center:Hide()
 	button.statusbar = statusbar
 
 	local cooldown = CreateFrame('Cooldown', nil, button, 'CooldownFrameTemplate')
@@ -303,13 +310,17 @@ function E:Auras_UpdateButton(container, button)
 		button:SetIcon(button.texture)
 	end
 
+	local valueColor = E.media.rgbvaluecolor
 	local borderColor = E.media.bordercolor
 	local backdropColor = E.media.backdropcolor
 	local backdropFadeColor = E.media.backdropfadecolor
 	if button.dispelBorder then
-		button.dispelBorder:SetVertexColor(borderColor.r, borderColor.g, borderColor.b) -- how can we do alpha?
-
-		button:SetAuraBorder(button.dispelBorder, E.AuraDispel)
+		if button.isEnchantment then
+			button.dispelBorder:SetVertexColor(valueColor.r, valueColor.g, valueColor.b)
+		else
+			button.dispelBorder:SetVertexColor(borderColor.r, borderColor.g, borderColor.b)
+			button:SetAuraBorder(button.dispelBorder, E.AuraDispel)
+		end
 	end
 
 	if button.border then
@@ -349,15 +360,24 @@ function E:Auras_UpdateButton(container, button)
 		end -- will also update the cooldown when needed
 	end
 
-	if container.useStatusbar then
-		if button.statusbar then
-			button:SetDurationBar(button.statusbar)
+	if container.isTopAura then
+		local statusbar = button.statusbar
+		if container.useStatusbar then
+			button:SetDurationBar(statusbar)
 
 			local color = container.barColor
-			button.statusbar:SetStatusBarColor(color.r, color.g, color.b)
-			button.statusbar:SetStatusBarTexture(container.barTexture)
+			statusbar:SetStatusBarColor(color.r or 1, color.g or 1, color.b or 1)
+			statusbar:SetStatusBarTexture(container.barTexture)
+			statusbar:Show()
 
-			A:Configure_Statusbar(button, button.statusbar, container.barDB)
+			if container.isAuraBar then
+				statusbar.backdrop.Center:Hide()
+			end
+
+			A:Configure_Statusbar(button, statusbar, container.barDB)
+		else
+			button:ClearDurationBar()
+			statusbar:Hide()
 		end
 	elseif container.isAuraBar then
 		if button.statusbar then
@@ -457,10 +477,11 @@ function E:Auras_UpdateIndicators(container)
 	end
 end
 
-function E:Auras_GenerateButton(container, key, filter)
+function E:Auras_GenerateButton(container, key, filter, isEnchantment)
 	return function(button)
 		container.buttons[button] = container
 
+		button.isEnchantment = isEnchantment
 		button.container = container
 		button.filter = filter
 		button.key = key
@@ -474,19 +495,22 @@ function E:Auras_GenerateSlot(container, key, data)
 	return function(button)
 		container.indicators[button] = container
 
-		button.key = key
-		button.data = data
 		button.container = container
+		button.data = data
+		button.key = key
 
 		E:Auras_CreateIndicator(button)
 		E:Auras_UpdateIndicator(container, button)
 	end
 end
 
-function E:Auras_GenerateHighlight(container)
+function E:Auras_GenerateHighlight(container, key, data)
 	return function(button)
 		container.indicators[button] = container
+
 		button.container = container
+		button.data = data
+		button.key = key
 
 		E:Auras_CreateHighlight(button)
 		E:Auras_UpdateHighlight(container, button)
@@ -545,11 +569,37 @@ do
 end
 
 do
-	local temp = {}
-	function E:Auras_DispelTypes()
-		temp.includeDispelTypes = CopyTable(DispelTypes)
+	local spell = {}
+	function E:Auras_DispelFilter(container, data)
+		local temp = container.candidateTemp
+		wipe(temp) -- trash object for reuse
+
+		if data then
+			temp.isFromPlayerOrPlayerPet = data.ownOnly or nil
+			temp.includeSpellIDs = spell
+
+			wipe(spell)
+
+			local dataID = data.id
+			if dataID then
+				spell[dataID] = true
+			end
+		else
+			temp.includeDispelTypes = CopyTable(DispelTypes)
+		end
 
 		return temp
+	end
+end
+
+do
+	local temp, layout = {}, {}
+	function E:Auras_SetupEnchantment(container, key, filter, spacing, placement)
+		temp.initializeFrame = E:Auras_GenerateButton(container, key, filter, true)
+		layout.elementSpacing = spacing
+		layout.placement = placement
+
+		return temp, layout
 	end
 end
 
@@ -581,8 +631,8 @@ end
 
 do
 	local temp = {}
-	function E:Auras_SetupHighlight(container, filter)
-		temp.initializeFrame = E:Auras_GenerateHighlight(container)
+	function E:Auras_SetupHighlight(container, filter, key, data)
+		temp.initializeFrame = E:Auras_GenerateHighlight(container, key, data)
 		temp.candidateFilters = filter
 
 		return temp
@@ -606,7 +656,8 @@ function E:Auras_UpdateGroup(container, key, filter, candidate, layout, maxCount
 end
 
 function E:Auras_SetEnchantments(container)
-	local group = E:Auras_SetupGroup(container)
+	local group, layout = E:Auras_SetupEnchantment(container, container.auraType, container.filter, container.spacing, ItemEnchantmentPlacement.AfterAuraGroups)
+	container:SetItemEnchantmentLayout(layout)
 	container:AddItemEnchantment(MAINHAND, group)
 	container:AddItemEnchantment(OFFHAND, group)
 end
@@ -625,13 +676,31 @@ function E:Auras_AddSlot(container, key, candidate, sortMethod, sortDirection, d
 end
 
 function E:Auras_SetHighlight(container)
-	local filter = container.filter
-	if container.known[filter] then return end
+	local KEY, FILTER = container.key, container.filter
+	if KEY == 'bad' then
+		if container.known[KEY] then return end
 
-	local dispel = E:Auras_DispelTypes()
-	local slot = E:Auras_SetupHighlight(container, dispel)
-	container:AddAuraSlot(filter, container.filter, slot)
-	container.known[filter] = 'meow'
+		local candidateFilters = E:Auras_DispelFilter(container)
+		container.candidateFilters = candidateFilters
+
+		local slot = E:Auras_SetupHighlight(container, candidateFilters)
+		container:AddAuraSlot(KEY, FILTER, slot)
+
+		container.known[KEY] = 'meow'
+	else
+		for key, data in next, container.keys do
+			local candidateFilters = E:Auras_DispelFilter(container, data)
+			container.candidateFilters = candidateFilters
+
+			if container.known[key] then
+				container:SetAuraSlotCandidateFilters(key, candidateFilters)
+			else
+				local slot = E:Auras_SetupHighlight(container, candidateFilters, key, data)
+				container:AddAuraSlot(key, FILTER, slot)
+				container.known[key] = 'bark'
+			end
+		end
+	end
 end
 
 function E:Auras_SetIndicator(container)
@@ -640,6 +709,8 @@ function E:Auras_SetIndicator(container)
 
 	for key, data in next, container.keys do
 		local candidateFilters = E:Auras_FilterIndicator(data)
+		container.candidateFilters = candidateFilters
+
 		if container.known[key] then
 			E:Auras_UpdateSlot(container, key, candidateFilters, sortMethod, sortDirection)
 		else
@@ -650,9 +721,17 @@ function E:Auras_SetIndicator(container)
 	end
 end
 
-function E:Auras_SetupIndicator(container, auraTable)
+function E:Auras_SetupList(container, auraTable)
+	wipe(container.keys)
+
 	for spell, data in next, auraTable do
-		if data.enabled then
+		if container.isIndicator and data.enabled then
+			container.keys[spell..''] = data
+		elseif container.isHighlight and data.enable then
+			if not data.id then
+				data.id = spell
+			end
+
 			container.keys[spell..''] = data
 		end
 	end
@@ -711,11 +790,11 @@ function E:Auras_GroupUnit(container, unit)
 		E.AuraFocus[container] = unit
 	end
 
+	E:Auras_SetUnit(container, unit)
+
 	if container.isHighlight then
 		UF:SetEnabled_AuraHighlight(container, unit)
 	end
-
-	E:Auras_SetUnit(container, unit)
 end
 
 function E:Auras_GetFilter(obj, key)
