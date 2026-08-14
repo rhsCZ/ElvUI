@@ -34,6 +34,7 @@ local GetCVar = C_CVar.GetCVar
 local EnableActionRangeCheck = C_ActionBar.EnableActionRangeCheck
 local IsAssistedCombatAction = C_ActionBar.IsAssistedCombatAction
 local IsConsumableSpell = C_Spell.IsConsumableSpell or IsConsumableSpell
+local HasAssistedCombatActionButtons = C_ActionBar.HasAssistedCombatActionButtons
 local IsSpellOverlayed = (C_SpellActivationOverlay and C_SpellActivationOverlay.IsSpellOverlayed) or IsSpellOverlayed
 local GetSpellLossOfControlCooldown = C_Spell.GetSpellLossOfControlCooldown or GetSpellLossOfControlCooldown
 
@@ -147,8 +148,8 @@ local UpdateTargetAuras -- Simpy
 local TARGETAURA_ENABLED = false
 
 local RangeFont
+local locale = GetLocale()
 do -- properly support range symbol when it's shown ~Simpy
-	local locale = GetLocale()
 	local stockFont, stockFontSize, stockFontOutline
 	if locale == 'koKR' then
 		stockFont, stockFontSize, stockFontOutline = [[Fonts\2002.TTF]], 11, 'MONOCHROME, THICKOUTLINE'
@@ -1273,8 +1274,7 @@ function Generic:OnEnter()
 	end
 
 	if self._state_type == "action" and self.NewActionTexture then
-		ClearNewActionHighlight(self._state_action, false, false)
-		UpdateNewAction(self)
+		ClearNewActionHighlight(self._state_action, false, false, self)
 	end
 
 	if FlyoutButtonMixin and UseCustomFlyout then
@@ -1351,7 +1351,7 @@ function Generic:PostClick(button, down)
 	self._receiving_drag = nil
 
 	if self._state_type == "action" and lib.ACTION_HIGHLIGHT_MARKS[self._state_action] then
-		ClearNewActionHighlight(self._state_action, false, false)
+		ClearNewActionHighlight(self._state_action, false, false, self)
 	end
 
 	if down and IsMouseButtonDown() then
@@ -1573,6 +1573,18 @@ function OnEvent(_, event, arg1, arg2, arg3, arg4)
 		if UseCustomFlyout then
 			UpdateFlyoutSpells()
 		end
+
+		if HasAssistedCombatActionButtons() then
+			for button in next, ButtonRegistry do
+				if button._state_type == 'action' then
+					local actionType, _, subType = GetActionInfo(button._state_action)
+					if actionType == 'spell' and subType == 'assistedcombat' then
+						ClearNewActionHighlight(button._state_action, true, false, button)
+						Update(button, event)
+					end
+				end
+			end
+		end
 	elseif event == "UNIT_MODEL_CHANGED" then
 		for button in next, ActiveButtons do
 			local texture = button:GetTexture()
@@ -1592,7 +1604,7 @@ function OnEvent(_, event, arg1, arg2, arg3, arg4)
 	elseif event == "ACTIONBAR_SLOT_CHANGED" then
 		for button in next, ButtonRegistry do
 			if button._state_type == "action" and (arg1 == 0 or arg1 == tonumber(button._state_action)) then
-				ClearNewActionHighlight(button._state_action, true, false)
+				ClearNewActionHighlight(button._state_action, true, false, button)
 				Update(button, event)
 			end
 		end
@@ -2400,7 +2412,10 @@ if WoWRetail then
 			cooldown:Clear()
 			return
 		end
-		cooldown:SetCooldownFromDurationObject(durationObject)
+
+		if locale ~= 'zhCN' and locale ~= 'zhTW' then
+			cooldown:SetCooldownFromDurationObject(durationObject)
+		end
 	end
 
 	function UpdateCooldown(self)
@@ -2411,7 +2426,7 @@ if WoWRetail then
 		local locShouldReplaceCooldown = locInfo.shouldReplaceNormalCooldown and self.config.lossOfControlCooldown
 		local showLoC = locInfo.isActive and self.config.lossOfControlCooldown
 		local showCharge = not locShouldReplaceCooldown and chargeInfo.isActive
-		local showNormal = not locShouldReplaceCooldown and cooldownInfo.isActive
+		local showNormal = not showCharge and not locShouldReplaceCooldown and cooldownInfo.isActive
 
 		SetOrClearCooldown(self.cooldown, showNormal, self:GetCooldownDuration())
 		SetOrClearCooldown(self.chargeCooldown, showCharge, self:GetChargeDuration())
@@ -2675,12 +2690,18 @@ function SpellVFX_PlaySpellInterruptedAnim(self)
 	end
 end
 
-function ClearNewActionHighlight(action, preventIdenticalActionsFromClearing, value)
+function ClearNewActionHighlight(action, preventIdenticalActionsFromClearing, value, button)
 	lib.ACTION_HIGHLIGHT_MARKS[action] = value
 
-	for button in next, ButtonRegistry do
+	if button then
 		if button._state_type == "action" and action == tonumber(button._state_action) then
 			UpdateNewAction(button)
+		end
+	else
+		for btn in next, ButtonRegistry do
+			if btn._state_type == "action" and action == tonumber(btn._state_action) then
+				UpdateNewAction(btn)
+			end
 		end
 	end
 
@@ -2710,7 +2731,7 @@ hooksecurefunc("MarkNewActionHighlight", function(action)
 end)
 
 hooksecurefunc("ClearNewActionHighlight", function(action, preventIdenticalActionsFromClearing)
-	ClearNewActionHighlight(action, preventIdenticalActionsFromClearing, nil)
+	ClearNewActionHighlight(action, preventIdenticalActionsFromClearing)
 end)
 
 function UpdateNewAction(self)
