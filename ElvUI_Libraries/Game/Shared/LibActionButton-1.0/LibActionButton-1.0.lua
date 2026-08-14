@@ -148,8 +148,8 @@ local UpdateTargetAuras -- Simpy
 local TARGETAURA_ENABLED = false
 
 local RangeFont
-local locale = GetLocale()
 do -- properly support range symbol when it's shown ~Simpy
+	local locale = GetLocale()
 	local stockFont, stockFontSize, stockFontOutline
 	if locale == 'koKR' then
 		stockFont, stockFontSize, stockFontOutline = [[Fonts\2002.TTF]], 11, 'MONOCHROME, THICKOUTLINE'
@@ -285,7 +285,7 @@ function lib:CreateButton(id, name, header, config)
 		KeyBound = LibStub("LibKeyBound-1.0", true)
 	end
 
-	local button = setmetatable(CreateFrame("CheckButton", name, header, "ActionButtonTemplate, SecureActionButtonTemplate"), Generic_MT)
+	local button = setmetatable(CreateFrame("CheckButton", name, header, (WoWRetail and "PingableActionButtonTemplate, " or "").."ActionButtonTemplate, SecureActionButtonTemplate"), Generic_MT)
 	button:RegisterForDrag("LeftButton", "RightButton")
 	button:RegisterForClicks("AnyDown", "AnyUp")
 
@@ -317,6 +317,7 @@ function lib:CreateButton(id, name, header, config)
 	button:SetScript("OnAttributeChanged", nil) -- inherited templates bring in a handler here which we don't want, so get rid of it
 
 	-- unwanted mixin functions, which we override through the metatable
+	button.GetActionButtonInfo = nil
 	button.HasAction = nil
 
 	button.id = id
@@ -416,11 +417,16 @@ function SetupSecureSnippets(button)
 		local type, action = (self:GetAttribute(format("labtype-%s", state)) or "empty"), self:GetAttribute(format("labaction-%s", state))
 
 		self:SetAttribute("type", type)
+
 		if type ~= "empty" and type ~= "custom" then
 			local action_field = (type == "pet") and "action" or type
 			self:SetAttribute(action_field, action)
 			self:SetAttribute("action_field", action_field)
 		end
+
+		local actionID, _, hasAction = self:GetAttribute("type") == "action" and self:GetAttribute("action")
+		if actionID then _, hasAction = GetActionInfo(actionID) end
+		self:SetAttribute('ping-receiver', hasAction) -- replicate UpdatePingAttributes ~Simpy
 
 		local updateReleaseCasting = self:GetAttribute("UpdateReleaseCasting")
 		if updateReleaseCasting then
@@ -2412,10 +2418,7 @@ if WoWRetail then
 			cooldown:Clear()
 			return
 		end
-
-		if locale ~= 'zhCN' and locale ~= 'zhTW' then
-			cooldown:SetCooldownFromDurationObject(durationObject)
-		end
+		cooldown:SetCooldownFromDurationObject(durationObject)
 	end
 
 	function UpdateCooldown(self)
@@ -3014,6 +3017,21 @@ Generic.GetLossOfControlCooldown = function(self)
 	if cd then
 		return cd.startTime, cd.duration
 	end
+end
+
+Generic.GetActionButtonInfo = function(self)
+	local actionType, id, subType = GetActionInfo(self._state_action)
+	local isUsable, notEnoughMana = IsUsableAction(self._state_action)
+
+	local info = {
+		id = id,
+		actionType = actionType,
+		subType = subType,
+		isUsable = isUsable,
+		notEnoughMana = notEnoughMana
+	}
+
+	return info
 end
 
 -----------------------------------------------------------

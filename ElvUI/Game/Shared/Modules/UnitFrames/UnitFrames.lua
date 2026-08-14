@@ -20,7 +20,6 @@ local GetInventorySlotInfo = (C_PaperDollInfo and C_PaperDollInfo.GetInventorySl
 local IsInInstance = IsInInstance
 local PlaySound = PlaySound
 local RegisterStateDriver = RegisterStateDriver
-local UIParent = UIParent
 local UnitExists = UnitExists
 local UnitGUID = UnitGUID
 local UnitIsEnemy = UnitIsEnemy
@@ -80,6 +79,15 @@ UF.classMaxResourceBar = { -- also used by Nameplates
 	PRIEST = 3,
 	HUNTER = 3
 }
+
+do
+	local info = { isPlayerResource = true }
+	UF.PingableInfo = info
+
+	function UF:Pingable_GetTargetInfo()
+		return info
+	end
+end
 
 function UF:GetAuraSortTime(which, a, b)
 	return a.noTime and huge or a[which] or -huge, b.noTime and huge or b[which] or -huge
@@ -2246,6 +2254,7 @@ function UF:Setup()
 end
 
 function UF:Initialize()
+	UF.PingableInfo.guid = E.myguid
 	UF.thinBorders = UF.db.thinBorders
 	UF.multiplier = UF.db.multiplier or 0.35
 	UF.multiplierPrediction = 1.25

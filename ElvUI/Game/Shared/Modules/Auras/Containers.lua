@@ -180,9 +180,7 @@ function E:Auras_UpdateIndicator(container, button)
 		local colorIcon = data.style == 'coloredIcon'
 		local cooldown = button.cooldown
 		if cooldown then
-			if E.allowCooldownDuration then
-				button:SetDurationCooldown(cooldown)
-			end
+			button:SetDurationCooldown(cooldown)
 
 			E:RegisterCooldown(cooldown, 'auraindicator')
 
@@ -358,9 +356,7 @@ function E:Auras_UpdateButton(container, button)
 	end
 
 	if button.cooldown then
-		if E.allowCooldownDuration then
-			button:SetDurationCooldown(button.cooldown)
-		end
+		button:SetDurationCooldown(button.cooldown)
 
 		if container.isAuraBar then
 			E:RegisterCooldown(button.cooldown, 'aurabars')
