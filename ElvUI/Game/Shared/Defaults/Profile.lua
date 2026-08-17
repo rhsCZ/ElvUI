@@ -2889,13 +2889,15 @@ P.unitframe.units.boss.power.xOffset = -2
 
 P.unitframe.units.boss.buffs.filterLists.group1.enable = true
 P.unitframe.units.boss.buffs.filterLists.group1.filter = 'HELPFUL'
-P.unitframe.units.boss.buffs.filterLists.group1.candidates.isBossAura = true
+P.unitframe.units.boss.buffs.filterLists.group1.candidates.isBossOrRoleAura = true
 P.unitframe.units.boss.buffs.filterLists.group2.enable = true
 P.unitframe.units.boss.buffs.filterLists.group2.filter = 'HELPFUL'
 P.unitframe.units.boss.buffs.filterLists.group2.candidates.isStealable = true
 P.unitframe.units.boss.buffs.filterLists.group2.useBlocklist = true
 P.unitframe.units.boss.buffs.filterLists.group3.enable = true
 P.unitframe.units.boss.buffs.filterLists.group3.filter = 'HELPFUL||IMPORTANT'
+P.unitframe.units.boss.buffs.filterLists.group4.enable = true
+P.unitframe.units.boss.buffs.filterLists.group4.filter = 'HELPFUL||RAID_IN_COMBAT||PLAYER'
 
 P.unitframe.units.boss.debuffs.filterLists.group1.enable = true
 P.unitframe.units.boss.debuffs.filterLists.group1.filter = 'HARMFUL||PLAYER||INCLUDE_NAME_PLATE_ONLY'
