@@ -28,6 +28,7 @@ local DispelTypes = E.Libs.Dispel:GetMyDispelTypes()
 
 local FALLBACK = Mixin({ r = 1, g = 1, b = 1, a = 1 }, ColorMixin)
 
+E.AuraUnits = {}
 E.AuraFocus = {}
 E.AuraTarget = {}
 E.AuraHighlight = {
@@ -103,18 +104,26 @@ function E:Auras_IsForced(container)
 	end
 end
 
-function E:Auras_OnEvent(event)
+function E:Auras_OnEvent(event, arg1)
 	local obj = E.AuraEvents[event]
-	if not obj then return end
-
-	for container in next, obj do
+	if obj then
 		local unit = E.AuraEventUnits[event]
-		if unit and container.isAuraBar then
-			UF:AuraBars_UpdateFilter(container, unit)
-			E:Auras_SetContainer(container)
+		if unit then
+			for container in next, obj do
+				if container.isAuraBar then
+					UF:AuraBars_UpdateFilter(container, unit)
+					E:Auras_SetContainer(container)
+				else -- for target frame
+					container:UpdateAllAuras()
+				end
+			end
 		end
-
-		container:UpdateAllAuras()
+	elseif event == 'UNIT_FACTION' or event == 'UNIT_TARGETABLE_CHANGED' then
+		for container, unit in next, E.AuraUnits do
+			if arg1 == unit then
+				container:UpdateAllAuras()
+			end
+		end
 	end
 end
 
@@ -346,7 +355,7 @@ function E:Auras_UpdateButton(container, button)
 		else
 			button.dispelBorder:SetVertexColor(borderColor.r, borderColor.g, borderColor.b)
 
-			if container.colorByType then -- auraByDispels would be isStealable
+			if container.isAuraBar or container.colorByType then -- auraByDispels would be isStealable
 				button:SetAuraBorder(button.dispelBorder, E.AuraDispel)
 			else
 				button:ClearAuraBorder()
@@ -356,14 +365,13 @@ function E:Auras_UpdateButton(container, button)
 
 	if button.border then
 		if container.isAuraBar then
-			local color = container.barColor
 			if container.invertAurabars then
 				button.border:SetTexture(container.statusbarTexture)
-				button.border:SetVertexColor(color.r, color.g, color.b, container.isTransparent and backdropFadeColor.a or 1)
 			else
 				button.border:SetTexture(E.media.blankTex)
-				button.border:SetVertexColor(backdropColor.r, backdropColor.g, backdropColor.b, container.isTransparent and backdropFadeColor.a or 1)
 			end
+
+			button.border:SetVertexColor(backdropColor.r, backdropColor.g, backdropColor.b, container.isTransparent and backdropFadeColor.a or 1)
 		else
 			button.border:SetVertexColor(borderColor.r, borderColor.g, borderColor.b)
 		end
@@ -396,8 +404,7 @@ function E:Auras_UpdateButton(container, button)
 		if container.useStatusbar then
 			button:SetDurationBar(statusbar)
 
-			local color = container.barColor
-			statusbar:SetStatusBarColor(color.r or 1, color.g or 1, color.b or 1)
+			statusbar:SetStatusBarColor(backdropColor.r, backdropColor.g, backdropColor.b)
 			statusbar:SetStatusBarTexture(container.barTexture)
 			statusbar:Show()
 
@@ -414,17 +421,15 @@ function E:Auras_UpdateButton(container, button)
 		if button.statusbar then
 			button:SetDurationBar(button.statusbar)
 
-			local color = container.barColor
-			button.statusbar:SetInside()
-			button.statusbar:SetReverseFill(not container.reverseFill)
-
 			if container.invertAurabars then
 				button.statusbar:SetStatusBarTexture(E.media.blankTex)
-				button.statusbar:SetStatusBarColor(backdropFadeColor.r, backdropFadeColor.g, backdropFadeColor.b, backdropFadeColor.a)
 			else
 				button.statusbar:SetStatusBarTexture(container.statusbarTexture)
-				button.statusbar:SetStatusBarColor(color.r, color.g, color.b, backdropFadeColor.a)
 			end
+
+			button.statusbar:SetInside()
+			button.statusbar:SetReverseFill(not container.reverseFill)
+			button.statusbar:SetStatusBarColor(backdropFadeColor.r, backdropFadeColor.g, backdropFadeColor.b, backdropFadeColor.a)
 
 			if button.border then
 				button.border:ClearAllPoints()
@@ -930,7 +935,8 @@ function E:Auras_SetLineSize(container)
 end
 
 function E:Auras_SetUnit(container, unit)
-	container.unit = unit
+	E.AuraUnits[container] = unit
+
 	container:SetUnit(unit)
 end
 
@@ -993,6 +999,8 @@ function E:InitializeAuras()
 	if E.AuraEventFrame then return end
 
 	local eventFrame = CreateFrame('Frame')
+	eventFrame:RegisterEvent('UNIT_FACTION')
+	eventFrame:RegisterEvent('UNIT_TARGETABLE_CHANGED')
 	eventFrame:RegisterEvent('PLAYER_TARGET_CHANGED')
 	eventFrame:RegisterEvent('PLAYER_FOCUS_CHANGED')
 	eventFrame:SetScript('OnEvent', E.Auras_OnEvent)

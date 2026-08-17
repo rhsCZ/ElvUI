@@ -5,8 +5,6 @@ local LSM = E.Libs.LSM
 local ipairs = ipairs
 local strfind = strfind
 
-local UnitIsEnemy = UnitIsEnemy
-local UnitReaction = UnitReaction
 local CreateFrame = CreateFrame
 local WrapString = C_StringUtil.WrapString
 local GetAuraApplicationDisplayCount = C_UnitAuras.GetAuraApplicationDisplayCount
@@ -97,14 +95,9 @@ function UF:Construct_AuraBarHeader(frame)
 	end
 end
 
-function UF:AuraBars_GetFilter(element, unit)
-	local isEnemy, reaction = UnitIsEnemy(unit, 'player'), UnitReaction(unit, 'player')
-	return (not isEnemy and (not reaction or reaction > 4) and (element.friendlyAuraType or 'HELPFUL')) or element.enemyAuraType or 'HARMFUL'
-end
-
 function UF:AuraBars_UpdateFilter(bars, unit)
-	bars.filter = UF:AuraBars_GetFilter(bars, unit)
-	bars.barColor = (bars.filter == 'HARMFUL' and UF.db.colors.auraBarDebuff) or UF.db.colors.auraBarBuff
+	local friendly = UF:UnitIsFriendly(unit)
+	bars.filterLists = friendly and bars.friendlyFilter or bars.enemyFilter
 
 	UF:GroupFilters(bars, bars.filterLists) -- build the groups
 end
@@ -226,9 +219,11 @@ function UF:Configure_AuraBars(frame)
 			bars.statusbarTexture = LSM:Fetch('statusbar', UF.db.statusbar)
 			bars.countPosition, bars.countXOffset, bars.countYOffset = db.countPosition, db.countXOffset, db.countYOffset
 			bars.countFont, bars.countFontSize, bars.countFontOutline = db.countFont, db.countFontSize, db.countFontOutline
+			bars.friendlyFilter = db.friendlyFilter.filterLists
+			bars.enemyFilter = db.enemyFilter.filterLists
 			bars.forceShowAuras = frame.forceShowAuras
-
-			bars.filterLists = db.filterLists
+			bars.colorDebuff = UF.db.colors.auraBarDebuff
+			bars.colorBuff = UF.db.colors.auraBarBuff
 
 			UF:AuraBars_UpdateFilter(bars, frame.__unit)
 

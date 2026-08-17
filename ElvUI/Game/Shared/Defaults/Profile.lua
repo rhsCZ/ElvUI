@@ -1652,8 +1652,6 @@ local UF_AuraBars = {
 	anchorPoint = 'ABOVE',
 	attachTo = 'DEBUFFS',
 	detachedWidth = 270,
-	enemyAuraType = 'HARMFUL',
-	friendlyAuraType = 'HELPFUL',
 	height = 20,
 	maxBars = 6,
 	maxDuration = 0,
@@ -1676,10 +1674,24 @@ local UF_AuraBars = {
 	countFontSize = 14,
 	countXOffset = -12,
 	countYOffset = 2,
-	allowList = 'Whitelist',
-	blockList = 'Blacklist',
-	filterLists = CopyTable(defaultFilterList)
+	friendlyAuraType = 'HELPFUL',
+	friendlyFilter = {
+		allowList = 'Whitelist',
+		blockList = 'Blacklist',
+		filterLists = CopyTable(defaultFilterList)
+	},
+	enemyAuraType = 'HARMFUL',
+	enemyFilter = {
+		allowList = 'Whitelist',
+		blockList = 'Blacklist',
+		filterLists = CopyTable(defaultFilterList)
+	},
 }
+
+UF_AuraBars.friendlyFilter.filterLists.group1.filter = 'HELPFUL||PLAYER'
+UF_AuraBars.friendlyFilter.filterLists.group1.maxDuration = 300
+UF_AuraBars.enemyFilter.filterLists.group1.filter = 'HARMFUL||PLAYER'
+UF_AuraBars.enemyFilter.filterLists.group1.maxDuration = 300
 
 local UF_AuraWatch = {
 	enable = false,
@@ -2581,9 +2593,9 @@ P.unitframe.units.player.debuffs.enable = true
 P.unitframe.units.player.debuffs.priority = 'Blacklist,Personal,NonPersonal'
 
 P.unitframe.units.player.buffs.filterLists.group1.enable = true
-P.unitframe.units.player.buffs.filterLists.group1.filter = 'HELPFUL||BIG_DEFENSIVE||PLAYER||!EXTERNAL_DEFENSIVE'
+P.unitframe.units.player.buffs.filterLists.group1.filter = 'HELPFUL||EXTERNAL_DEFENSIVE'
 P.unitframe.units.player.buffs.filterLists.group2.enable = true
-P.unitframe.units.player.buffs.filterLists.group2.filter = 'HELPFUL||EXTERNAL_DEFENSIVE'
+P.unitframe.units.player.buffs.filterLists.group2.filter = 'HELPFUL||BIG_DEFENSIVE||PLAYER||!EXTERNAL_DEFENSIVE'
 
 P.unitframe.units.player.debuffs.filterLists.group1.enable = true
 P.unitframe.units.player.debuffs.filterLists.group1.filter = 'HARMFUL||IMPORTANT'
@@ -2941,6 +2953,7 @@ P.unitframe.units.arena.debuffs.filterLists.group2.filter = 'HARMFUL||CROWD_CONT
 
 P.unitframe.units.party.buffIndicator.enable = true
 P.unitframe.units.party.buffs.anchorPoint = 'LEFT'
+P.unitframe.units.party.buffs.enable = not E.Retail
 P.unitframe.units.party.buffs.maxDuration = 300
 P.unitframe.units.party.buffs.priority = 'Blacklist,TurtleBuffs'
 P.unitframe.units.party.castbar.enable = false
