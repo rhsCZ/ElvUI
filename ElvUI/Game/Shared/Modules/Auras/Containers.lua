@@ -485,7 +485,7 @@ function E:Auras_UpdateButton(container, button)
 end
 
 function E:Auras_IsInRestriction()
-	return E:IsCombatRestricted() or E:IsPvPMatchRestricted()
+	return E:IsRestrictedEncounter() or E:IsRestrictedCombat() or E:IsRestrictedPvPMatch()
 end
 
 function E:Auras_UpdateButtons(container)
@@ -669,7 +669,7 @@ end
 
 function E:Auras_SetEnchantments(container)
 	local spacing = E:Auras_GetSpacing(container)
-	local group, layout = E:Auras_SetupEnchantment(container, container.auraType, container.filter, spacing, ItemEnchantmentPlacement.AfterAuraGroups)
+	local group, layout = E:Auras_SetupEnchantment(container, container.auraType, container.filter, spacing, ItemEnchantmentPlacement.BeforeAuraGroups)
 	container:SetItemEnchantmentLayout(layout)
 	container:AddItemEnchantment(MAINHAND, group)
 	container:AddItemEnchantment(OFFHAND, group)

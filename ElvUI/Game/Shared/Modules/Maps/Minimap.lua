@@ -218,19 +218,13 @@ function M:UpdateClockButton()
 
 	local clock = _G.TimeManagerClockButton
 	if clock then
-		if M.db.clusterDisable then -- noCluster
-			clock:Kill()
-		else
-			clock.Show = nil
-			clock:SetParent(MinimapCluster)
-			clock:Show()
+		M:HandleClusterElement(clock)
 
-			if not E.Retail then
-				clock:ClearAllPoints()
-				clock:Point('TOPRIGHT')
+		if not E.Retail then
+			clock:ClearAllPoints()
+			clock:Point('TOPRIGHT')
 
-				M:ClearClockTextures()
-			end
+			M:ClearClockTextures()
 		end
 	end
 end
@@ -530,6 +524,16 @@ function M:UpdateIcons()
 	end
 end
 
+function M:HandleClusterElement(element)
+	if not element then return end
+
+	local current = element:GetParent()
+	local parent = M.db.clusterDisable and E.HiddenFrame or MinimapCluster
+	if current ~= parent then
+		element:SetParent(parent)
+	end
+end
+
 function M:UpdateSettings()
 	if not M.Initialized then return end
 
@@ -636,6 +640,7 @@ function M:UpdateSettings()
 	end
 
 	MinimapCluster:SetScale(mmScale)
+	M:HandleClusterElement(MinimapCluster.ZoneTextButton)
 
 	local clusterWidth = MinimapCluster:GetWidth()
 	local definedWidth = E.Retail and 30 or 0
@@ -646,15 +651,6 @@ function M:UpdateSettings()
 	M.ClusterBackdrop:SetShown(M.db.clusterBackdrop and not noCluster)
 
 	_G.MinimapZoneText:FontTemplate(locationFont, locaitonSize, locationOutline)
-
-	if noCluster then
-		MinimapCluster.ZoneTextButton:Kill()
-	else
-		MinimapCluster.ZoneTextButton.Show = nil
-		MinimapCluster.ZoneTextButton:SetParent(MinimapCluster)
-		MinimapCluster.ZoneTextButton:RegisterEvent('UPDATE_BINDINGS')
-		MinimapCluster.ZoneTextButton:Show()
-	end
 end
 
 function M:Minimap_PostDrag()
@@ -840,11 +836,11 @@ function M:Initialize()
 		M:SetScale(Minimap.backdrop, 1)
 	end
 
-	Minimap.location = MinimapCluster:CreateFontString(nil, 'OVERLAY')
-	Minimap.location:Point('TOP', Minimap, 0, -2)
+	Minimap.location = Minimap:CreateFontString(nil, 'OVERLAY')
+	Minimap.location:Point('TOP', 0, -2)
 	Minimap.location:SetJustifyH('CENTER')
 	Minimap.location:SetJustifyV('MIDDLE')
-	Minimap.location:Hide() -- Fixes blizzard's font rendering issue, keep after M:SetScale
+
 	M:SetScale(Minimap.location, 1)
 	M:SetMinimapMask(not M.db.circle)
 
