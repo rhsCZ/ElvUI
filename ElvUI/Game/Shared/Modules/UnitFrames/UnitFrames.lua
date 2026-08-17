@@ -408,7 +408,7 @@ function UF:UnitFrame_OnEnter()
 	else
 		_G.GameTooltip_SetDefaultAnchor(GameTooltip, self)
 
-		self.UpdateTooltip = (E:NotSecretValue(self.unit) and self.unit and GameTooltip:SetUnit(self.unit) and UF.UnitFrame_OnEnter) or nil
+		self.UpdateTooltip = (E:NotSecretValue(self.__unit) and self.__unit and GameTooltip:SetUnit(self.__unit) and UF.UnitFrame_OnEnter) or nil
 	end
 
 	UF:SetAlpha_MouseTags(self.__mousetags, 1)
@@ -1578,7 +1578,7 @@ end
 
 do
 	local function EventlessUpdate(frame, elapsed)
-		local unit = frame.__eventless and frame.unit
+		local unit = frame.__eventless and frame.__unit
 		local guid = UnitGUID(unit)
 		if not guid then return end
 
@@ -2219,7 +2219,7 @@ end
 do
 	local units = {} -- track units
 	function UF:Configure_UnitAuras(frame)
-		local unit = frame.unit -- update when needed
+		local unit = frame.__unit -- update when needed
 		if not unit or (units[frame] == unit) then return end
 
 		units[frame] = unit
