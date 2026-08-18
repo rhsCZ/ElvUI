@@ -1250,8 +1250,8 @@ for unit, data in next, P.nameplates.units do
 			data.buffs.filterLists.group4.useBlocklist = true
 
 			data.debuffs.filterLists.group1.enable = true
-			data.debuffs.filterLists.group1.filter = 'HARMFUL||PLAYER||INCLUDE_NAME_PLATE_ONLY||!CROWD_CONTROL'
-			data.debuffs.filterLists.group1.candidates.nameplateShowPersonal = true
+			data.debuffs.filterLists.group1.filter = 'HARMFUL||INCLUDE_NAME_PLATE_ONLY||!CROWD_CONTROL'
+			data.debuffs.filterLists.group1.candidates.nameplateShowAll = true
 			data.debuffs.filterLists.group1.useBlocklist = true
 
 			data.auras.filterLists.group1.enable = true
@@ -1269,8 +1269,8 @@ for unit, data in next, P.nameplates.units do
 			data.buffs.filterLists.group3.filter = 'HELPFUL||IMPORTANT'
 
 			data.debuffs.filterLists.group1.enable = true
-			data.debuffs.filterLists.group1.filter = 'HARMFUL||PLAYER||INCLUDE_NAME_PLATE_ONLY||!CROWD_CONTROL'
-			data.debuffs.filterLists.group1.candidates.nameplateShowPersonal = true
+			data.debuffs.filterLists.group1.filter = 'HARMFUL||INCLUDE_NAME_PLATE_ONLY||!CROWD_CONTROL'
+			data.debuffs.filterLists.group1.candidates.nameplateShowAll = true
 			data.debuffs.filterLists.group1.useBlocklist = true
 
 			data.auras.filterLists.group1.enable = true
@@ -2673,8 +2673,8 @@ P.unitframe.units.target.buffs.filterLists.group4.filter = 'HELPFUL||!IMPORTANT'
 P.unitframe.units.target.buffs.filterLists.group4.candidates.isFromPlayerOrPlayerPet = true
 
 P.unitframe.units.target.debuffs.filterLists.group1.enable = true
-P.unitframe.units.target.debuffs.filterLists.group1.filter = 'HARMFUL||PLAYER||INCLUDE_NAME_PLATE_ONLY||!CROWD_CONTROL'
-P.unitframe.units.target.debuffs.filterLists.group1.candidates.nameplateShowPersonal = true
+P.unitframe.units.target.debuffs.filterLists.group1.filter = 'HARMFUL||INCLUDE_NAME_PLATE_ONLY||!CROWD_CONTROL'
+P.unitframe.units.target.debuffs.filterLists.group1.candidates.nameplateShowAll = true
 P.unitframe.units.target.debuffs.filterLists.group1.useBlocklist = true
 
 P.unitframe.units.target.auras.filterLists.group1.enable = true
@@ -2900,8 +2900,8 @@ P.unitframe.units.boss.buffs.filterLists.group4.enable = true
 P.unitframe.units.boss.buffs.filterLists.group4.filter = 'HELPFUL||RAID_IN_COMBAT||PLAYER'
 
 P.unitframe.units.boss.debuffs.filterLists.group1.enable = true
-P.unitframe.units.boss.debuffs.filterLists.group1.filter = 'HARMFUL||PLAYER||INCLUDE_NAME_PLATE_ONLY'
-P.unitframe.units.boss.debuffs.filterLists.group1.candidates.nameplateShowPersonal = true
+P.unitframe.units.boss.debuffs.filterLists.group1.filter = 'HARMFUL||INCLUDE_NAME_PLATE_ONLY'
+P.unitframe.units.boss.debuffs.filterLists.group1.candidates.nameplateShowAll = true
 P.unitframe.units.boss.debuffs.filterLists.group1.useBlocklist = true
 
 P.unitframe.units.arena.buffs.anchorPoint = 'LEFT'
@@ -2948,7 +2948,7 @@ P.unitframe.units.arena.buffs.filterLists.group5.useBlocklist = true
 
 P.unitframe.units.arena.debuffs.filterLists.group1.enable = true
 P.unitframe.units.arena.debuffs.filterLists.group1.filter = 'HARMFUL||PLAYER||INCLUDE_NAME_PLATE_ONLY||!CROWD_CONTROL'
-P.unitframe.units.arena.debuffs.filterLists.group1.candidates.nameplateShowPersonal = true
+P.unitframe.units.arena.debuffs.filterLists.group1.candidates.nameplateShowAll = true
 P.unitframe.units.arena.debuffs.filterLists.group1.useBlocklist = true
 P.unitframe.units.arena.debuffs.filterLists.group2.enable = true
 P.unitframe.units.arena.debuffs.filterLists.group2.filter = 'HARMFUL||CROWD_CONTROL'
@@ -3115,18 +3115,14 @@ P.unitframe.units.tank.buffs.filterLists.group1.enable = true
 P.unitframe.units.tank.buffs.filterLists.group1.filter = 'HELPFUL'
 P.unitframe.units.tank.buffs.filterLists.group1.candidates.isBossOrRoleAura = true
 P.unitframe.units.tank.buffs.filterLists.group2.enable = true
-P.unitframe.units.tank.buffs.filterLists.group2.filter = 'HELPFUL'
-P.unitframe.units.tank.buffs.filterLists.group2.candidates.isStealable = true
-P.unitframe.units.tank.buffs.filterLists.group2.useBlocklist = true
+P.unitframe.units.tank.buffs.filterLists.group2.filter = 'HELPFUL||IMPORTANT'
 P.unitframe.units.tank.buffs.filterLists.group3.enable = true
-P.unitframe.units.tank.buffs.filterLists.group3.filter = 'HELPFUL||IMPORTANT'
+P.unitframe.units.tank.buffs.filterLists.group3.filter = 'HELPFUL||RAID||!BIG_DEFENSIVE||!EXTERNAL_DEFENSIVE'
+P.unitframe.units.tank.buffs.filterLists.group3.useBlocklist = true
 P.unitframe.units.tank.buffs.filterLists.group4.enable = true
-P.unitframe.units.tank.buffs.filterLists.group4.filter = 'HELPFUL||RAID||!BIG_DEFENSIVE||!EXTERNAL_DEFENSIVE'
-P.unitframe.units.tank.buffs.filterLists.group4.useBlocklist = true
+P.unitframe.units.tank.buffs.filterLists.group4.filter = 'HELPFUL||BIG_DEFENSIVE||!EXTERNAL_DEFENSIVE'
 P.unitframe.units.tank.buffs.filterLists.group5.enable = true
-P.unitframe.units.tank.buffs.filterLists.group5.filter = 'HELPFUL||BIG_DEFENSIVE||!EXTERNAL_DEFENSIVE'
-P.unitframe.units.tank.buffs.filterLists.group6.enable = true
-P.unitframe.units.tank.buffs.filterLists.group6.filter = 'HELPFUL||EXTERNAL_DEFENSIVE'
+P.unitframe.units.tank.buffs.filterLists.group5.filter = 'HELPFUL||EXTERNAL_DEFENSIVE'
 
 P.unitframe.units.tank.debuffs.filterLists.group1.enable = true
 P.unitframe.units.tank.debuffs.filterLists.group1.filter = 'HARMFUL||IMPORTANT||!CROWD_CONTROL'
