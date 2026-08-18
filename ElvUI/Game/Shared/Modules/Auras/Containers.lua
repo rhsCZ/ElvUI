@@ -134,7 +134,7 @@ function E:Auras_OnEvent(event, arg1, arg2)
 	elseif event == 'UNIT_IN_RANGE_UPDATE' then
 		for container, unit in next, E.AuraGated do
 			if arg1 == unit then
-				E:Auras_UpdateRange(container, arg2)
+				E:Auras_UpdateRange(container, UnitIsConnected(unit) and arg2)
 			end
 		end
 	elseif event == 'UNIT_FACTION' or event == 'UNIT_TARGETABLE_CHANGED' then
@@ -926,12 +926,12 @@ function E:Auras_SetContainer(container)
 	end
 
 	local count = E:Auras_IsForced(container) and 0 or maxCount
+	local sortMethod = container.sortMethod or SORTMETHOD.Default
+	local sortDirection = container.sortDirection or SORTDIRECTION.Normal
+
 	for key, info in next, container.filters do
 		if info.filter then
 			container.active[key] = info.filter -- set all active
-
-			local sortMethod = info.sortMethod or SORTMETHOD.Default
-			local sortDirection = info.sortDirection or SORTDIRECTION.Normal
 
 			if container.known[key] then
 				E:Auras_UpdateGroup(container, key, info.filter, info.candidateFilters, layout, count, sortMethod, sortDirection)
@@ -969,14 +969,7 @@ end
 function E:Auras_UpdateGate(container, unit)
 	if not E.AuraGates[container.unitframeType] then return end
 
-	local inRange, wasChecked = true
-	if UnitIsConnected(unit) then
-		inRange, wasChecked = UnitInRange(unit)
-
-		if E:NotSecretValue(wasChecked) and not wasChecked then
-			inRange = true -- range is unknown
-		end
-	end
+	local inRange = UnitIsConnected(unit) and UnitInRange(unit)
 
 	E:Auras_UpdateRange(container, inRange)
 end
