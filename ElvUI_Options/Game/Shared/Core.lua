@@ -970,7 +970,7 @@ do -- shared filters
 		local group = ACH:Group(function() return format('|cFF%s%s|r', enable() and '33ff33' or 'ff3333', C.Values.Roman[index]) end, nil, index, nil, mainGet, mainSet, nil, not E.Retail)
 
 		group.args.enable = ACH:Toggle(L["Enable"], nil, 1)
-		group.args.filter = ACH:Input(L["Big Boy String"], nil, 2, nil, 'full', nil, nil, nil, nil, C.VerifyFilter)
+		group.args.filter = ACH:Input(L["Filter String"], nil, 2, nil, 'full', nil, nil, nil, nil, C.VerifyFilter)
 
 		group.args.lists = ACH:Group(' ', nil, 10)
 		group.args.lists.args.allowList = ACH:Select(L["Allow List"], nil, 1, function() wipe(filters) local list = E.global.unitframe.aurafilters if not list then return end for filter in pairs(list) do filters[filter] = filter end return filters end)
@@ -1021,28 +1021,28 @@ do -- shared filters
 		DISPELLABLE				= { order = 13,	desc = L["FILTER_STRING_DISPELLABLE_DESC"],				text = nil },
 	}
 
-	local function AddGuideInput(group, key, order, name, value)
-		local input = ACH:Input(name or ' ', nil, order, nil, 'full', function() return (value:gsub('|', '||')) end)
+	local function AddGuideInput(group, key, order, text, desc, value, width)
+		local input = ACH:Input(desc or '', text or ' ', order, nil, width or 'full', function() return (value:gsub('|', '||')) end)
 		input.focusSelect = true
 		group.args[key] = input
 	end
 
-	local function AddGuideRow(parent, key, order, text, desc, value, testCommand)
+	local function AddGuideRow(parent, key, order, text, desc, value, cmd, width)
 		local pair = ACH:Group(desc or ' ', nil, order)
-		pair.args.desc = ACH:Description(text or '', 1, 'medium', nil, nil, nil, nil, 'full')
+		pair.args.desc = ACH:Description(text or '', 1, 'medium', nil, nil, nil, nil, width or 'full')
 		pair.inline = true
 
-		AddGuideInput(pair, 'input', 2, '', value)
+		AddGuideInput(pair, 'input', 2, '', nil, value, width)
 
-		if testCommand then
-			AddGuideInput(pair, 'testCommand', 3, L["FILTER_TEST_COMMAND"], testCommand)
+		if cmd then
+			AddGuideInput(pair, 'testCommand', 3, L["FILTER_TEST_COMMAND_TEXT"], L["FILTER_TEST_COMMAND_DESC"], cmd, width)
 		end
 
 		parent.args[key] = pair
 	end
 
 	function C:GetOptionsTable_FiltersGuide(order)
-		local config = ACH:Group(L["Filters Guide"], nil, order or 100, 'tab')
+		local config = ACH:Group(L["Filters Guide"], nil, order or 100, 'tab', nil, nil, nil, not E.Retail)
 		config.args.howToFilter = ACH:Group(L["How to filter"], nil, 1)
 		config.args.howToFilter.args.desc = ACH:Description(L["HOW_TO_FILTER"], 1, 'medium', nil, nil, nil, nil, 'full')
 
@@ -1051,7 +1051,7 @@ do -- shared filters
 		config.args.filterExamples = examples
 
 		for key, data in next, listExamples do
-			AddGuideRow(examples, key, data.order, data.text, data.desc, data.value)
+			AddGuideRow(examples, key, data.order, data.text, data.desc, data.value, nil, 300)
 		end
 
 		local available = ACH:Group(L["Available Filters"], nil, 3)
@@ -1059,7 +1059,7 @@ do -- shared filters
 		config.args.availableFilter = available
 
 		for key, data in next, listFilters do
-			AddGuideRow(available, key, data.order, data.text, data.desc, key, data.testCommand)
+			AddGuideRow(available, key, data.order, data.text, data.desc, key, data.testCommand, 300)
 		end
 
 		config.args.filterCheckboxes = ACH:Group(L["Filter checkboxes"], nil, 4)
@@ -1067,7 +1067,6 @@ do -- shared filters
 
 		return config
 	end
-
 end
 
 do -- shared cooldown

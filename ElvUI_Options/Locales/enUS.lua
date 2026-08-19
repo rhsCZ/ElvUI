@@ -2166,19 +2166,19 @@ Ctrl + Left Click: Toggle between Allow, Block, or normal state.
 L["HOW_TO_FILTER"] = ([=[
 *How filtering works in ElvUI for Midnight|r
 
-All filter strings are combined with a *|| |r
-The very first string of each input box should always be *HARMFUL|r (For Debuffs) or *HELPFUL|r (For Buffs)
-Piping multiple strings together should be imagined as an *AND|r statement
-Example *HARMFUL|r||*RAID|r||*PLAYER|r means that it displays Debuffs which your current spec/talent setup can dispel
+Filter strings are used to restrict the buffs/debuffs to be displayed
+Every filter string must start with *HARMFUL|r (for debuffs) or *HELPFUL|r (for buffs)
+Each filter restricts the buffs/debuffs selected further, separated by a separator *|||r
+Example is *HARMFUL|r||*CROWD_CONTROL|r||*PLAYER|r to select CC applied by the current player
 
-If you randomly pipe together strings without a logic you won't see any auras at all
+If you join strings together without using the correct logic you may not see any auras at all
 Example of a bad string: *HELPFUL|r||*IMPORTANT|r||*CROWD_CONTROL|r||*BIG_DEFENSIVE|r
 That translates into "The aura is a buff which is important, a cc and big defensive" at the same time ^Impossible|r
 
 It is possible to add a *NOT|r statement to a filter string using *!|r like so *!CROWD_CONTROL|r
 
-ElvUI offers up to 8 tabs of filter sets (Named *I -> VIII|r)
-All active(*green|r) tabs combined is what will show up on the main container
+ElvUI offers up to 8 tabs of filter sets (named as roman numerals: *I|r to *VIII|r)
+All active (*green|r) tabs combined is what will show up on the main container
 That's because you can't display everything you want with just one single filter string
 It also means that, without fully understanding this new Blizzard system, you might see duplicate icons when a spell would return true in multiple of your filter set tabs.
 For 99% of cases we recommend to stick to our optimized default setups (also available via the *Reset Filters|r button).
@@ -2188,8 +2188,8 @@ For example *HELPFUL|r + enabled checkbox for *Use: Allow|r will display all Buf
 And *HARMFUL|r + enabled checkbox for *Use: Block|r will display all Debuffs except the IDs in *Block List|r (default:* Blacklist|r)
 
 The following *Blizzard restrictions|r apply at all times:
-1. *Allow List is limited|r to "You can only allow/track Buffs on friendly units via ID"
-2. *Block List is limited|r to "You can only block/block Debuffs on enemy units via ID"
+1. *Allow List is limited|r to "You can only allow Buffs on friendly units via ID"
+2. *Block List is limited|r to "You can only block Debuffs on enemy units via ID"
 3. You can NOT allow Debuffs on friendly units
 4. You can NOT block Buffs on enemy units
 ]=]):gsub('*', E.InfoColor):gsub('%^', E.InfoColor2)
@@ -2209,28 +2209,27 @@ L["FILTER_EXAMPLE_6_DESC"] = "Show Debuffs which anyone in your party or raid ca
 L["FILTER_EXAMPLE_6_TEXT"] = "Maximum Duration 0"
 
 L["AVAILABLE_FILTERS"] = ("*Valid filter strings|r"):gsub('*', E.InfoColor)
-L["FILTER_STRING_HELPFUL_DESC"] = "Require it to be a Buff"
-L["FILTER_STRING_HARMFUL_DESC"] = "Require it to be a Debuff"
-L["FILTER_STRING_PLAYER_DESC"] = "Require unit: \"Player\"(You), \"Pet\"(Yours), \"Vehicle\"(Yours)"
-L["FILTER_STRING_RAID_DESC"] = "If configuring Buffs: \"Player\"(You) can apply this aura."
-L["FILTER_STRING_RAID_TEXT"] = "If configuring Debuffs: \"Player\" (you) can dispel it."
-L["FILTER_STRING_RAID_PLAYER_DISPELLABLE_DESC"] = "If configuring Buffs: Someone in your party or raid can purge or steal it."
-L["FILTER_STRING_RAID_PLAYER_DISPELLABLE_TEXT"] = "If configuring Debuffs: Someone in your party or raid can dispel it."
-L["FILTER_STRING_RAID_IN_COMBAT_DESC"] = "When combined with HELPFUL and PLAYER it will show self-cast hots and shields."
-L["FILTER_STRING_RAID_IN_COMBAT_TEXT"] = "Whats being displayed matches the ElvUI Aura Indicator (Class) list in the Filters Dropdown."
-L["FILTER_STRING_CANCELABLE_DESC"] = "Works on HELPFUL||PLAYER to show Buffs \"Player\"(You) can click off / cancel with right-click."
-L["FILTER_STRING_INCLUDE_NAME_PLATE_ONLY_DESC"] = "When added to the string, include nameplate-only flagged auras."
-L["FILTER_STRING_EXTERNAL_DEFENSIVE_DESC"] = "Replace ID with the numeric ID of your test aura. This will print true or false."
+L["FILTER_STRING_HELPFUL_DESC"] = "Restricts to buffs"
+L["FILTER_STRING_HARMFUL_DESC"] = "Restricts to debuffs"
+L["FILTER_STRING_PLAYER_DESC"] = ("Restricts to those from the current *Player|r, their *Pets|r, or *Vehicle|r"):gsub('*', E.InfoColor)
+L["FILTER_STRING_RAID_DESC"] = ("Restricts to those you could apply ^(buffs only)|r or those you can dispel ^(debuffs only)|r"):gsub('%^', E.InfoColor2)
+L["FILTER_STRING_RAID_PLAYER_DISPELLABLE_DESC"] = "Restricts to those you, your party or your raid can dispell/purge/steal"
+L["FILTER_STRING_RAID_IN_COMBAT_DESC"] = "Restricts to HoTs and shields"
+L["FILTER_STRING_CANCELABLE_DESC"] = "Restricts to buffs the active player can cancel with right-click"
+L["FILTER_STRING_INCLUDE_NAME_PLATE_ONLY_DESC"] = "Expands the restrictions to force include buffs/debuffs mandated to be shown on nameplates"
+L["FILTER_STRING_EXTERNAL_DEFENSIVE_DESC"] = "Restricts to external defensive buffs"
 L["FILTER_STRING_EXTERNAL_DEFENSIVE_TEXT"] = "Some examples: Pain suppression, Iron Bark, Life Cocoon"
-L["FILTER_STRING_CROWD_CONTROL_DESC"] = "Replace ID with the numeric ID of your test aura. This will print true or false."
+L["FILTER_STRING_CROWD_CONTROL_DESC"] = "Restricts to CC debuffs."
 L["FILTER_STRING_CROWD_CONTROL_TEXT"] = "Some examples: Fear, Polymorph, Entangling Roots"
-L["FILTER_STRING_BIG_DEFENSIVE_DESC"] = "Replace ID with the numeric ID of your test aura. This will print true or false."
+L["FILTER_STRING_BIG_DEFENSIVE_DESC"] = "Restricts to buffs deemed important personal defensives"
 L["FILTER_STRING_BIG_DEFENSIVE_TEXT"] = "Some examples: Ice Block, Bubble, Blur, Barkskin"
-L["FILTER_STRING_IMPORTANT_DESC"] = "Replace ID with the numeric ID of your test aura. This will print true or false."
+L["FILTER_STRING_IMPORTANT_DESC"] = "Restricts to debuffs/buffs deemed very important by Blizzard"
 L["FILTER_STRING_IMPORTANT_TEXT"] = "Those are also special helpful auras that show on enemy even if non-stealable."
-L["FILTER_STRING_DISPELLABLE_DESC"] = "Displays auras which are dispellable, purgable or stealable. Regardless if your party or raid setup can handle it."
+L["FILTER_STRING_DISPELLABLE_DESC"] = ("Restricts to buffs/debuffs that are *dispellable|r, *purgable|r, or *stealable|r by ANY class"):gsub('*', E.InfoColor)
 
-L["FILTER_TEST_COMMAND"] = ("*Test Command|r"):gsub('*', E.InfoColor)
+L["FILTER_TEST_COMMAND_DESC"] = ("*Test Command|r"):gsub('*', E.InfoColor)
+L["FILTER_TEST_COMMAND_TEXT"] = ("Replace ID with the numeric ID of your test aura. This will print *true|r or *false|r."):gsub('*', E.InfoColor)
+
 L["FILTER_CHECKBOXES"] = ([=[
 *Filter checkboxes|r
 
