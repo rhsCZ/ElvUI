@@ -143,7 +143,7 @@ end
 function E:ParseVersionString(addon)
 	local version = GetAddOnMetadata(addon, 'Version')
 	if strfind(version, 'project%-version') then
-		return 15.24, '15.24-git', nil, true
+		return 15.25, '15.25-git', nil, true
 	else
 		local release, extra = strmatch(version, '^v?([%d.]+)(.*)')
 		return tonumber(release), release..extra, extra ~= ''
@@ -440,6 +440,53 @@ do -- Blizzard broke font Shadows in 12.0.7 this helps fix that by allowing us t
 		font:SetShadowColor(sR or 0, sG or 0, sB or 0, sA or (shadow and (style == '' and 1 or 0.6)) or 0)
 		font:SetShadowOffset(sX or (shadow and 1) or 0, sY or (shadow and -1) or 0)
 	end
+end
+
+function E:CopyTable(current, default, merge, shallow)
+	if type(current) ~= 'table' then
+		current = {}
+	end
+
+	if type(default) == 'table' then
+		for option, value in next, default do
+			local isTable = type(value) == 'table'
+			if isTable or (not merge or current[option] == nil) then
+				current[option] = (isTable and not shallow) and E:CopyTable(current[option], value, merge) or value
+			end
+		end
+	end
+
+	return current
+end
+
+-- Stripped down variant based on AceDB-3.0 by Simpy
+function E:CopyDefaults(dest, src)
+	for k, v in next, src do
+		if type(v) == 'table' then
+			if not rawget(dest, k) then rawset(dest, k, {}) end
+			if type(dest[k]) == 'table' then E:CopyDefaults(dest[k], v) end
+		elseif rawget(dest, k) == nil then
+			rawset(dest, k, v)
+		end
+	end
+
+	return dest
+end
+
+-- Stripped down variant based on AceDB-3.0 by Simpy
+function E:RemoveDefaults(db, defaults)
+	setmetatable(db, nil)
+
+	for k, v in next, defaults do
+		if type(v) == 'table' and type(db[k]) == 'table' then
+			E:RemoveDefaults(db[k], v)
+			if next(db[k]) == nil then db[k] = nil end
+		elseif db[k] == defaults[k] then
+			db[k] = nil
+		end
+	end
+
+	return db
 end
 
 function E:CanFlagSlug(outline)

@@ -804,23 +804,6 @@ do
 	end
 end
 
-function E:CopyTable(current, default, merge)
-	if type(current) ~= 'table' then
-		current = {}
-	end
-
-	if type(default) == 'table' then
-		for option, value in next, default do
-			local isTable = type(value) == 'table'
-			if not merge or (isTable or current[option] == nil) then
-				current[option] = (isTable and E:CopyTable(current[option], value, merge)) or value
-			end
-		end
-	end
-
-	return current
-end
-
 function E:RemoveEmptySubTables(tbl)
 	if type(tbl) ~= 'table' then
 		E:Print('Bad argument #1 to \'RemoveEmptySubTables\' (table expected)')
@@ -2023,37 +2006,6 @@ function E:ConvertActionBarKeybinds()
 	local cur = GetCurrentBindingSet()
 	if cur and cur > 0 then
 		SaveBindings(cur)
-	end
-end
-
-do
-	-- Shamelessly taken from AceDB-3.0 and stripped down by Simpy
-	function E:CopyDefaults(dest, src)
-		for k, v in next, src do
-			if type(v) == 'table' then
-				if not rawget(dest, k) then rawset(dest, k, {}) end
-				if type(dest[k]) == 'table' then E:CopyDefaults(dest[k], v) end
-			elseif rawget(dest, k) == nil then
-				rawset(dest, k, v)
-			end
-		end
-
-		return dest
-	end
-
-	function E:RemoveDefaults(db, defaults)
-		setmetatable(db, nil)
-
-		for k, v in next, defaults do
-			if type(v) == 'table' and type(db[k]) == 'table' then
-				E:RemoveDefaults(db[k], v)
-				if next(db[k]) == nil then db[k] = nil end
-			elseif db[k] == defaults[k] then
-				db[k] = nil
-			end
-		end
-
-		return db
 	end
 end
 
