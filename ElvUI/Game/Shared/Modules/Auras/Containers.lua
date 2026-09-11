@@ -57,7 +57,7 @@ E.AuraDispel = {
 	customDispelColorMap = {} -- updated by UpdateDispelColors
 }
 
-E.AuraHighlightContainers = {}
+E.AuraHighlightActive = {}
 E.AuraContainerSortDirection = {}
 E.AuraContainerSortMethod = {}
 E.AuraPreviewFrames = {}
@@ -98,7 +98,7 @@ if SORTDIRECTION then
 end
 
 function E:Auras_DispelUpdated()
-	for container in next, E.AuraHighlightContainers do
+	for container in next, E.AuraHighlightActive do
 		E:Auras_SetHighlight(container)
 	end
 end
@@ -1028,7 +1028,7 @@ function E:Auras_ToggleEnable(container, shown)
 	if state ~= container:IsEnabled() then
 		container:SetEnabled(state)
 
-		E.AuraHighlightContainers[container] = (container.isHighlight and state) or nil
+		E.AuraHighlightActive[container] = (container.isHighlight and state) or nil
 
 		return true
 	end
