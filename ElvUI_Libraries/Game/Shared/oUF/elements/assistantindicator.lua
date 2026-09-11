@@ -98,7 +98,7 @@ end
 local function Disable(self)
 	local element = self.AssistantIndicator
 	if(element) then
-		self:SetAlpha(0)
+		element:SetAlpha(0)
 
 		self:UnregisterEvent('UNIT_FLAGS', Path)
 		self:UnregisterEvent('GROUP_ROSTER_UPDATE', Path)

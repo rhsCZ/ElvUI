@@ -124,7 +124,7 @@ end
 local function Disable(self)
 	local element = self.LeaderIndicator
 	if(element) then
-		self:SetAlpha(0)
+		element:SetAlpha(0)
 
 		self:UnregisterEvent('UNIT_FLAGS', Path)
 		self:UnregisterEvent('PLAYER_FLAGS_CHANGED', Path)
