@@ -26,7 +26,6 @@ local _, ns = ...
 local oUF = ns.oUF
 
 local UnitIsGroupAssistant = UnitIsGroupAssistant
-local UnitIsGroupLeader = UnitIsGroupLeader
 local UnitAffectingCombat = UnitAffectingCombat
 
 local function Update(self, event)
@@ -42,7 +41,7 @@ local function Update(self, event)
 		element:PreUpdate()
 	end
 
-	local isAssistant = UnitIsGroupAssistant(unit) and not UnitIsGroupLeader(unit)
+	local isAssistant = UnitIsGroupAssistant(unit)
 	local combatHide = element.combatHide and UnitAffectingCombat(unit)
 	if element.SetAlphaFromBoolean then
 		element:SetAlphaFromBoolean(isAssistant, not combatHide and 1 or 0, 0)
