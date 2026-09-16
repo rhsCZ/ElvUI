@@ -9,7 +9,6 @@ local _G = _G
 local wipe, ceil, huge = wipe, ceil, math.huge
 local strfind, strmatch = strfind, strmatch
 local floor, next, type = floor, next, type
-local hooksecurefunc = hooksecurefunc
 
 local AnchorUtil = AnchorUtil
 local CreateFrame = CreateFrame
@@ -112,15 +111,15 @@ function E:Auras_OnEvent(event, arg1)
 				UF:AuraBars_UpdateFilter(container, eventUnit)
 				E:Auras_SetContainer(container)
 			else -- for target frame
-				E:Auras_AssistUnit(container, eventUnit, true)
+				E:Auras_AssistUnit(container, eventUnit)
 			end
 		end
 	elseif event == 'GROUP_ROSTER_UPDATE' then
 		if container.unit then
-			E:Auras_AssistUnit(container, container.unit, true)
+			E:Auras_AssistUnit(container, container.unit)
 		end
 	elseif arg1 and (arg1 == container.unit) then
-		E:Auras_AssistUnit(container, arg1, true)
+		E:Auras_AssistUnit(container, arg1)
 	end
 end
 
@@ -1036,21 +1035,31 @@ function E:Auras_ToggleEnable(container, shown)
 	end
 end
 
-function E:Auras_AssistUnit(container, unit, update)
+function E:Auras_AssistUnit(container, unit, shown, skip)
 	container.canReach = unit and UnitCanAssist('player', unit, true, true)
 	container.canAssist = unit and UnitCanAssist('player', unit)
 
-	local state, changed = E:Auras_ToggleEnable(container)
-	if update and state and not changed then -- update when the state doesnt change but its active
+	local state, changed = E:Auras_ToggleEnable(container, shown)
+	if state and not skip and not changed then -- update when the state doesnt change but its active
 		container:UpdateAllAuras()
 	end
 end
 
-function E:Auras_GroupUnit(container, unit)
+function E:Auras_GroupUnit(container, unit, shown)
 	if not container then return end
 
 	E:Auras_SetUnit(container, unit)
-	E:Auras_AssistUnit(container, unit)
+	E:Auras_AssistUnit(container, unit, shown, true)
+end
+
+function E:Auras_ToggleActive(container, unit, shown)
+	if not container then return end
+
+	E:Auras_GroupUnit(container, unit, shown)
+
+	if container.events then
+		container.events:SetScript('OnEvent', shown and E.Auras_OnEvent or nil)
+	end
 end
 
 function E:Auras_GetFilter(obj, key)
@@ -1068,16 +1077,6 @@ function E:Auras_GetFilter(obj, key)
 	end
 
 	return list
-end
-
-function E:Auras_ToggleActive(container, shown)
-	if not container then return end
-
-	E:Auras_ToggleEnable(container, shown)
-
-	if container.events then
-		container.events:SetScript('OnEvent', shown and E.Auras_OnEvent or nil)
-	end
 end
 
 function E:Auras_CreateEventFrame(container, parent)
@@ -1104,6 +1103,7 @@ function E:Auras_CreateEventFrame(container, parent)
 	-- keeps opposite faction correct when zoning into content
 	if highlight or group then
 		events:RegisterEvent('UNIT_PHASE')
+		events:RegisterEvent('UNIT_DISTANCE_CHECK_UPDATE')
 	end
 
 	return events
