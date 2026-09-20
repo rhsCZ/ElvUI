@@ -12,7 +12,6 @@ local toggles = {
 	bags = L["Bags"],
 	bgmap = L["BG Map"],
 	bgscore = L["BG Score"],
-	binding = L["KEY_BINDINGS"],
 	blizzardOptions = L["INTERFACE_OPTIONS"],
 	channels = L["CHANNELS"],
 	character = L["Character Frame"],
@@ -34,6 +33,7 @@ local toggles = {
 	merchant = L["Merchant Frame"],
 	mirrorTimers = L["Mirror Timers"],
 	misc = L["Misc Frames"],
+	nonraid = L["Non-Raid Frame"],
 	petition = L["Petition Frame"],
 	quest = L["Quest Frames"],
 	raid = L["Raid Frame"],
@@ -53,14 +53,9 @@ local toggles = {
 }
 
 if E.Retail or E.Mists then
-	toggles.alertframes = L["Alert Frames"]
 	toggles.archaeology = L["Archaeology Frame"]
-	toggles.barber = L["BARBERSHOP"]
 	toggles.bmah = L["BLACK_MARKET_AUCTION_HOUSE"]
-	toggles.calendar = L["Calendar Frame"]
-	toggles.collections = L["COLLECTIONS"]
 	toggles.encounterjournal = L["ENCOUNTER_JOURNAL"]
-	toggles.gbank = L["Guild Bank"]
 	toggles.itemUpgrade = L["Item Upgrade"]
 	toggles.pvp = L["PvP Frames"]
 	toggles.petbattleui = L["Pet Battle"]
@@ -73,11 +68,24 @@ end
 
 if E.Retail or E.Mists or E.Wrath then
 	toggles.achievement = L["ACHIEVEMENTS"]
+	toggles.alertframes = L["Alert Frames"]
+	toggles.barber = L["BARBERSHOP"]
+	toggles.calendar = L["Calendar Frame"]
+	toggles.collections = L["COLLECTIONS"]
+	toggles.gbank = L["Guild Bank"]
 	toggles.transmogrify = L["TRANSMOGRIFY"]
+end
+
+if E.Retail or E.TBC then
+	toggles.binding = L["KEY_BINDINGS"]
 end
 
 if E.Wrath or E.TBC then
 	toggles.arena = L["Arena"]
+end
+
+if E.Wrath or E.Classic then
+	toggles.battlefield = L["Battlefield"]
 end
 
 if E.Mists or E.Wrath or E.TBC then
@@ -121,7 +129,6 @@ if E.Retail then
 	toggles.itemInteraction = L["Item Interaction"]
 	toggles.losscontrol = L["LOSS_OF_CONTROL"]
 	toggles.majorFactions = L["Major Factions"]
-	toggles.nonraid = L["Non-Raid Frame"]
 	toggles.objectiveTracker = L["OBJECTIVES_TRACKER_LABEL"]
 	toggles.obliterum = L["OBLITERUM_FORGE_TITLE"]
 	toggles.orderhall = L["Orderhall"]
@@ -138,7 +145,6 @@ elseif E.Mists then
 	toggles.reforge = L["Reforge"]
 elseif E.Classic then
 	toggles.engraving = L["Engraving"]
-	toggles.battlefield = L["Battlefield"]
 end
 
 local function ToggleSkins(value)
