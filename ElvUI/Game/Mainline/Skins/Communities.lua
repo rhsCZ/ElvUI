@@ -102,6 +102,13 @@ local function RequestToJoin_Initialize(frame)
 	end
 end
 
+local function ChatEditBoxMinimized(frame)
+	local parent = frame:GetParent()
+	local editBox = parent.ChatEditBox
+	editBox:Point('BOTTOMLEFT', 10, 6)
+	editBox:Point('BOTTOMRIGHT', -12, 6)
+end
+
 function S:Blizzard_Communities()
 	if not (E.private.skins.blizzard.enable and E.private.skins.blizzard.communities) then return end
 
@@ -162,6 +169,7 @@ function S:Blizzard_Communities()
 
 	S:HandleEditBox(CommunitiesFrame.ChatEditBox)
 	CommunitiesFrame.ChatEditBox:Size(120, 20)
+	hooksecurefunc(CommunitiesFrame.MaximizeMinimizeFrame, 'Minimize', ChatEditBoxMinimized)
 
 	-- Guild and Community Finder
 	for _, name in next, { 'GuildFinderFrame', 'CommunityFinderFrame' } do
@@ -193,9 +201,11 @@ function S:Blizzard_Communities()
 	for _, name in next, { 'InvitationFrame', 'TicketFrame', 'ClubFinderInvitationFrame' } do
 		local frame = CommunitiesFrame[name]
 		frame:StripTextures()
+
 		frame.InsetFrame:Hide()
 		frame.CircleMask:Hide()
 		frame.IconRing:Hide()
+
 		S:HandleIcon(frame.Icon)
 		S:HandleButton(frame.AcceptButton)
 		S:HandleButton(frame.DeclineButton)
@@ -360,6 +370,7 @@ function S:Blizzard_Communities()
 
 	-- Filters Frame
 	local FiltersFrame = _G.CommunitiesGuildNewsFiltersFrame
+	FiltersFrame:StripTextures()
 	FiltersFrame:SetTemplate('Transparent')
 	S:HandleCheckBox(FiltersFrame.GuildAchievement)
 	S:HandleCheckBox(FiltersFrame.Achievement)
@@ -383,13 +394,8 @@ function S:Blizzard_Communities()
 	end)
 
 	if E.private.skins.parchmentRemoverEnable then
-		for _, frame in pairs({
-			GuildDetailsFrameInfo,
-			GuildDetailsFrameNews,
-			FiltersFrame,
-		}) do
-			frame:StripTextures()
-		end
+		GuildDetailsFrameInfo:StripTextures()
+		GuildDetailsFrameNews:StripTextures()
 
 		-- Guild Challenges Background
 		local backdrop1 = CreateFrame('Frame', nil, GuildDetailsFrameInfo)

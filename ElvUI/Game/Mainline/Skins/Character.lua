@@ -34,7 +34,8 @@ local function UpdateCollapse(texture, atlas)
 end
 
 local function UpdateToggleCollapseButton(button)
-	local tex = button:GetHeader():IsCollapsed() and E.Media.Textures.PlusButton or E.Media.Textures.MinusButton
+	local header = button:GetHeader()
+	local tex = header:IsCollapsed() and E.Media.Textures.PlusButton or E.Media.Textures.MinusButton
 	button:SetNormalTexture(tex)
 	button:SetPushedTexture(tex)
 end
@@ -332,11 +333,13 @@ function S:Blizzard_UIPanels_Game()
 
 	for _, Slot in next, { _G.PaperDollItemsFrame:GetChildren() } do
 		if Slot:IsObjectType('Button') or Slot:IsObjectType('ItemButton') then
-			S:HandleIcon(Slot.icon)
 			Slot:StripTextures()
 			Slot:SetTemplate()
-			Slot:StyleButton(Slot)
+			Slot:StyleButton()
+
+			S:HandleIcon(Slot.icon)
 			Slot.icon:SetInside()
+
 			Slot.ignoreTexture:SetTexture([[Interface\PaperDollInfoFrame\UI-GearManager-LeaveItem-Transparent]])
 
 			S:HandleIconBorder(Slot.IconBorder)
