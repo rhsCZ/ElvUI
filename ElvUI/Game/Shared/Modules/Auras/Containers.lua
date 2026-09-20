@@ -103,7 +103,7 @@ function E:Auras_DispelUpdated()
 	end
 end
 
-function E:Auras_OnEvent(event, arg1, arg2)
+function E:Auras_OnEvent(event, arg1)
 	local container = self:GetParent()
 	if event == 'PLAYER_FOCUS_CHANGED' or event == 'PLAYER_TARGET_CHANGED' then
 		local eventUnit = E.AuraEventUnits[event]
@@ -120,11 +120,7 @@ function E:Auras_OnEvent(event, arg1, arg2)
 			E:Auras_AssistUnit(container, container.unit)
 		end
 	elseif arg1 and (arg1 == container.unit) then
-		if event == 'UNIT_DISTANCE_CHECK_UPDATE' then
-			container.isInDistance = arg2
-		end
-
-		E:Auras_AssistUnit(container, arg1, container.isInDistance)
+		E:Auras_AssistUnit(container, arg1)
 	end
 end
 
@@ -1008,8 +1004,6 @@ end
 function E:Auras_SetUnit(container, unit)
 	container:SetUnit(unit or '')
 	container.unit = unit
-
-	container.isInDistance = nil -- we dont want a stale value, clear it when unit is set (changed or not)
 end
 
 function E:Auras_ToggleEnable(container, shown)
@@ -1057,6 +1051,7 @@ function E:Auras_GroupUnit(container, unit, shown)
 	if not container then return end
 
 	E:Auras_SetUnit(container, unit)
+	E:Auras_RegisterUnitEvents(container, unit)
 	E:Auras_AssistUnit(container, unit, shown, true)
 end
 
@@ -1091,8 +1086,13 @@ function E:Auras_CreateEventFrame(container, parent)
 	local events = CreateFrame('Frame', nil, container)
 
 	local frameType = parent.unitframeType
-	local group = E.AuraGroupHeaders[frameType]
-	if group then
+	local isGroup = E.AuraGroupHeaders[frameType]
+
+	events.isHighlight = parent.isHighlight
+	events.frameType = frameType
+	events.isGroup = isGroup
+
+	if isGroup then
 		events:RegisterEvent('GROUP_ROSTER_UPDATE')		-- raid: when people move between groups
 	elseif strmatch(frameType, '^focus') then
 		events:RegisterEvent('PLAYER_FOCUS_CHANGED')	-- aurabar: switch friendship
@@ -1100,21 +1100,27 @@ function E:Auras_CreateEventFrame(container, parent)
 		events:RegisterEvent('PLAYER_TARGET_CHANGED')	-- aurabar: switch friendship
 	end
 
-	-- technically we might need this on group too
-	-- however blizzard plans to fix us needing this
-	-- so for now we only add it to highlight
-	local highlight = parent.isHighlight
-	if highlight then
-		events:RegisterEvent('UNIT_FACTION')
-	end
+	return events
+end
+
+function E:Auras_RegisterUnitEvents(container, unit)
+	local events = container.events
+	if not events then return end
 
 	-- keeps opposite faction correct when zoning into content
-	if highlight or group then
-		events:RegisterEvent('UNIT_DISTANCE_CHECK_UPDATE')
-		events:RegisterEvent('UNIT_PHASE')
+	if unit and (events.isHighlight or events.isGroup) then
+		events:RegisterUnitEvent('UNIT_DISTANCE_CHECK_UPDATE', unit)
+		events:RegisterUnitEvent('UNIT_IN_RANGE_UPDATE', unit)
+		events:RegisterUnitEvent('UNIT_CONNECTION', unit)
+		events:RegisterUnitEvent('UNIT_FACTION', unit)
+		events:RegisterUnitEvent('UNIT_PHASE', unit)
+	else
+		events:UnregisterEvent('UNIT_DISTANCE_CHECK_UPDATE')
+		events:UnregisterEvent('UNIT_IN_RANGE_UPDATE')
+		events:UnregisterEvent('UNIT_CONNECTION')
+		events:UnregisterEvent('UNIT_FACTION')
+		events:UnregisterEvent('UNIT_PHASE')
 	end
-
-	return events
 end
 
 function E:Auras_Create(parent, which, override)
