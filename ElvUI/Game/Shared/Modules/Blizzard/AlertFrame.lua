@@ -37,10 +37,10 @@ end
 function BL:AdjustSubSystemPosition(subSystem)	-- self is not always BL
 	if subSystem.alertFramePool then			-- queued alert system
 		subSystem.AdjustAnchors = BL.AdjustQueuedAnchors
-	elseif not subSystem.anchorFrame then		-- simple alert system
-		subSystem.AdjustAnchors = BL.AdjustAnchors
 	elseif subSystem.anchorFrame then			-- anchor frame system
 		subSystem.AdjustAnchors = BL.AdjustAnchorsNonAlert
+	elseif not subSystem.anchorFrame then		-- simple alert system
+		subSystem.AdjustAnchors = BL.AdjustAnchors
 	end
 end
 
