@@ -195,11 +195,11 @@ function BL:Initialize()
 	end
 
 	if E.Retail then
-		BL:DisableTutorials()
+		BL:DisableHelpTip()
 	end
 
 	if E.Modern then
-		BL:DisableHelpTip()
+		BL:DisableTutorials()
 		BL:HandleTalkingHead()
 		BL:HandleAddonCompartment()
 
