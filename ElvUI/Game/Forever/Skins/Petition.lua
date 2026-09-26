@@ -6,10 +6,10 @@ local _G = _G
 function S:PetitionFrame()
 	if not (E.private.skins.blizzard.enable and E.private.skins.blizzard.petition) then return end
 
-	local parchment = E.private.skins.parchmentRemoverEnable
+	local parchmentRemover = E.private.skins.parchmentRemoverEnable
 
 	local PetitionFrame = _G.PetitionFrame
-	if parchment then
+	if parchmentRemover then
 		PetitionFrame:StripTextures(true)
 	else
 		local pageBG = PetitionFrame.Bg:GetAtlas()
@@ -29,7 +29,7 @@ function S:PetitionFrame()
 	S:HandleButton(_G.PetitionFrameCancelButton)
 	S:HandleCloseButton(_G.PetitionFrameCloseButton)
 
-	if parchment then
+	if parchmentRemover then
 		_G.PetitionFrameCharterTitle:SetTextColor(1, 1, 0)
 		_G.PetitionFrameCharterName:SetTextColor(1, 1, 1)
 		_G.PetitionFrameMasterTitle:SetTextColor(1, 1, 0)

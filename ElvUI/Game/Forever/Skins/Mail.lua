@@ -91,10 +91,10 @@ function S:Blizzard_MailFrame()
 	_G.MailFrameTab1:Point('TOPLEFT', _G.MailFrame, 'BOTTOMLEFT', -3, 0)
 	_G.MailFrameTab2:Point('TOPLEFT', _G.MailFrameTab1, 'TOPRIGHT', -5, 0)
 
-	local parchment = E.private.skins.parchmentRemoverEnable
+	local parchmentRemover = E.private.skins.parchmentRemoverEnable
 
 	-- send mail
-	if parchment then
+	if parchmentRemover then
 		_G.SendMailScrollFrame:StripTextures(true)
 	else
 		_G.SendStationeryBackgroundLeft:SetDrawLayer('BACKGROUND', 1) -- above the ElvUI backdrop
@@ -153,7 +153,7 @@ function S:Blizzard_MailFrame()
 	S:HandleButton(_G.OpenMailCancelButton, true)
 	S:HandleButton(_G.OpenAllMail, true)
 
-	if parchment then
+	if parchmentRemover then
 		_G.InboxFrame:StripTextures()
 		_G.OpenMailScrollFrame:StripTextures(true)
 	else
@@ -167,12 +167,12 @@ function S:Blizzard_MailFrame()
 	S:HandleTrimScrollBar(_G.OpenMailScrollFrame.ScrollBar)
 
 	-- no outline on Blizzard's dark letter text
-	local letterFontStyle = not parchment and 'NONE' or nil
+	local letterFontStyle = not parchmentRemover and 'NONE' or nil
 	_G.InvoiceTextFontNormal:FontTemplate(nil, 13, letterFontStyle)
 	_G.MailTextFontNormal:FontTemplate(nil, 13, letterFontStyle)
 	_G.OpenMailArithmeticLine:Kill()
 
-	if parchment then
+	if parchmentRemover then
 		_G.InvoiceTextFontNormal:SetTextColor(1, 1, 1)
 		_G.MailTextFontNormal:SetTextColor(1, 1, 1)
 	end

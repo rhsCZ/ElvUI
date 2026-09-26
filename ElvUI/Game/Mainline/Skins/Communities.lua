@@ -4,7 +4,6 @@ local S = E:GetModule('Skins')
 local _G = _G
 local next, pairs = next, pairs
 
-local C_GuildInfo_GetGuildNewsInfo = C_GuildInfo.GetGuildNewsInfo
 local BATTLENET_FONT_COLOR = BATTLENET_FONT_COLOR
 local GREEN_FONT_COLOR = GREEN_FONT_COLOR
 local CreateFrame = CreateFrame

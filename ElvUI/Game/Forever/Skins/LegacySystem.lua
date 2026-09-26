@@ -123,8 +123,8 @@ function S:Blizzard_LegacySystem()
 	S:HandleNextPrevButton(RewardProgressFrame.JumpLeftButton, 'left', nil, true)
 	S:HandleNextPrevButton(RewardProgressFrame.JumpRightButton, 'right', nil, true)
 
-	local parchment = E.private.skins.parchmentRemoverEnable
-	if parchment then
+	local parchmentRemover = E.private.skins.parchmentRemoverEnable
+	if parchmentRemover then
 		RewardTrackPage.Background:SetAlpha(0)
 	end
 
@@ -143,7 +143,7 @@ function S:Blizzard_LegacySystem()
 	S:HandleTrimScrollBar(DetailPane.ScrollBar)
 	hooksecurefunc(DetailPane.ScrollBox, 'Update', DetailPane_Update)
 
-	if parchment then
+	if parchmentRemover then
 		ChallengesPage.Background:SetAlpha(0)
 		ChallengesPage.VerticalDivider:Hide()
 	end
@@ -161,7 +161,7 @@ function S:Blizzard_LegacySystem()
 	TraitPanel.SearchPreviewContainer:StripTextures()
 	TraitPanel.SearchPreviewContainer:CreateBackdrop('Transparent')
 
-	if parchment then
+	if parchmentRemover then
 		TreePage.Background:SetAlpha(0)
 		TreePage.VerticalDivider:Hide()
 		LegacyPointSummary.Border:SetAlpha(0)
