@@ -15,7 +15,7 @@ local C_Heirloom_PlayerHasHeirloom = C_Heirloom.PlayerHasHeirloom
 local C_TransmogCollection_GetSourceInfo = C_TransmogCollection.GetSourceInfo
 local GetItemQualityByID = C_Item.GetItemQualityByID
 
-local ITEMQUALITY_HEIRLOOM = Enum.ItemQuality.Heirloom -- 7
+local ITEMQUALITY_HEIRLOOM = Enum.ItemQuality.Heirloom or 7
 
 local function ClearBackdrop(backdrop)
 	backdrop:SetBackdropColor(0, 0, 0, 0)
@@ -596,7 +596,8 @@ local function SkinWardrobeFrame()
 				border:Point('BOTTOMRIGHT', Model, 'BOTTOMRIGHT', 1, -1)
 				border:SetBackdropColor(0, 0, 0, 0)
 				border.callbackBackdropColor = ClearBackdrop
-				Model.Border.border = border
+
+				Model.Border.border = border -- used by ModelBorderSetAtlas
 
 				Model.Border:SetAlpha(0)
 				Model.TransmogStateTexture:SetAlpha(0)

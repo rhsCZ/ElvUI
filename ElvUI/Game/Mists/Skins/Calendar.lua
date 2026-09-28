@@ -3,9 +3,9 @@ local S = E:GetModule('Skins')
 
 local _G = _G
 local next = next
+local hooksecurefunc = hooksecurefunc
 
 local CLASS_SORT_ORDER = CLASS_SORT_ORDER
-local hooksecurefunc = hooksecurefunc
 
 local function SkinContainer(frame)
 	frame.NineSlice:Kill()
@@ -23,6 +23,10 @@ local function HandleEventIcon(icon)
 	icon:CreateBackdrop(nil, nil, nil, nil, nil, nil, nil, nil, true)
 	icon:SetTexCoords()
 	icon.SetTexCoord = E.noop
+end
+
+local function CalendarSetToday()
+	_G.CalendarTodayFrame:SetAllPoints()
 end
 
 function S:Blizzard_Calendar()
@@ -98,9 +102,7 @@ function S:Blizzard_Calendar()
 	_G.CalendarTodayFrame:SetBackdropColor(0,0,0,0)
 	_G.CalendarTodayFrame:SetScript('OnUpdate', nil)
 
-	hooksecurefunc('CalendarFrame_SetToday', function()
-		_G.CalendarTodayFrame:SetAllPoints()
-	end)
+	hooksecurefunc('CalendarFrame_SetToday', CalendarSetToday)
 
 	-- CreateEventFrame
 	_G.CalendarCreateEventFrame:StripTextures()
