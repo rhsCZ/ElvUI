@@ -5,6 +5,7 @@ local UF = E:GetModule('UnitFrames')
 local next = next
 local unpack = unpack
 local strfind = strfind
+local wipe = wipe
 
 local CreateFrame = CreateFrame
 
@@ -192,6 +193,7 @@ end
 function NP:AuraContainer_ConstructFilters()
 	for frameType, data in next, NP.AuraContainerFilterTypes do
 		local plateDB = NP:PlateDB(nil, frameType)
+
 		for which, auraType in next, AURA_TYPES do
 			local info = data[which]
 			if not info then
@@ -199,11 +201,13 @@ function NP:AuraContainer_ConstructFilters()
 				data[which] = info
 			end
 
-			local db = plateDB[auraType]
-			if db then
+			local db = (plateDB.enable and not plateDB.nameOnly) and plateDB[auraType]
+			if db and db.enable then
 				info.filterLists = db.filterLists
 
 				UF:GroupFilters(info, info.filterLists)
+			elseif next(info.filters) then -- types that wont be configured
+				wipe(info.filters) -- so just empty their list if it has one
 			end
 		end
 	end
