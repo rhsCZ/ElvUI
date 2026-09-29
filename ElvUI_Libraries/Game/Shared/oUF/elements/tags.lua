@@ -74,10 +74,10 @@ local validateUnit = Private.validateUnit
 local isUnitEvent = Private.isUnitEvent
 
 local _G = _G
-local next, type, unpack = next, type, unpack
-local wipe, rawset, tonumber = wipe, rawset, tonumber
+local next, wipe, type, unpack = next, wipe, type, unpack
+local strmatch, rawset, tonumber, max = strmatch, rawset, tonumber, max
+local setfenv, getfenv, gsub, gmatch = setfenv, getfenv, gsub, gmatch
 local pcall, format, tinsert, floor = pcall, format, tinsert, floor
-local setfenv, getfenv, gsub, max = setfenv, getfenv, gsub, max
 local error, assert, loadstring = error, assert, loadstring
 
 local SPEC_MAGE_ARCANE = SPEC_MAGE_ARCANE or 1
@@ -214,7 +214,7 @@ tagFunctions.arcanecharges = function()
 end
 
 tagFunctions.arenaspec = function(u)
-	local id = u:match('arena(%d)$')
+	local id = strmatch(u, 'arena(%d)$')
 	if(id) then
 		local specID = GetArenaOpponentSpec(tonumber(id))
 		if(specID and specID > 0) then
@@ -428,7 +428,7 @@ tagFunctions.raidcolor = function(u)
 	if oUF:NotSecretValue(classToken) and classToken then
 		return Hex(_COLORS.class[classToken])
 	else
-		local id = u:match('arena(%d)$')
+		local id = strmatch(u, 'arena(%d)$')
 		local specID = id and GetArenaOpponentSpec(tonumber(id))
 		if specID and specID > 0 then
 			local _, _, _, _, _, classSpec = GetSpecializationInfoByID(specID)
@@ -714,8 +714,8 @@ local bracketFuncs = {}
 local tagBuffer = {}
 
 local function GetTagName(tag)
-	local tagStart = tag:match('.*>()') or 2
-	local tagEnd = (tag:match('.-()<') or -1) - 1
+	local tagStart = strmatch(tag, '^.*>()') or 2
+	local tagEnd = (strmatch(tag, '^.-()<') or -1) - 1
 
 	return tag:sub(tagStart, tagEnd), tagStart, tagEnd
 end
@@ -723,10 +723,10 @@ end
 local function GetTagFunc(tagstr)
 	local func = tagStringFuncs[tagstr]
 	if not func then
-		local frmt, numTags = tagstr:gsub('%%', '%%%%'):gsub(_PATTERN, '%%s')
+		local frmt, numTags = gsub(gsub(tagstr, '%%', '%%%%'), _PATTERN, '%%s')
 		local data = {}
 
-		for bracket in tagstr:gmatch(_PATTERN) do
+		for bracket in gmatch(tagstr, _PATTERN) do
 			local tagFunc = bracketFuncs[bracket] or tagFuncs[bracket:sub(2, -2)]
 			if not tagFunc then
 				local tagName, tagStart, tagEnd = GetTagName(bracket)
@@ -888,10 +888,10 @@ local function RegisterEvent(frame, event, fs)
 end
 
 local function RegisterEvents(frame, fs, ts)
-	for tag in ts:gmatch(_PATTERN) do
+	for tag in gmatch(ts, _PATTERN) do
 		local tagevents = tagEvents[GetTagName(tag)]
 		if tagevents then
-			for event in tagevents:gmatch('%S+') do
+			for event in gmatch(tagevents, '%S+') do
 				RegisterEvent(frame, event, fs)
 			end
 		end
@@ -969,12 +969,12 @@ local function Tag(self, fs, ts, arg1, ...)
 		self:Untag(fs)
 	end
 
-	ts = ts:gsub('||([TCRAtncra])', EscapeSequence)
+	ts = gsub(ts, '||([TCRAtncra])', EscapeSequence)
 
-	local customArgs = ts:match('{(.-)}%]')
+	local customArgs = strmatch(ts, '{(.-)}%]')
 	if customArgs then
 		self.__customargs[fs] = customArgs
-		ts = ts:gsub('{.-}%]', ']')
+		ts = gsub(ts, '{.-}%]', ']')
 	else
 		self.__customargs[fs] = nil
 	end
@@ -984,7 +984,7 @@ local function Tag(self, fs, ts, arg1, ...)
 			self.__mousetags[fs] = true
 			fs:SetAlpha(0)
 
-			ts = ts:gsub('%[mouseover%]', '')
+			ts = gsub(ts, '%[mouseover%]', '')
 		else
 			for fontString in next, self.__mousetags do
 				if fontString == fs then
@@ -996,7 +996,7 @@ local function Tag(self, fs, ts, arg1, ...)
 	end
 
 	local containsOnUpdate
-	for tag in ts:gmatch(_PATTERN) do
+	for tag in gmatch(ts, _PATTERN) do
 		tag = GetTagName(tag)
 
 		local delay = not tagEvents[tag] and onUpdateDelay[tag]
@@ -1057,7 +1057,7 @@ local function Untag(self, fs)
 end
 
 local function StripTag(tag) -- remove prefix, custom args, and suffix
-	return tag:gsub("%[[^%[%]]*>", "["):gsub("<[^%[%]]*%]", "]") -- ElvUI uses old tag format
+	return gsub(gsub(tag, "%[[^%[%]]*>", "["), "<[^%[%]]*%]", "]") -- ElvUI uses old tag format
 end
 
 oUF.Tags = {
@@ -1072,16 +1072,16 @@ oUF.Tags = {
 		if not tag then return end
 
 		-- if a tag's name contains magic chars, there's a chance that string.match will fail to find the match
-		tag = '%[' .. tag:gsub('[%^%$%(%)%%%.%*%+%-%?]', '%%%1') .. '%]'
+		tag = '%[' .. gsub(tag, '[%^%$%(%)%%%.%*%+%-%?]', '%%%1') .. '%]'
 
 		for bracket in next, bracketFuncs do
-			if StripTag(bracket):match(tag) then
+			if strmatch(StripTag(bracket), tag) then
 				bracketFuncs[bracket] = nil
 			end
 		end
 
 		for tagstr, func in next, tagStringFuncs do
-			if StripTag(tagstr):match(tag) then
+			if strmatch(StripTag(tagstr), tag) then
 				tagStringFuncs[tagstr] = nil
 
 				for fs in next, taggedFontStrings do
@@ -1100,10 +1100,10 @@ oUF.Tags = {
 		if not tag then return end
 
 		-- if a tag's name contains magic chars, there's a chance that string.match will fail to find the match
-		tag = '%[' .. tag:gsub('[%^%$%(%)%%%.%*%+%-%?]', '%%%1') .. '%]'
+		tag = '%[' .. gsub(tag, '[%^%$%(%)%%%.%*%+%-%?]', '%%%1') .. '%]'
 
 		for tagstr in next, tagStringFuncs do
-			if StripTag(tagstr):match(tag) then
+			if strmatch(StripTag(tagstr), tag) then
 				for fs, ts in next, taggedFontStrings do
 					if ts == tagstr then
 						UnregisterEvents(fs.parent, fs)

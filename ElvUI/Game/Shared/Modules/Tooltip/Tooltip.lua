@@ -243,30 +243,32 @@ function TT:SetUnitText(tt, unit, isPlayerUnit)
 		local localeClass, className = UnitClass(unit)
 		if not localeClass or not className then return end
 
+		local nameColor = E:ClassColor(className) or PRIEST_COLOR
 		local guildName, guildRankName, _, guildRealm = GetGuildInfo(unit)
 		if E:IsSecretValue(guildName) then
 			guildName, guildRankName, guildRealm = nil, nil, nil
 		end
 
-		local nameRealm = (realm and realm ~= '' and format('%s-%s', name, realm)) or name
 		local pvpName, gender = UnitPVPName(unit), UnitSex(unit)
-		local level, realLevel = E:UnitEffectiveLevel(unit), UnitLevel(unit)
 		local relationship = UnitRealmRelationship(unit)
 		local isShiftKeyDown = IsShiftKeyDown()
 
-		local nameColor = E:ClassColor(className) or PRIEST_COLOR
-
-		if TT.db.playerTitles and pvpName and pvpName ~= '' then
+		local useTitle = TT.db.playerTitles and (pvpName and pvpName ~= '')
+		if useTitle then
 			name = pvpName
 		end
 
-		if realm and realm ~= '' then
+		if E.Forever then
+			if realm and not useTitle then -- title adds LastName
+				name = format('%s %s', name, realm)
+			end
+		elseif realm and realm ~= '' then
 			if isShiftKeyDown or TT.db.alwaysShowRealm then
-				name = name..'-'..realm
+				name = format('%s-%s', name, realm)
 			elseif relationship == _G.LE_REALM_RELATION_COALESCED then
-				name = name.._G.FOREIGN_SERVER_LABEL
+				name = format('%s%s', name, _G.FOREIGN_SERVER_LABEL)
 			elseif relationship == _G.LE_REALM_RELATION_VIRTUAL then
-				name = name.._G.INTERACTIVE_SERVER_LABEL
+				name = format('%s%s', name, _G.INTERACTIVE_SERVER_LABEL)
 			end
 		end
 
@@ -275,7 +277,7 @@ function TT:SetUnitText(tt, unit, isPlayerUnit)
 
 		local levelLine, specLine = TT:GetLevelLine(tt, (guildName and not E.Classic and 2) or 1)
 		if guildName then
-			if guildRealm and isShiftKeyDown then
+			if not E.Forever and (guildRealm and isShiftKeyDown) then
 				guildName = guildName..'-'..guildRealm
 			end
 
@@ -295,17 +297,20 @@ function TT:SetUnitText(tt, unit, isPlayerUnit)
 
 			local _, localizedFaction = E:GetUnitBattlefieldFaction(unit)
 			if localizedFaction and englishRaces[englishRace] then
-				race = localizedFaction..' '..race
+				race = format('%s %s', localizedFaction, race)
 			end
 
 			local levelText
-			local diffColor = GetCreatureDifficultyColor(level)
-			local unitGender = TT.db.gender and E:NotSecretValue(gender) and genderTable[gender]
+			local realLevel = UnitLevel(unit)
+			local effectiveLevel = E:UnitEffectiveLevel(unit)
+			local diffColor = GetCreatureDifficultyColor(effectiveLevel)
+			local shownLevel = effectiveLevel > 0 and effectiveLevel or '??'
+			local unitGender = TT.db.gender and (E:NotSecretValue(gender) and genderTable[gender]) or ''
 			local hexColor = E:RGBToHex(diffColor.r, diffColor.g, diffColor.b)
-			if level < realLevel then
-				levelText = format('%s%s|r |cffFFFFFF(%s)|r %s%s', hexColor, level > 0 and level or '??', realLevel, unitGender or '', race or '')
+			if effectiveLevel < realLevel then
+				levelText = format('%s%s|r |cffFFFFFF(%s)|r %s%s', hexColor, shownLevel, realLevel, unitGender, race or '')
 			else
-				levelText = format('%s%s|r %s%s', hexColor, level > 0 and level or '??', unitGender or '', race or '')
+				levelText = format('%s%s|r %s%s', hexColor, shownLevel, unitGender, race or '')
 			end
 
 			if E.Modern then
@@ -321,10 +326,11 @@ function TT:SetUnitText(tt, unit, isPlayerUnit)
 		end
 
 		if TT.db.showElvUIUsers then
-			local addonUser = E.UserList[nameRealm]
-			if addonUser then
-				local same = addonUser == E.version
-				tt:AddDoubleLine(L["ElvUI Version:"], format('%.2f', addonUser), nil, nil, nil, same and 0.2 or 1, same and 1 or 0.2, 0.2)
+			local nameRealm = E:GetNameRealm(name, realm)
+			local userVersion = E.UserList[nameRealm]
+			if userVersion then
+				local same = userVersion == E.version
+				tt:AddDoubleLine(L["ElvUI Version:"], format('%.2f', userVersion), nil, nil, nil, same and 0.2 or 1, same and 1 or 0.2, 0.2)
 			end
 		end
 
