@@ -1957,8 +1957,11 @@ function S:HandleStepSlider(frame, minimal)
 		thumb:SetSize(20, 30)
 	end
 
+	if not slider.backdrop then
+		slider:CreateBackdrop()
+	end
+
 	local offset = minimal and 10 or 13
-	slider:CreateBackdrop()
 	slider.backdrop:SetPoint('TOPLEFT', 10, -offset)
 	slider.backdrop:SetPoint('BOTTOMRIGHT', -10, offset)
 
@@ -1966,9 +1969,9 @@ function S:HandleStepSlider(frame, minimal)
 		local step = CreateFrame('StatusBar', nil, slider.backdrop)
 		step:SetStatusBarTexture(E.Media.Textures.Melli)
 		step:SetStatusBarColor(1, .8, 0, .5)
-		step:SetPoint('TOPLEFT', slider.backdrop, E.mult, -E.mult)
-		step:SetPoint('BOTTOMLEFT', slider.backdrop, E.mult, E.mult)
-		step:SetPoint('RIGHT', thumb, 'CENTER')
+		step:Point('TOPLEFT', slider.backdrop, 1, -1)
+		step:Point('BOTTOMLEFT', slider.backdrop, 1, 1)
+		step:Point('RIGHT', thumb, 'CENTER')
 
 		slider.barStep = step
 	end
@@ -2372,11 +2375,6 @@ do -- Handle collapse
 		hooksecurefunc(button, 'SetNormalTexture', UpdateCollapseTexture)
 		UpdateCollapseTexture(button, button:GetNormalTexture():GetTexture())
 	end
-end
-
--- World Map related Skinning functions used for WoW 8.0
-function S:WorldMapMixin_AddOverlayFrame(frame, templateName)
-	S[templateName](frame.overlayFrames[#frame.overlayFrames])
 end
 
 -- UIWidgets
