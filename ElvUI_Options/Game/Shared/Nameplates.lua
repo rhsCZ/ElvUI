@@ -78,9 +78,9 @@ local function GetUnitAuras(unit, auraType)
 	group.args.textGroup.args.stacks.args.countFont = ACH:SharedMediaFont(L["Font"], nil, 1)
 	group.args.textGroup.args.stacks.args.countFontSize = ACH:Range(L["Font Size"], nil, 2, C.Values.FontSize)
 	group.args.textGroup.args.stacks.args.countFontOutline = ACH:FontFlags(L["Font Outline"], nil, 3)
-	group.args.textGroup.args.stacks.args.countXOffset = ACH:Range(L["X-Offset"], nil, 10, { min = -100, max = 100, step = 1 })
-	group.args.textGroup.args.stacks.args.countYOffset = ACH:Range(L["Y-Offset"], nil, 9, { min = -100, max = 100, step = 1 })
-	group.args.textGroup.args.stacks.args.countPosition = ACH:Select(L["Position"], nil, 3, C.Values.AllPoints)
+	group.args.textGroup.args.stacks.args.countPosition = ACH:Select(L["Position"], nil, 4, C.Values.AllPoints)
+	group.args.textGroup.args.stacks.args.countXOffset = ACH:Range(L["X-Offset"], nil, 5, { min = -100, max = 100, step = 1 })
+	group.args.textGroup.args.stacks.args.countYOffset = ACH:Range(L["Y-Offset"], nil, 6, { min = -100, max = 100, step = 1 })
 
 	group.args.textGroup.args.duration = ACH:Group(L["Duration"], nil, 25)
 	group.args.textGroup.args.duration.inline = true
@@ -506,19 +506,19 @@ NamePlates.generalGroup.args.clickThrough = ACH:Group(L["Click Through"], nil, 6
 NamePlates.generalGroup.args.clickThrough.args.friendly = ACH:Toggle(L["Friendly"], nil, 2, nil, nil, nil, nil, function(info, value) E.db.nameplates.clickThrough[info[#info]] = value NP:SetNamePlateClickThrough() end)
 NamePlates.generalGroup.args.clickThrough.args.enemy = ACH:Toggle(L["Enemy"], nil, 3, nil, nil, nil, nil, function(info, value) E.db.nameplates.clickThrough[info[#info]] = value NP:SetNamePlateClickThrough() end)
 
-NamePlates.generalGroup.args.clickableRange = ACH:Group(L["Clickable Size"], nil, 70, nil, function(info) return E.db.nameplates.clickSize[info[#info]] end, function(info, value) E.db.nameplates.clickSize[info[#info]] = value NP:ConfigureAll() end)
+NamePlates.generalGroup.args.clickableRange = ACH:Group(L["Clickable Size"], nil, 70, nil, function(info) return E.db.nameplates.clickSize[info[#info]] end, function(info, value) E.db.nameplates.clickSize[info[#info]] = value NP:ConfigureAll() end, nil, E.Modern)
 
-NamePlates.generalGroup.args.clickableRange.args.personal = ACH:Group(L["Personal"], nil, 10, nil, nil, nil, nil, E.Modern)
+NamePlates.generalGroup.args.clickableRange.args.personal = ACH:Group(L["Personal"], nil, 10)
 NamePlates.generalGroup.args.clickableRange.args.personal.inline = true
 NamePlates.generalGroup.args.clickableRange.args.personal.args.personalWidth = ACH:Range(L["Clickable Width"], L["Change the width and controls how big of an area on the screen will accept clicks to target unit."], 1, { min = 1, max = MAX_WIDTH, step = 1 })
 NamePlates.generalGroup.args.clickableRange.args.personal.args.personalHeight = ACH:Range(L["Clickable Height"], L["Controls how big of an area on the screen will accept clicks to target unit."], 2, { min = 1, max = MAX_HEIGHT, step = 1 })
 
-NamePlates.generalGroup.args.clickableRange.args.friendly = ACH:Group(L["Friendly"], nil, 20, nil, nil, nil, nil, E.Modern)
+NamePlates.generalGroup.args.clickableRange.args.friendly = ACH:Group(L["Friendly"], nil, 20)
 NamePlates.generalGroup.args.clickableRange.args.friendly.inline = true
 NamePlates.generalGroup.args.clickableRange.args.friendly.args.friendlyWidth = ACH:Range(L["Clickable Width"], L["Change the width and controls how big of an area on the screen will accept clicks to target unit."], 1, { min = 1, max = MAX_WIDTH, step = 1 })
 NamePlates.generalGroup.args.clickableRange.args.friendly.args.friendlyHeight = ACH:Range(L["Clickable Height"], L["Controls how big of an area on the screen will accept clicks to target unit."], 2, { min = 1, max = MAX_HEIGHT, step = 1 })
 
-NamePlates.generalGroup.args.clickableRange.args.enemy = ACH:Group(L["Enemy"], nil, 30, nil, nil, nil, nil, E.Modern)
+NamePlates.generalGroup.args.clickableRange.args.enemy = ACH:Group(L["Enemy"], nil, 30)
 NamePlates.generalGroup.args.clickableRange.args.enemy.inline = true
 NamePlates.generalGroup.args.clickableRange.args.enemy.args.enemyWidth = ACH:Range(L["Clickable Width"], L["Change the width and controls how big of an area on the screen will accept clicks to target unit."], 1, { min = 1, max = MAX_WIDTH, step = 1 })
 NamePlates.generalGroup.args.clickableRange.args.enemy.args.enemyHeight = ACH:Range(L["Clickable Height"], L["Controls how big of an area on the screen will accept clicks to target unit."], 2, { min = 1, max = MAX_HEIGHT, step = 1 })
