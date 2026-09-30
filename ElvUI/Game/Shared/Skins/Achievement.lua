@@ -16,8 +16,7 @@ local FLAG_PROGRESS_BAR = EVALUATION_TREE_FLAG_PROGRESS_BAR
 
 local blueAchievement = { r = 0.1, g = 0.2, b = 0.3, a = 1 }
 
-local data = S:AddCallbackForAddon('Blizzard_AchievementUI')
-data.toggle = 'achievement'
+S:AddCallbackForAddon('Blizzard_AchievementUI', nil, nil, nil, nil, nil, 'achievement')
 
 local function SetupButtonHighlight(button, backdrop)
 	button:SetHighlightTexture(E.media.normTex)
@@ -210,7 +209,6 @@ local function UpdateTabs()
 	end
 end
 
--- Mists anchors the statistics tab again on every open, next to the guild tab only while that one is shown
 local function SetTabs()
 	local tab = _G.AchievementFrameTab3
 	tab:ClearAllPoints()
@@ -594,7 +592,7 @@ function S:Blizzard_AchievementUI()
 
 		-- https://github.com/Gethe/wow-ui-source/blob/live/Interface/AddOns/Blizzard_AchievementUI/Mainline/Blizzard_AchievementUI.lua#L337-L343
 		hooksecurefunc('AchievementFrame_UpdateTabs', UpdateTabs)
-	elseif E.Mists then
+	elseif E.Mists then -- Mists anchors the statistics tab again on every open, next to the guild tab only while that one is shown
 		hooksecurefunc('AchievementFrame_SetTabs', SetTabs)
 		SetTabs()
 	end
