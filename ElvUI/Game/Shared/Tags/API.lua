@@ -9,9 +9,11 @@ local format, gmatch, strmatch, strsub = format, gmatch, strmatch, strsub
 local utf8lower, utf8sub = string.utf8lower, string.utf8sub
 
 local _G = _G
+local GetPlayerInfoByGUID = GetPlayerInfoByGUID
 local GetRuneCooldown = GetRuneCooldown
-local UnitHealthMax = UnitHealthMax
 local IsInInstance = IsInInstance
+local UnitGUID = UnitGUID
+local UnitHealthMax = UnitHealthMax
 local UnitIsPlayer = UnitIsPlayer
 local UnitPowerMax = UnitPowerMax
 local UnitPowerType = UnitPowerType
@@ -22,7 +24,7 @@ local GetCVarBool = C_CVar.GetCVarBool
 
 local LEVEL = strlower(LEVEL)
 
--- GLOBALS: UnitPower -- override during testing groups
+-- GLOBALS: UnitName, UnitPower -- override during testing groups
 
 local POWERTYPE_MANA = Enum.PowerType.Mana
 local POWERTYPE_COMBOPOINTS = Enum.PowerType.ComboPoints
@@ -139,6 +141,23 @@ Tags.SharedEvents.QUEST_LOG_UPDATE = true
 ------------------------------------------------------------------------
 --	Tag Functions
 ------------------------------------------------------------------------
+
+Tags.Env.GetUnitRealm = function(unit)
+	if E.Forever then
+		if E:UnitIsUnit(unit, 'player') then
+			return E.myrealm
+		elseif UnitIsPlayer(unit) then
+			local guid = UnitGUID(unit)
+			if guid then
+				local _, _, _, _, _, _, realm = GetPlayerInfoByGUID(guid)
+				return (E:NotSecretValue(realm) and realm == '' and E.myrealm) or realm
+			end
+		end
+	else
+		local _, realm = UnitName(unit)
+		return realm
+	end
+end
 
 Tags.Env.UnitEffectiveLevel = function(unit)
 	if E.Modern or E.TBC or E.Wrath or E.Mists then
