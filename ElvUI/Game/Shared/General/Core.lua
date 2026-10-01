@@ -2056,11 +2056,11 @@ function E:Initialize()
 			E:Tutorials()
 		end
 
-		if E.db.general.tagUpdateRate and (E.db.general.tagUpdateRate ~= P.general.tagUpdateRate) then
+		if E.db.general.tagUpdateRate then
 			E:TagUpdateRate(E.db.general.tagUpdateRate)
 		end
 
-		if E.db.general.smoothingAmount and (E.db.general.smoothingAmount ~= P.general.smoothingAmount) then
+		if E.db.general.smoothingAmount then
 			E:SetSmoothingAmount(E.db.general.smoothingAmount)
 		end
 
