@@ -1,7 +1,7 @@
 -- License: LICENSE.txt
 
 local MAJOR_VERSION = "LibActionButton-1.0-ElvUI"
-local MINOR_VERSION = 84 -- the real minor version is 161
+local MINOR_VERSION = 84 -- the real minor version is 166
 
 local LibStub = LibStub
 if not LibStub then error(MAJOR_VERSION .. " requires LibStub.") end
@@ -1729,11 +1729,13 @@ function OnEvent(_, event, arg1, arg2, arg3, arg4)
 			end
 		end
 	elseif event == "ACTION_USABLE_CHANGED" then
-		for _, change in ipairs(arg1) do
-			local buttons = change.slot and lib.buttonsBySlot[change.slot]
-			if buttons then
-				for button in next, buttons do
-					UpdateUsable(button, change.usable, change.noMana)
+		if arg1 then
+			for _, change in ipairs(arg1) do
+				local buttons = lib.buttonsBySlot[change.slot]
+				if buttons then
+					for button in next, buttons do
+						UpdateUsable(button, change.usable, change.noMana)
+					end
 				end
 			end
 		end
