@@ -3,16 +3,16 @@ local S = E:GetModule('Skins')
 
 local _G = _G
 local next = next
-
-local CreateFrame = CreateFrame
 local hooksecurefunc = hooksecurefunc
+local CreateFrame = CreateFrame
 
 S:AddCallback('BlizzardMiscFrames', nil, nil, 'misc')
 
-local function FixReadyCheckFrame(frame)
-	if _G.ReadyCheckListenerFrame:IsShown() then return end
-
-	frame:Hide() -- bug fix, dont show it if player is initiator
+local function FixReadyCheckFrame(listener)
+	local readyCheck = _G.ReadyCheckFrame
+	if readyCheck.initiator and not listener:IsShown() then
+		readyCheck:Hide() -- bug fix, dont show it if player is initiator; blizzard checks UnitIsUnit('player', initiator)
+	end
 end
 
 local function FixAutoCompleteLevel(frame)
@@ -118,7 +118,7 @@ function S:BlizzardMiscFrames()
 		ListenerFrame:SetAlpha(0)
 	end
 
-	ReadyCheckFrame:HookScript('OnShow', FixReadyCheckFrame)
+	ListenerFrame:HookScript('OnShow', FixReadyCheckFrame)
 
 	-- Retail, Forever and Mists skin it in PVP.lua
 	if not (E.Modern or E.Mists) then
