@@ -313,14 +313,6 @@ function NP:ScalePlate(nameplate, scale, targetPlate)
 	end
 end
 
-function NP:PostUpdateAllElements(event)
-	if self == NP.TestFrame or self.widgetsOnly then return end -- skip test and widget plates
-
-	if event == 'NAME_PLATE_UNIT_ADDED' and self.isTarget then
-		NP:SetupTarget(self)
-	end
-end
-
 function NP:StylePlate(nameplate)
 	nameplate:SetScale(1)
 	nameplate:ClearAllPoints()
@@ -355,8 +347,6 @@ function NP:StylePlate(nameplate)
 	NP:Construct_ClassPowerTwo(nameplate)
 
 	NP.Plates[nameplate] = nameplate.frameName
-
-	hooksecurefunc(nameplate, 'UpdateAllElements', NP.PostUpdateAllElements)
 end
 
 do
@@ -418,11 +408,11 @@ function NP:UpdatePlate(nameplate, updateBase)
 	NP:Update_RaidTargetIndicator(nameplate)
 	NP:Update_PVPRole(nameplate)
 	NP:Update_Portrait(nameplate)
-	NP:Update_QuestIcons(nameplate, not updateBase)
+	NP:Update_QuestIcons(nameplate, updateBase)
 
 	local db = NP:PlateDB(nameplate)
 	if db.nameOnly or not db.enable then
-		NP:DisablePlate(nameplate, db.enable and db.nameOnly, not db.enable, not updateBase)
+		NP:DisablePlate(nameplate, db.enable and db.nameOnly, not db.enable, updateBase)
 
 		if nameplate == NP.TestFrame then
 			nameplate.Castbar:SetAlpha(0)
@@ -454,7 +444,7 @@ function NP:UpdatePlate(nameplate, updateBase)
 	end
 end
 
-function NP:DisablePlate(nameplate, nameOnly, hideRaised, keepTags)
+function NP:DisablePlate(nameplate, nameOnly, hideRaised, updateBase)
 	if hideRaised and nameplate.RaisedElement:IsShown() then
 		nameplate.RaisedElement:Hide() -- reshown by NAME_PLATE_UNIT_ADDED
 	end
@@ -462,7 +452,7 @@ function NP:DisablePlate(nameplate, nameOnly, hideRaised, keepTags)
 	NP:ReparentElements(nameplate, E.HiddenFrame)
 
 	if nameOnly then
-		if not keepTags then
+		if updateBase then
 			NP:Update_Tags(nameplate)
 		end
 
@@ -612,6 +602,23 @@ function NP:ConfigurePlates(init)
 
 	if E.Modern then
 		NP:AuraContainer_ConstructFilters() -- rebuilds the filters
+	else
+		local allowCLEU -- only register when we actually need it
+		for frameType in next, NP.AuraContainerFilterKeys do
+			local plateDB = NP:PlateDB(nil, frameType)
+			local notHidden = plateDB.enable and not plateDB.nameOnly
+			local castDB = notHidden and plateDB.castbar -- only when it can actually show up
+			if castDB and castDB.enable and castDB.sourceInterrupt and (castDB.timeToHold > 0) then
+				allowCLEU = true
+				break
+			end
+		end
+
+		if allowCLEU then
+			NP:RegisterEvent('COMBAT_LOG_EVENT_UNFILTERED')
+		else
+			NP:UnregisterEvent('COMBAT_LOG_EVENT_UNFILTERED')
+		end
 	end
 
 	local staticEvent = (NP.db.units.PLAYER.enable and NP.db.units.PLAYER.useStaticPosition) and 'NAME_PLATE_UNIT_ADDED' or 'NAME_PLATE_UNIT_REMOVED'
@@ -745,16 +752,6 @@ function NP:UpdatePlateBase(nameplate)
 	end
 end
 
-function NP:PLAYER_TARGET_CHANGED(_, unit)
-	NP:SetupTarget(self) -- pass it, even as nil here
-end
-
-function NP:UpdateTargets() -- the driver callback above only runs when the new target has a plate
-	for nameplate in pairs(NP.Plates) do
-		nameplate.isTarget = nameplate.__unit and E:UnitIsUnit(nameplate.__unit, 'target') or nil
-	end
-end
-
 function NP:NAME_PLATE_UNIT_ADDED(_, unit)
 	if not unit then unit = self.__unit end
 
@@ -762,9 +759,9 @@ function NP:NAME_PLATE_UNIT_ADDED(_, unit)
 	self.widgetSet = E.Modern and UnitWidgetSet(unit)
 	self.classification = UnitClassification(unit)
 	self.creatureType = UnitCreatureType(unit)
+	self.isTarget = E:UnitIsUnit(unit, 'target')
 	self.isMe = E:UnitIsUnit(unit, 'player')
 	self.isPet = E:UnitIsUnit(unit, 'pet')
-	self.isTarget = E:UnitIsUnit(unit, 'target')
 	self.isFriend = UnitIsFriend('player', unit)
 	self.isEnemy = UnitIsEnemy('player', unit)
 	self.isPlayer = UnitIsPlayer(unit)
@@ -879,6 +876,14 @@ function NP:NAME_PLATE_UNIT_REMOVED(event, unit)
 	self.Health.cur = nil -- cutaway
 	self.Power.cur = nil -- cutaway
 	self.npcID = nil -- just cause
+end
+
+function NP:PLAYER_TARGET_CHANGED(_, unit)
+	if not unit then unit = self.__unit end
+
+	self.isTarget = E:UnitIsUnit(unit, 'target')
+
+	NP:SetupTarget(self)
 end
 
 function NP:UNIT_FACTION(_, unit)
@@ -1128,7 +1133,6 @@ function NP:Initialize()
 	NP:RegisterEvent('PLAYER_REGEN_ENABLED')
 	NP:RegisterEvent('PLAYER_REGEN_DISABLED')
 	NP:RegisterEvent('PLAYER_ENTERING_WORLD')
-	NP:RegisterEvent('PLAYER_TARGET_CHANGED', 'UpdateTargets')
 	NP:RegisterEvent('PLAYER_UPDATE_RESTING', 'EnviromentConditionals')
 	NP:RegisterEvent('ZONE_CHANGED_NEW_AREA', 'EnviromentConditionals')
 	NP:RegisterEvent('UNIT_FACTION', 'NamePlateCallBack')

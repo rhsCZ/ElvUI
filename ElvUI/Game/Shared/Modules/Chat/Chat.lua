@@ -2786,14 +2786,18 @@ function CH:ChatThrottleIntervalHandler(event, text, author, ...)
 	if blockFlag then
 		return true
 	else
-		if blockObject then blockObject.time = time() end
+		if blockObject then
+			blockObject.time = time()
+		end
+
 		return CH:FindURL(event, text, author, ...)
 	end
 end
 
 function CH:CHAT_MSG_CHANNEL(event, msg, author, ...)
-	-- self is the chat frame - one without channels drops the line anyway
-	if self.channelList and not next(self.channelList) then return false end
+	if self.channelList and not next(self.channelList) then
+		return false -- one without channels drops the line anyway
+	end
 
 	return CH:ChatThrottleIntervalHandler(event, msg, author, ...)
 end
@@ -3044,6 +3048,11 @@ function CH:DelayGuildMOTD()
 end
 
 function CH:SaveChatHistory(event, ...)
+	local historyType = historyTypes[event]
+	if historyType and not CH.db.showHistory[historyType] then
+		return -- let others go by but kill ignored ones
+	end
+
 	if CH.db.throttleInterval ~= 0 and (event == 'CHAT_MSG_SAY' or event == 'CHAT_MSG_YELL' or event == 'CHAT_MSG_CHANNEL') then
 		local msg, author = ...
 		local when = time()
@@ -3053,11 +3062,6 @@ function CH:SaveChatHistory(event, ...)
 		if CH:ChatThrottleBlockFlag(author, msg, when) then
 			return
 		end
-	end
-
-	local historyType = historyTypes[event]
-	if historyType then -- let others go by..
-		if not CH.db.showHistory[historyType] then return end -- but kill ignored ones
 	end
 
 	if not CH.db.chatHistory then return end

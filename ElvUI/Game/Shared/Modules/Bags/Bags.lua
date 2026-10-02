@@ -555,22 +555,24 @@ function B:UpdateItemScrapIcon(slot)
 end
 
 function B:NewItemGlowSlotSwitch(slot, show)
-	if slot and slot.newItemGlow then
-		if show then
-			if not slot.newItemGlow:IsShown() then
-				slot.bagFrame.NewItemGlow.Fade:AddChild(slot.newItemGlow, slot.newItemGlow)
-			end
+	local glow = slot and slot.newItemGlow
+	if not glow then return end
 
-			slot.newItemGlow:Show()
-
-			local bank = slot.bagFrame.isBank and B.BankFrame
-			B:ShowItemGlow(bank or B.BagFrame, slot.newItemGlow)
-		else
-			slot.newItemGlow:Hide()
-
-			-- also clear them on blizzard's side
-			C_NewItems_RemoveNewItem(slot.BagID, slot.SlotID)
+	if show then
+		local bag = slot.bagFrame
+		if not glow:IsShown() then
+			bag.NewItemGlow.Fade:AddChild(glow)
 		end
+
+		glow:Show()
+
+		local bank = bag.isBank and B.BankFrame
+		B:ShowItemGlow(bank or B.BagFrame, glow)
+	else
+		glow:Hide()
+
+		-- also clear them on blizzard's side
+		C_NewItems_RemoveNewItem(slot.BagID, slot.SlotID)
 	end
 end
 
@@ -1507,10 +1509,8 @@ function B:Container_OnEvent(event, ...)
 	elseif event == 'BAG_UPDATE' or event == 'BAG_CLOSED' then
 		if not self.isBank or self:IsShown() then
 			local id = ...
-			if B.WarbandBanks[id] then
-				if self.isBank then -- the bag frame gets these too
-					B:UpdateBagSlots(self, id)
-				end
+			if self.isBank and B.WarbandBanks[id] then -- the bag frame gets these too
+				B:UpdateBagSlots(self, id)
 			else
 				B:DelayedContainer(self, event, id)
 			end
@@ -3283,11 +3283,13 @@ function B:HideItemGlow(bag)
 	if bag.NewItemGlow:IsPlaying() then
 		bag.NewItemGlow:Stop()
 
-		for _, itemGlow in next, bag.NewItemGlow.Fade.children do
+		local glow = bag.NewItemGlow.Fade
+		local slots = glow.children
+		for key, itemGlow in next, slots do
 			itemGlow:SetAlpha(0)
-		end
 
-		wipe(bag.NewItemGlow.Fade.children)
+			slots[key] = nil
+		end
 	end
 end
 
@@ -3295,11 +3297,13 @@ function B:SetupItemGlow(frame)
 	frame.NewItemGlow = _G.CreateAnimationGroup(frame)
 	frame.NewItemGlow:SetLooping(true)
 
-	frame.NewItemGlow.Fade = frame.NewItemGlow:CreateAnimation('fade')
-	frame.NewItemGlow.Fade:SetDuration(0.7)
-	frame.NewItemGlow.Fade:SetChange(0)
-	frame.NewItemGlow.Fade:SetEasing('in')
-	frame.NewItemGlow.Fade:SetScript('OnFinished', B.ItemGlowOnFinished)
+	local glow = frame.NewItemGlow:CreateAnimation('fade')
+	glow:SetDuration(0.7)
+	glow:SetChange(0)
+	glow:SetEasing('in')
+	glow:SetScript('OnFinished', B.ItemGlowOnFinished)
+
+	frame.NewItemGlow.Fade = glow
 end
 
 function B:OpenBank()
