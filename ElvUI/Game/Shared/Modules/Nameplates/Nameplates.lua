@@ -250,9 +250,22 @@ end
 
 function NP:Construct_RaisedElement(nameplate)
 	local element = CreateFrame('Frame', '$parent_RaisedElement', nameplate)
+	local RaisedLevel = 10 -- start at 10
+
 	element:EnableMouse(false)
-	element:SetFrameLevel(10)
+	element:SetFrameLevel(RaisedLevel)
 	element:SetAllPoints()
+
+	element.TargetIndicatorLevel = 0
+	element.HealthLevel = RaisedLevel + 5 -- prediction goes up to 3 over this
+	element.PowerLevel = RaisedLevel + 10
+	element.HighlightLevel = RaisedLevel + 15
+	element.TagTextLevel = RaisedLevel + 20
+	element.RaidTargetIndicatorLevel = RaisedLevel + 25 -- one over target indicator
+	element.AuraLevel = RaisedLevel + 30
+	element.ClassBarLevel = RaisedLevel + 35
+	element.ClassButtonLevel = RaisedLevel + 36 -- one over bar level
+	element.CastBarLevel = RaisedLevel + 40
 
 	element.frameName = element:GetName()
 

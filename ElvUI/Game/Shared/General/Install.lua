@@ -513,7 +513,6 @@ function E:LayoutAnniversary()
 	E.db.general.altPowerBar.textFormat = 'NAMECURMAXPERC'
 	E.db.general.autoRepair = 'PLAYER'
 	E.db.general.backdropfadecolor = E:NewColorTable(0.13, 0.13, 0.13, 0.69)
-	E.db.general.bonusObjectivePosition = 'AUTO'
 	E.db.general.bottomPanel = false
 	E.db.general.font = 'Expressway'
 	E.db.general.fontSize = 11
@@ -542,7 +541,6 @@ function E:LayoutAnniversary()
 	E.db.general.talkingHeadFrameScale = 1
 	E.db.general.totems.growthDirection = 'HORIZONTAL'
 	E.db.general.totems.size = 36
-	E.db.general.vehicleSeatIndicatorSize = 76
 	E.db.nameplates.colors.selection[0] = E:NewColorTable(0.78, 0.25, 0.25, 1)
 	E.db.nameplates.colors.selection[2] = E:NewColorTable(0.85, 0.768, 0.36, 1)
 	E.db.nameplates.colors.threat.badColor = E:NewColorTable(0.78, 0.25, 0.25, 1)
@@ -998,7 +996,6 @@ function E:LayoutNormal()
 	E.db.databars.azerite.enable = false
 	E.db.databars.reputation.enable = true
 	--General
-	E.db.general.bonusObjectivePosition = 'AUTO'
 	E.db.general.minimap.size = 220
 	E.db.general.objectiveFrameHeight = 400
 	E.db.general.talkingHeadFrameScale = 1
