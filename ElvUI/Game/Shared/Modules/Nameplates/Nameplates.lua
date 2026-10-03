@@ -45,6 +45,7 @@ local Blacklist = {
 }
 
 NP.AuraContainers = {}
+NP.AuraContainersCreated = {}
 NP.AuraContainerFilterTypes = {}
 NP.AuraContainerFilterKeys = {
 	PLAYER = 'Player',
@@ -618,6 +619,13 @@ function NP:ToggleStaticPlate()
 	E:SetCVar('nameplateShowSelf', (isStatic or not playerEnabled) and 0 or 1)
 end
 
+function NP:AuraContainer_Preloader()
+	if self:IsShown() then return end
+
+	self:Show() -- let the container build its filtering
+	self:Hide() -- now rehide it
+end
+
 function NP:ConfigurePlates(init)
 	NP.SkipFading = true
 
@@ -653,6 +661,10 @@ function NP:ConfigurePlates(init)
 
 		if E.Modern then
 			NP:AuraContainer_ConstructContainers() -- this spawns the containers
+
+			-- /dump (40 * 5 * 3) / 3 / (60 / 0.9) = (3 x 0.9) = 3 mins
+			-- (plates * frametypes * auratypes) / containers per tick / (seconds / tickdelay)
+			E:CoroutineUpdate(NP.AuraContainer_Preloader, NP.AuraContainersCreated, nil, 1, 0.3)
 		end
 
 		if staticEvent == 'NAME_PLATE_UNIT_ADDED' then
