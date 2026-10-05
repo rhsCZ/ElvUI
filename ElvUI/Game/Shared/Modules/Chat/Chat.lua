@@ -361,10 +361,11 @@ do --this can save some main file locals
 		if E.Classic then
 			-- Simpy Seasonal (5813: Wild Growth)
 			z['Player-5813-0301DEC1']	= itsSimpy -- Warlock: Yubi
-			-- Simpy Era (5149: Mankrik, 5066: Whitemane)
+			-- Simpy Era (5149: Mankrik)
 			z['Player-5149-04172B76']	= itsSimpy -- Warlock: Simpy
 			z['Player-5149-04C878ED']	= itsSimpy -- Warrior: Feldia
-			z['Player-5066-0659581C']	= itsSimpy -- Priest: Cutepriest
+			z['Player-5066-0659581C']	= itsSimpy -- [Alliance, Whitemane] Priest: Cutepriest
+			z['Player-5066-06716CCB']	= itsSimpy -- [Horde, Blaumeux] Hunter: Neah
 		elseif E.TBC then
 			-- Simpy TBC Anniversary (6064: Dreamscythe)
 			z['Player-6064-02A886D5']	= itsSimpy -- Warlock: Simpy
@@ -2234,7 +2235,7 @@ function CH:MessageFormatter(frame, info, chatType, chatGroup, chatTarget, chann
 		body = format(header..msg, pflag..sender)
 	elseif header then -- ignore special characters from players
 		body = format(header..'%s', pflag..sender, msg)
-	else -- Forever: COLLECTED_APPEARANCE will end up here
+	else -- new chat types might fail to here
 		body = msg
 	end
 
@@ -2398,7 +2399,8 @@ function CH:ChatFrame_MessageEventHandler(frame, event, arg1, arg2, arg3, arg4, 
 		end
 
 		if (chatType == 'SYSTEM' or chatType == 'SKILL' or chatType == 'CURRENCY' or chatType == 'MONEY' or
-			chatType == 'OPENING' or chatType == 'TRADESKILLS' or chatType == 'PET_INFO' or chatType == 'TARGETICONS' or chatType == 'BN_WHISPER_PLAYER_OFFLINE') then
+			chatType == 'OPENING' or chatType == 'TRADESKILLS' or chatType == 'PET_INFO' or chatType == 'TARGETICONS' or
+			chatType == 'BN_WHISPER_PLAYER_OFFLINE' or chatType == 'COLLECTED_APPEARANCE') then
 			frame:AddMessage(arg1, info.r, info.g, info.b, info.id, nil, nil, nil, nil, nil, isHistory, historyTime)
 		elseif chatType == 'LOOT' then
 			frame:AddMessage(arg1, info.r, info.g, info.b, info.id, nil, nil, nil, nil, nil, isHistory, historyTime)
