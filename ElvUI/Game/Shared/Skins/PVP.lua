@@ -25,7 +25,7 @@ local classicCategoryButtonIcons = {
 	464820, -- interface\icons\achievement_general_stayclassy
 }
 
-if E.Forever then -- ToDo: Forever
+if E.Forever then
 	S:AddCallbackForAddon('Blizzard_LFGUtil', 'PVPReadyDialog', nil, nil, nil, nil, 'pvp')
 else
 	S:AddCallbackForAddon('Blizzard_GroupFinder', 'PVPReadyDialog', nil, nil, nil, nil, 'pvp')
@@ -341,7 +341,6 @@ function S:Blizzard_PVPUI()
 		BonusFrame.ShadowOverlay:Hide()
 		BonusFrame.WorldBattlesTexture:Hide()
 
-		-- TODO: This is a fake dropdown
 		HandleHonorDropdown(_G.HonorQueueFrameTypeDropDown)
 
 		for _, bu in next, { BonusFrame.RandomBGButton, BonusFrame.CallToArmsButton, BonusFrame.WorldPVP1Button, BonusFrame.WorldPVP2Button } do
