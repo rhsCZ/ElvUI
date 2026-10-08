@@ -4157,12 +4157,17 @@ function CH:Initialize()
 	CH:RegisterEvent('UPDATE_CHAT_WINDOWS', 'SetupChat')
 	CH:RegisterEvent('UPDATE_FLOATING_CHAT_WINDOWS', 'SetupChat')
 	CH:RegisterEvent('GROUP_ROSTER_UPDATE', 'CheckLFGRoles')
-	CH:RegisterEvent('PET_BATTLE_CLOSE')
 	CH:RegisterEvent('CVAR_UPDATE')
 
-	if E.Modern then
-		CH:RegisterEvent('SOCIAL_QUEUE_UPDATE', 'SocialQueueEvent')
+	if E.Retail or E.Mists then
+		CH:RegisterEvent('PET_BATTLE_CLOSE')
+	end
 
+	if E.Retail then
+		CH:RegisterEvent('SOCIAL_QUEUE_UPDATE', 'SocialQueueEvent')
+	end
+
+	if E.Modern then
 		if E.private.general.voiceOverlay then
 			CH:RegisterEvent('VOICE_CHAT_CHANNEL_MEMBER_SPEAKING_STATE_CHANGED', 'VoiceOverlay')
 			CH:RegisterEvent('VOICE_CHAT_CHANNEL_MEMBER_ENERGY_CHANGED', 'VoiceOverlay')
