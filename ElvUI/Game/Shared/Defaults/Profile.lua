@@ -133,7 +133,6 @@ P.general = {
 
 		-- These dont exist in Blizzards color table
 		Bleed = { r = 1, g = 0.2, b = 0.6, a = 1 },
-		BadDispel = { r = 0.05, g = 0.85, b = 0.94, a = 1 },
 		Stealable = { r = 0.93, g = 0.91, b = 0.55, a = 1 },
 	},
 	bordercolor = { r = 0, g = 0, b = 0, a = 1 }, -- updated in E.Initialize
@@ -580,7 +579,7 @@ P.bags = {
 	},
 }
 
-for i = -3, 12 do
+for i = -3, E.Forever and 14 or 12 do
 	local name = 'bag'..i
 	P.bags.shownBags[name] = true
 
@@ -589,7 +588,7 @@ for i = -3, 12 do
 	end
 end
 
-for id = 6, 11 do
+for id = 6, E.Forever and 14 or 11 do
 	P.bags.split['bank'..id] = false
 end
 
@@ -3329,9 +3328,7 @@ P.actionbar = {
 		fontOutline = 'OUTLINE',
 		fontSize = 12,
 		mouseover = false,
-		visibility = '[vehicleui] hide;show',
-		frameStrata = 'LOW',
-		frameLevel = 5
+		visibility = '[vehicleui] hide;show'
 	},
 	microbar = {
 		enabled = false,
