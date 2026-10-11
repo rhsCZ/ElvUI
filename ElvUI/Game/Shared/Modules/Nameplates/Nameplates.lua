@@ -310,7 +310,6 @@ function NP:Update_ClassPowerTwo(nameplate)
 end
 
 function NP:StyleTargetPlate(nameplate)
-	nameplate:SetScale(1)
 	nameplate:ClearAllPoints()
 	nameplate:Point('CENTER')
 	nameplate:Size(NP.db.clickSize.personalWidth, NP.db.clickSize.personalHeight)
@@ -329,22 +328,7 @@ function NP:UpdateTargetPlate(nameplate)
 	nameplate:UpdateAllElements('OnShow')
 end
 
-function NP:ScalePlate(nameplate, scale, targetPlate)
-	if targetPlate and NP.targetPlate then
-		NP.targetPlate:SetScale(1)
-		NP.targetPlate = nil
-	end
-
-	if not nameplate then return end
-	nameplate:SetScale(scale)
-
-	if targetPlate then
-		NP.targetPlate = nameplate
-	end
-end
-
 function NP:StylePlate(nameplate)
-	nameplate:SetScale(1)
 	nameplate:ClearAllPoints()
 	nameplate:Point('CENTER')
 
@@ -521,13 +505,15 @@ function NP:GetClassAnchor()
 end
 
 function NP:SetupTarget(nameplate, removed)
-	local classpower = NP.db.units and NP.db.units.TARGET and NP.db.units.TARGET.classpower
-	if not classpower then return end
-
 	local TCP = NP.TargetClassPower
-	if removed and nameplate and TCP.realPlate ~= nameplate then
+	if nameplate and removed and TCP.realPlate ~= nameplate then
 		return -- this plate doesn't hold the class bar, dont pull it from the actual target
-	elseif removed or not nameplate or not classpower.enable then
+	end
+
+	local classpower = NP.db.units and NP.db.units.TARGET and NP.db.units.TARGET.classpower
+	if not classpower then return end -- this should exist
+
+	if removed or not nameplate or not classpower.enable then
 		TCP.realPlate = nil
 	else
 		local db = NP:PlateDB(nameplate)
@@ -870,7 +856,6 @@ function NP:NAME_PLATE_UNIT_REMOVED(event, unit)
 		end
 
 		if self.isTarget then
-			NP:ScalePlate(self, 1, true)
 			NP:SetupTarget(self, true)
 		end
 	end
@@ -917,7 +902,6 @@ function NP:PLAYER_TARGET_CHANGED(_, unit)
 end
 
 function NP:TargetChanged()
-	-- the driver only calls PLAYER_TARGET_CHANGED on the new target plate
 	local plate = C_NamePlate_GetNamePlateForUnit('target')
 	local current = plate and plate.unitFrame
 
@@ -1180,7 +1164,7 @@ function NP:Initialize()
 	NP:RegisterEvent('PLAYER_REGEN_ENABLED')
 	NP:RegisterEvent('PLAYER_REGEN_DISABLED')
 	NP:RegisterEvent('PLAYER_ENTERING_WORLD')
-	NP:RegisterEvent('PLAYER_TARGET_CHANGED', 'TargetChanged')
+	NP:RegisterEvent('PLAYER_TARGET_CHANGED', 'TargetChanged') -- the driver only calls PLAYER_TARGET_CHANGED on the new target plate
 	NP:RegisterEvent('PLAYER_UPDATE_RESTING', 'EnviromentConditionals')
 	NP:RegisterEvent('ZONE_CHANGED_NEW_AREA', 'EnviromentConditionals')
 	NP:RegisterEvent('UNIT_FACTION', 'NamePlateCallBack')
