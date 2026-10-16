@@ -158,7 +158,7 @@ function M:HandleTrackingButton()
 
 	local hidden = not Minimap:IsShown()
 	if hidden or E.private.general.minimap.hideTracking then
-		tracking:Point('TOP', UIParent, 'BOTTOM', 0, -5000) -- retail cant hide the parent otherwise the menu will error
+		tracking:Point('BOTTOM', UIParent, 'TOP', 0, 5000) -- retail cant hide the parent otherwise the menu will error
 	else
 		local scale, position, xOffset, yOffset = M:GetIconSettings('tracking')
 
@@ -881,8 +881,15 @@ function M:Initialize()
 	M:RegisterEvent('ZONE_CHANGED_INDOORS', 'Update_ZoneText')
 	M:RegisterEvent('ZONE_CHANGED', 'Update_ZoneText')
 
-	if MinimapCluster.BorderTop then
-		MinimapCluster.BorderTop:StripTextures()
+	local zoneButton = MinimapCluster.ZoneTextButton
+	local borderTop = MinimapCluster.BorderTop or (zoneButton and zoneButton.BorderTop)
+	if borderTop then
+		borderTop:StripTextures()
+	end
+
+	if zoneButton and zoneButton.StateTexture then
+		zoneButton:StripTextures()
+		zoneButton.StateTexture:SetAlpha(0)
 	end
 
 	if E.Modern then
