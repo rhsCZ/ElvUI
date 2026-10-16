@@ -286,6 +286,12 @@ local function HandleRankBar(bar)
 	S:HandleButton(bar.ExpansionDropdownButton)
 end
 
+local function SetModifiedBackdrop(button, method)
+	if method == 'OnEnter' then
+		button:HookScript('OnEnter', S.SetModifiedBackdrop)
+	end
+end
+
 local function HandleOrderView(frame)
 	local DeclineOrderDialog = frame.DeclineOrderDialog
 	DeclineOrderDialog:StripTextures()
@@ -318,6 +324,11 @@ local function HandleOrderView(frame)
 	S:HandleButton(OrderInfo.SocialDropdown)
 	S:HandleEditBox(OrderInfo.NoteBox, 'Transparent')
 
+	-- blizzard rescripts these later, see comment function
+	hooksecurefunc(frame.CreateButton, 'SetScript', SetModifiedBackdrop) -- UpdateCreateButton
+	hooksecurefunc(frame.CompleteOrderButton, 'SetScript', SetModifiedBackdrop) -- UpdateFulfillButton
+	hooksecurefunc(OrderInfo.StartOrderButton, 'SetScript', SetModifiedBackdrop) -- UpdateStartOrderButton
+
 	local RewardsFrame = OrderInfo.NPCRewardsFrame
 	RewardsFrame.Background:SetAlpha(0)
 	RewardsFrame.Background:CreateBackdrop('Transparent')
@@ -345,9 +356,56 @@ local function HandleOrderView(frame)
 	OrderItemIcon.CircleMask:Hide()
 end
 
+-- SetupTable refills headers per browse type
+local function HandleOrderListHeaders(page)
+	local columns = page.tableBuilder:GetColumns()
+	local numColumns = #columns
+	for i, column in next, columns do
+		local header = column:GetHeaderFrame()
+		if not header.IsSkinned then
+			header:DisableDrawLayer('BACKGROUND')
+			header:CreateBackdrop('Transparent')
+
+			local highlight = header:GetHighlightTexture()
+			highlight:SetColorTexture(1, 1, 1, 0.1)
+			highlight:SetAllPoints(header.backdrop)
+
+			header.IsSkinned = true
+		end
+
+		header.backdrop:Point('BOTTOMRIGHT', i < numColumns and -5 or 0, -2)
+	end
+end
+
+local COLLAPSE_ATLAS = {
+	['Professions-recipe-header-expand'] = 'common-button-list-plus',
+	['Professions-recipe-header-collapse'] = 'common-button-list-minus'
+}
+
+-- Use Blizzard's plus / minus for headers
+local function UpdateCollapseIcon(texture, atlas)
+	local icon = COLLAPSE_ATLAS[atlas]
+	if icon then
+		texture:SetAtlas(icon, true)
+	end
+end
+
 -- RecipeList category rows (ProfessionsRecipeListCategoryTemplate)
 local function HandleRecipeCategory(button)
-	button:StripTextures()
+	if button.CollapseButton then -- Forever ListHeaderVisualTemplate
+		button:StripTextures()
+	else
+		button.LeftPiece:SetAlpha(0)
+		button.CenterPiece:SetAlpha(0)
+		button.RightPiece:SetAlpha(0)
+
+		for _, icon in next, { button.CollapseIcon, button.CollapseIconAlphaAdd } do
+			UpdateCollapseIcon(icon, icon:GetAtlas())
+
+			hooksecurefunc(icon, 'SetAtlas', UpdateCollapseIcon)
+		end
+	end
+
 	button:CreateBackdrop()
 	button.backdrop:SetInside(button, 0, 1)
 
@@ -376,7 +434,7 @@ end
 local function HandleRecipeListChild(child)
 	if child.IsSkinned then return end
 
-	if E.Forever and child.CollapseButton then
+	if child.CollapseIcon or (E.Forever and child.CollapseButton) then
 		HandleRecipeCategory(child)
 	elseif child.SkillUps then
 		HandleRecipe(child)
@@ -396,14 +454,15 @@ end
 
 -- BookPage profession spell buttons (ProfessionButtonTemplate)
 local function HandleProfessionButton(button)
-	button:OffsetFrameLevel(1) -- backdrops sit a level below, the card art would cover them
+	local icon = button.IconTexture
+	icon:RemoveMaskTexture(button.OutlineMask)
+	icon:SetInside()
+
+	S:HandleIcon(icon, true)
+	icon.backdrop.Center:SetDrawLayer('BACKGROUND', 1)
+
+	button.highlightTexture:SetInside(icon.backdrop)
 	button.IconTextureOverlay:SetAlpha(0)
-	button.IconTexture:RemoveMaskTexture(button.OutlineMask)
-	button.IconTexture:SetInside()
-
-	S:HandleIcon(button.IconTexture, true)
-
-	button.highlightTexture:SetInside(button.IconTexture.backdrop)
 
 	E:RegisterCooldown(button.cooldown)
 
@@ -416,6 +475,7 @@ local function HandleBookProfession(frame)
 	local unlearn = frame.UnlearnButton
 	if unlearn then
 		S:HandleCloseButton(unlearn)
+
 		unlearn:OffsetFrameLevel(1)
 		unlearn:CreateBackdrop()
 		unlearn:SetHitRectInsets(0, 0, 0, 0)
@@ -612,8 +672,13 @@ function S:Blizzard_Professions()
 		S:HandleEditBox(BrowseList.SearchBox)
 		S:HandleButton(BrowseList.FilterDropdown)
 
+		hooksecurefunc(BrowseList.ScrollBox, 'Update', HandleRecipeList)
+
 		BrowseFrame.OrderList:StripTextures()
 		S:HandleTrimScrollBar(BrowseFrame.OrderList.ScrollBar)
+
+		HandleOrderListHeaders(OrdersPage) -- First one exists OnLoad already
+		hooksecurefunc(OrdersPage, 'SetupTable', HandleOrderListHeaders)
 	end
 
 	if E.Forever then -- Forever BookPage (ProfessionsBookFrameTemplate)
