@@ -2443,12 +2443,7 @@ function CH:ChatFrame_MessageEventHandler(frame, event, arg1, arg2, arg3, arg4, 
 			if E:IsSecretValue(arg1) then
 				return -- we cant get the globalstring because arg1 is secret
 			elseif E.Modern and arg1 == 'YOU_CHANGED' and (GetChannelRuleset(arg8) == CHATCHANNELRULESET_MENTOR) then
-				if frame.UpdateDefaultChatTarget then
-					frame:UpdateDefaultChatTarget()
-				else
-					_G.ChatFrame_UpdateDefaultChatTarget(frame)
-				end
-
+				frame:UpdateDefaultChatTarget()
 				frame.editBox:UpdateNewcomerEditBoxHint()
 			else
 				if E.Modern and arg1 == 'YOU_LEFT' then
@@ -2579,13 +2574,11 @@ function CH:ChatFrame_MessageEventHandler(frame, event, arg1, arg2, arg3, arg4, 
 end
 
 function CH:ChatFrame_ConfigEventHandler(...)
-	local ConfigEventHandler = _G.ChatFrameMixin and _G.ChatFrameMixin.ConfigEventHandler or _G.ChatFrame_ConfigEventHandler
-	return ConfigEventHandler(...)
+	return _G.ChatFrameMixin.ConfigEventHandler(...)
 end
 
 function CH:ChatFrame_SystemEventHandler(...)
-	local SystemEventHandler = _G.ChatFrameMixin and _G.ChatFrameMixin.SystemEventHandler or _G.ChatFrame_SystemEventHandler
-	return SystemEventHandler(...)
+	return _G.ChatFrameMixin.SystemEventHandler(...)
 end
 
 function CH:ChatFrame_OnEvent(frame, ...)
@@ -3990,16 +3983,10 @@ function CH:FCF_Close(fallback)
 		self.inUse = false
 	end
 
-	--Reset what this window receives.
-	if self.RemoveAllMessageGroups then
-		self:RemoveAllMessageGroups()
-		self:RemoveAllChannels()
-		self:ReceiveAllPrivateMessages()
-	else
-		_G.ChatFrame_RemoveAllMessageGroups(self)
-		_G.ChatFrame_RemoveAllChannels(self)
-		_G.ChatFrame_ReceiveAllPrivateMessages(self)
-	end
+	-- Reset what this window receives
+	self:RemoveAllMessageGroups()
+	self:RemoveAllChannels()
+	self:ReceiveAllPrivateMessages()
 
 	CH:PostChatClose(self) -- also call this since it won't call from blizzard in this case
 end
